@@ -1,0 +1,456 @@
+/* ============================================================
+   Miaw Tracker — tema "Hangat" v3 (redesign 2026-09-10)
+   Layer desain penuh: palet, tipografi, bentuk, kedalaman.
+   Dimuat SETELAH styles.css; mengubah design tokens + lapisan
+   visual, membiarkan struktur layout yang sudah teruji.
+   ============================================================ */
+
+/* ---------- Tokens: Light ---------- */
+:root {
+  color-scheme: light;
+
+  --font-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* permukaan hangat */
+  --bg: #faf6ef;
+  --panel: #fffdf9;
+  --panel-soft: #f5efe4;
+  --panel-raised: #ffffff;
+
+  --text: #26201a;
+  --muted: #857a6b;
+  --line: #e8dfd0;
+  --line-strong: #cfc2ac;
+
+  --sidebar: #241f1a;
+  --sidebar-soft: rgba(255, 255, 255, 0.07);
+  --sidebar-text: #f4ecdf;
+
+  /* aksen koral — identitas baru */
+  --teal: #e85d4f;
+  --teal-strong: #d3483a;
+  --blue: #3e7b8c;
+  --cyan: #e8934f;
+  --violet: #7c5cbf;
+  --amber: #d98324;
+  --orange: #e0682f;
+  --rose: #d64468;
+  --pink: #d05792;
+  --lime: #679a3c;
+  --green: #3d9a5f;
+  --danger: #c93c30;
+
+  --focus: 0 0 0 3px rgba(232, 93, 79, 0.28);
+
+  /* kedalaman lembut */
+  --shadow: 0 1px 2px rgba(58, 42, 24, 0.05), 0 10px 30px -12px rgba(58, 42, 24, 0.14);
+  --shadow-lift: 0 2px 4px rgba(58, 42, 24, 0.06), 0 18px 40px -14px rgba(58, 42, 24, 0.22);
+  --radius: 14px;
+}
+
+/* ---------- Tokens: Dark ---------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #16130f;
+  --panel: #211d17;
+  --panel-soft: #1a1712;
+  --panel-raised: #28231c;
+
+  --text: #f3ede3;
+  --muted: #a89b88;
+  --line: #362f26;
+  --line-strong: #4d4335;
+
+  --sidebar: #0e0c09;
+  --sidebar-soft: rgba(255, 255, 255, 0.06);
+  --sidebar-text: #f4ecdf;
+
+  --teal: #ef7263;
+  --teal-strong: #e85d4f;
+  --blue: #6aa7b8;
+  --cyan: #efa967;
+  --violet: #a487e0;
+  --amber: #e9a83f;
+  --orange: #ef8148;
+  --rose: #e5678a;
+  --pink: #e077ab;
+  --lime: #93c257;
+  --green: #5cb87e;
+  --danger: #e05a4d;
+
+  --focus: 0 0 0 3px rgba(239, 114, 99, 0.3);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 34px -12px rgba(0, 0, 0, 0.55);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 22px 48px -16px rgba(0, 0, 0, 0.65);
+}
+
+/* ---------- Tipografi dasar ---------- */
+html {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+}
+
+h1, h2, h3,
+.brand-copy h1,
+.title-group h2,
+.section-heading h3,
+.metric-card strong,
+.day-score strong,
+.month-score-card strong,
+.sheet-tile strong,
+.label-tile strong,
+.cat-card strong,
+.auth-copy h1,
+.auth-card strong {
+  font-family: var(--font-display);
+  letter-spacing: -0.018em;
+}
+
+.kicker,
+.nav-label,
+.metric-card span,
+.section-chip,
+.category-card span,
+.auth-kicker,
+.habit-meta {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---------- Latar & permukaan ---------- */
+body {
+  background:
+    radial-gradient(900px 480px at 88% -8%, color-mix(in srgb, var(--cyan) 10%, transparent), transparent 60%),
+    radial-gradient(760px 420px at -10% 20%, color-mix(in srgb, var(--teal) 7%, transparent), transparent 55%),
+    radial-gradient(680px 500px at 40% 110%, color-mix(in srgb, var(--violet) 5%, transparent), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+.panel {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* topbar glass */
+.topbar {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom-color: color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--teal) 16%, transparent), transparent 30%),
+    linear-gradient(20deg, color-mix(in srgb, var(--cyan) 10%, transparent), transparent 46%),
+    var(--sidebar);
+  border-right: 1px solid color-mix(in srgb, var(--sidebar-text) 7%, transparent);
+  box-shadow: 18px 0 44px rgba(20, 12, 6, 0.22);
+}
+
+.brand {
+  padding-bottom: 4px;
+}
+
+.brand-copy h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.brand-copy p {
+  color: color-mix(in srgb, var(--sidebar-text) 55%, transparent);
+}
+
+.nav-icon svg,
+.icon-button svg,
+.icon-action svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-item {
+  border-radius: 12px;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+}
+
+.nav-item:hover {
+  background: var(--sidebar-soft);
+}
+
+.nav-item.active {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--teal) 30%, transparent), color-mix(in srgb, var(--cyan) 18%, transparent));
+  box-shadow: inset 3px 0 0 var(--cyan), 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-weight: 800;
+}
+
+.month-link {
+  border-radius: 12px;
+}
+
+.month-link.active {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--teal) 34%, transparent), color-mix(in srgb, var(--cyan) 20%, transparent));
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+.year-select {
+  border-radius: 12px;
+}
+
+/* ---------- Kartu metrik ---------- */
+.metric-card {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+}
+
+.metric-card strong {
+  font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+  font-weight: 700;
+}
+
+/* ---------- Kartu kategori & skor ---------- */
+.category-card,
+.month-score-card,
+.sheet-tile,
+.label-tile,
+.cat-card,
+.day-score,
+.point-day {
+  border-radius: var(--radius);
+}
+
+.month-score-card {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.month-score-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+}
+
+.category-track,
+.progress-bar,
+.mini-bar {
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.category-track span,
+.progress-bar span,
+.mini-bar span {
+  border-radius: 999px;
+}
+
+/* ---------- Tabel kebiasaan ---------- */
+.habit-table th,
+.habit-table td {
+  transition: background 0.15s ease;
+}
+
+.habit-table .habit-col {
+  box-shadow: 1px 0 0 var(--line);
+}
+
+.habit-table thead th {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+.slot-check {
+  border-radius: 10px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.slot-check:hover {
+  border-color: var(--teal);
+}
+
+.slot-check:active {
+  transform: scale(0.92);
+}
+
+.slot-check:checked {
+  background: linear-gradient(135deg, var(--teal), var(--cyan));
+  border-color: transparent;
+}
+
+.slot-check.tone-teal:checked {
+  background: linear-gradient(135deg, var(--teal), var(--orange));
+}
+
+.slot-check.tone-blue:checked {
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+}
+
+.slot-check.tone-amber:checked {
+  background: linear-gradient(135deg, var(--amber), var(--orange));
+}
+
+.slot-check.tone-rose:checked {
+  background: linear-gradient(135deg, var(--rose), var(--pink));
+}
+
+/* titik kalender poin */
+.point-day {
+  border-radius: 10px;
+}
+
+/* ---------- Tombol ---------- */
+.primary-button,
+.auth-primary {
+  border: 0;
+  background: linear-gradient(125deg, var(--teal) 0%, var(--teal-strong) 55%, var(--orange) 130%);
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--teal) 60%, transparent);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+}
+
+.primary-button:hover:not(:disabled),
+.auth-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: saturate(1.12);
+  box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--teal) 65%, transparent);
+}
+
+.primary-button:active:not(:disabled),
+.auth-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.small-button,
+.icon-button,
+.icon-action,
+.auth-button {
+  border-radius: 12px;
+  transition: background 0.15s ease, transform 0.12s ease, border-color 0.15s ease;
+}
+
+.small-button:hover,
+.icon-button:hover,
+.icon-action:hover {
+  transform: translateY(-1px);
+}
+
+.icon-button,
+.icon-action,
+.small-button,
+.mobile-section-toggle {
+  min-width: 40px;
+}
+
+/* ---------- Form ---------- */
+input,
+select,
+textarea,
+.habit-form input,
+.habit-form select,
+.account-form input,
+.auth-form input,
+.auth-page-form input,
+.otp-form input {
+  border-radius: 12px;
+}
+
+.habit-form input:focus,
+.habit-form select:focus,
+.account-form input:focus,
+.auth-form input:focus,
+.auth-page-form input:focus,
+.year-select:focus {
+  border-color: var(--teal);
+  box-shadow: var(--focus);
+}
+
+/* ---------- Auth ---------- */
+.auth-screen {
+  background:
+    radial-gradient(700px 480px at 80% 0%, color-mix(in srgb, var(--teal) 12%, transparent), transparent 60%),
+    radial-gradient(640px 420px at 12% 100%, color-mix(in srgb, var(--violet) 9%, transparent), transparent 55%),
+    var(--bg);
+}
+
+.auth-card,
+.auth-hero {
+  border-radius: 20px;
+}
+
+.auth-card {
+  box-shadow: var(--shadow-lift);
+}
+
+.auth-primary {
+  border-radius: 12px;
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  border-radius: 999px;
+  box-shadow: var(--shadow-lift);
+  font-weight: 700;
+}
+
+/* ---------- Ringkasan & chip ---------- */
+.section-chip,
+.points-pill,
+.mobile-focus-chip,
+.cat-badge {
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.summary-table tbody tr:hover {
+  background: color-mix(in srgb, var(--teal) 5%, transparent);
+}
+
+.summary-table tbody tr.is-focus-month {
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+}
+
+/* ---------- Grafik tren ---------- */
+.trend-chart {
+  border-radius: var(--radius);
+}
+
+.chart-line {
+  stroke: var(--teal);
+  stroke-width: 3;
+}
+
+.chart-point circle {
+  fill: var(--panel-raised);
+  stroke: var(--teal);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
