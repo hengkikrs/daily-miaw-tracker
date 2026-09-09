@@ -6,3 +6,4 @@ node_modules
 public/runtime-config.js
 
 .vercel
+.env*
