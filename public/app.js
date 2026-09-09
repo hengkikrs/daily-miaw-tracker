@@ -2166,7 +2166,15 @@
       }
 
       const actionButton = event.target.closest('[data-action]');
-      if (!actionButton) return;
+      if (!actionButton) {
+        // Tap di area sel (bukan cuma checkbox kecil) = toggle slot
+        const cell = event.target.closest('td.slot-cell[data-slot-index]');
+        if (cell) {
+          const box = cell.querySelector('input.slot-check:not(:disabled)');
+          if (box) box.click();
+        }
+        return;
+      }
 
       const { action, category, habitId, month } = actionButton.dataset;
 
