@@ -518,7 +518,8 @@ svg {
 
 .auth-button,
 .auth-link {
-  min-height: 36px;
+  min-height: 44px;
+  padding-inline: 16px;
   border-radius: var(--radius);
   font-weight: 900;
 }
@@ -2073,6 +2074,7 @@ svg {
   }
 
   .topbar .auth-button {
+    flex: 0 0 44px;
     width: 44px;
     min-height: 44px;
     padding: 0;
