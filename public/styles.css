@@ -1709,6 +1709,13 @@ svg {
   transform: scale(0.92);
 }
 
+/* Perluas area sentuh jadi ~44px (slot grid gap cukup longgar) */
+.slot-check::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}
+
 .slot-check:focus-visible {
   outline: none;
   box-shadow: var(--focus);
@@ -2866,6 +2873,7 @@ svg {
   content: "";
   position: absolute;
   inset: -11px;
+  z-index: 1;
 }
 
 .task-check:checked {
