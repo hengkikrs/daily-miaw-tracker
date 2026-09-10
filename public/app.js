@@ -1082,6 +1082,7 @@
   ];
   let taskFilter = 'today';
   let taskAdding = false;
+  let taskDetailId = null;
 
   function taskSeed() {
     const today = taskTodayIso();
@@ -1131,7 +1132,60 @@
     return taskMatchKey(t, taskFilter, todayIso);
   }
 
+  function taskDeadlineLabel(t) {
+    if (!t.date) return '';
+    const d = new Date(`${t.date}T00:00:00`);
+    const label = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    return t.time ? `${label}&nbsp;·&nbsp;${escapeHtml(t.time)}` : label;
+  }
+
+  function renderTaskDetail() {
+    const t = loadTasks().find((x) => x.id === taskDetailId);
+    if (!t) return '';
+    const prio = { high: ['Prioritas Tinggi', 'high'], med: ['Prioritas Sedang', 'med'], low: ['Prioritas Rendah', 'low'] }[t.priority || 'low'];
+    const status = t.done ? ['Selesai', 'done'] : ['In Progres', 'prog'];
+    const projLabel = [t.project, t.tag].filter(Boolean).join(' ');
+    const deadline = taskDeadlineLabel(t);
+    const desc = t.notes ? `<p class="task-detail-desc">${escapeHtml(t.notes)}</p>` : '';
+    return `
+    <section class="task-page task-detail">
+      <div class="task-detail-top">
+        <button class="icon-button task-back" type="button" data-task-back aria-label="Kembali">←</button>
+        <strong>Detail Task</strong>
+      </div>
+      <div class="task-card task-detail-head">
+        <div class="task-detail-chips">
+          <span class="task-chip prio ${prio[1]}">${prio[0]}</span>
+          <span class="task-chip status ${status[1]}">${status[0]}</span>
+        </div>
+        <h2 class="task-detail-title">${escapeHtml(t.title)}</h2>
+        ${desc}
+      </div>
+      <div class="task-card task-detail-info">
+        <div class="task-info-grid">
+          <div class="task-info-cell">
+            <span class="task-info-label">Project</span>
+            <span class="task-info-value">${escapeHtml(projLabel || '—')}</span>
+          </div>
+          <div class="task-info-cell">
+            <span class="task-info-label">Deadline</span>
+            <span class="task-info-value">${deadline || '—'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="task-detail-actions">
+        <button class="primary-button" type="button" data-task-toggle="${t.id}">${t.done ? 'Tandai Belum Selesai' : 'Tandai Selesai'}</button>
+        <button class="ghost-button danger" type="button" data-task-delete="${t.id}">Hapus Task</button>
+      </div>
+    </section>`;
+  }
+
   function renderTaskView() {
+    if (taskDetailId) {
+      const detail = renderTaskDetail();
+      if (detail) return detail;
+      taskDetailId = null;
+    }
     const tasks = loadTasks();
     const todayIso = taskTodayIso();
     const visible = tasks.filter((t) => taskMatchFilter(t, todayIso));
@@ -1153,15 +1207,17 @@
 
     const chip = (text, cls) => (text ? `<span class="task-chip ${cls || ''}">${escapeHtml(text)}</span>` : '');
     const row = (t) => `
-      <label class="task-row ${t.done ? 'done' : ''}" data-task-id="${t.id}">
+      <div class="task-row ${t.done ? 'done' : ''}" data-task-id="${t.id}">
         <span class="task-prio p-${t.priority || 'low'}" aria-label="Prioritas"></span>
-        <input class="task-check" type="checkbox" ${t.done ? 'checked' : ''} data-task-toggle="${t.id}" />
-        <span class="task-main">
+        <label class="task-check-wrap">
+          <input class="task-check" type="checkbox" ${t.done ? 'checked' : ''} data-task-toggle="${t.id}" />
+        </label>
+        <span class="task-main" data-task-open="${t.id}" role="button" tabindex="0" aria-label="Buka detail ${escapeHtml(t.title)}">
           <span class="task-name">${escapeHtml(t.title)}</span>
           <span class="task-meta">${chip(t.project)}${t.tag ? chip(t.tag, 'tag') : ''}${t.time ? `<span class="task-time">⏱ ${escapeHtml(t.time)}</span>` : ''}</span>
         </span>
         <button class="task-del icon-button" type="button" data-task-delete="${t.id}" aria-label="Hapus task">✕</button>
-      </label>`;
+      </div>`;
 
     const composer = taskAdding ? `
       <form class="task-composer" id="taskComposer">
@@ -1215,6 +1271,16 @@
   }
 
   function handleTaskAction(actionButton) {
+    if (actionButton.matches('[data-task-open]')) {
+      taskDetailId = actionButton.dataset.taskOpen;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-back]')) {
+      taskDetailId = null;
+      renderShell();
+      return true;
+    }
     if (actionButton.matches('[data-task-filter]')) {
       taskFilter = actionButton.dataset.taskFilter;
       renderShell();
@@ -2407,8 +2473,8 @@
         return;
       }
 
-      const taskBtn = event.target.closest('[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel]');
-      if (taskBtn && handleTaskAction(taskBtn)) return;
+      const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel]');
+      if (taskBtn && event.target.tagName !== 'INPUT' && handleTaskAction(taskBtn)) return;
 
       const viewButton = event.target.closest('[data-view]');
       if (viewButton) {
