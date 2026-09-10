@@ -1010,9 +1010,47 @@
       return;
     }
 
+    if (PLACEHOLDER_VIEWS[activeView]) {
+      dom.pageTitle.textContent = PLACEHOLDER_VIEWS[activeView].title;
+      dom.pageSubtitle.textContent = PLACEHOLDER_VIEWS[activeView].subtitle;
+      dom.content.innerHTML = renderPlaceholderView(activeView);
+      return;
+    }
+
     dom.pageTitle.textContent = `${MONTHS[activeMonth]} ${activeYear}`;
     dom.pageSubtitle.textContent = 'Lembar pelacak bulanan dan analitik';
     dom.content.innerHTML = renderMonth(activeYear, activeMonth);
+  }
+
+  const PLACEHOLDER_VIEWS = {
+    task: { title: 'Task', subtitle: 'Daftar pekerjaan harian', emoji: '✅', hint: 'Kelola todo dan pekerjaan per hari di sini.' },
+    jadwal: { title: 'Jadwal', subtitle: 'Rencana waktu harian & mingguan', emoji: '🗓️', hint: 'Atur agenda dan rutinitas harianmu.' },
+    kalender: { title: 'Kalender', subtitle: 'Pandangan bulanan seluruh aktivitas', emoji: '📆', hint: 'Lihat task, jadwal, dan kebiasaan dalam satu kalender.' },
+    goals: { title: 'Goals', subtitle: 'Target jangka pendek & panjang', emoji: '🎯', hint: 'Pasang target besar dan pecah jadi kebiasaan kecil.' },
+    progress: { title: 'Progress', subtitle: 'Grafik perkembangan dirimu', emoji: '📈', hint: 'Pantau konsistensi dan pertumbuhan dari waktu ke waktu.' },
+    project: { title: 'Project', subtitle: 'Proyek & target besar', emoji: '🧩', hint: 'Kelompokkan task dan catatan ke dalam proyek.' },
+    catatan: { title: 'Catatan', subtitle: 'Ide, journal, dan memo cepat', emoji: '📝', hint: 'Tangkap pikiran sebelum hilang.' },
+    dokumen: { title: 'Dokumen', subtitle: 'Berkas & referensi penting', emoji: '🗂️', hint: 'Simpan tautan dan dokumen penting di satu tempat.' },
+    transaksi: { title: 'Transaksi', subtitle: 'Pemasukan & pengeluaran harian', emoji: '💸', hint: 'Catat uang masuk dan keluar dengan cepat.' },
+    budget: { title: 'Budget', subtitle: 'Rencana belanja bulanan', emoji: '🧾', hint: 'Bagi budget per pos belanja.' },
+    tabungan: { title: 'Tabungan', subtitle: 'Target tabungan & dana darurat', emoji: '🪙', hint: 'Kejar target tabungan setahap demi setahap.' },
+    'laporan-keuangan': { title: 'Laporan Keuangan', subtitle: 'Ringkasan kondisi finansial', emoji: '📊', hint: 'Rekap bulanan kas, budget, dan tabungan.' },
+    reports: { title: 'Laporan', subtitle: 'Laporan lintas aktivitas & kebiasaan', emoji: '📑', hint: 'Analitik gabungan dari seluruh modul tracker.' },
+    miawai: { title: 'MiawAI', subtitle: 'Asisten cerdas produktivitas', emoji: '🤖', hint: 'Minta saran, ringkasan, dan rencana dari data tracker-mu.' },
+  };
+
+  function renderPlaceholderView(viewKey) {
+    const meta = PLACEHOLDER_VIEWS[viewKey];
+    return `
+      <section class="panel placeholder-panel">
+        <div class="placeholder-stage">
+          <div class="placeholder-emoji" aria-hidden="true">${meta.emoji}</div>
+          <h3 class="placeholder-title">${escapeHtml(meta.title)}</h3>
+          <p class="placeholder-hint">${escapeHtml(meta.hint)}</p>
+          <span class="placeholder-chip">Segera hadir</span>
+        </div>
+      </section>
+    `;
   }
 
   function renderDashboard(year) {

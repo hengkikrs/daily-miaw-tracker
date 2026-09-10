@@ -2482,8 +2482,8 @@ svg {
   }
 
   .summary-table .small-button {
-    width: 34px;
-    min-height: 34px;
+    width: 44px;
+    min-height: 44px;
     padding: 0;
     overflow: hidden;
     color: transparent;
@@ -2539,4 +2539,69 @@ svg {
     bottom: 14px;
     max-width: none;
   }
+}
+
+/* --- Grup navigasi sidebar (struktur menu 2026-09-10) --- */
+.nav-group {
+  margin-top: 14px;
+  padding: 0 8px 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted, #8a8f98);
+}
+
+.nav-item.sub {
+  min-height: 40px;
+  padding-left: 34px;
+  font-size: 13.5px;
+}
+
+.nav-item.sub .nav-icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* --- Halaman placeholder menu baru --- */
+.placeholder-panel {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+}
+
+.placeholder-stage {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.placeholder-emoji {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.placeholder-title {
+  margin: 6px 0 0;
+  font-size: 20px;
+}
+
+.placeholder-hint {
+  margin: 0;
+  max-width: 380px;
+  color: var(--muted, #8a8f98);
+  font-size: 14px;
+}
+
+.placeholder-chip {
+  margin-top: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-strong, #c94f3d);
+  background: rgba(232, 93, 79, 0.12);
+  border: 1px solid rgba(232, 93, 79, 0.25);
 }
