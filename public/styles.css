@@ -2543,25 +2543,94 @@ svg {
 
 /* --- Grup navigasi sidebar (struktur menu 2026-09-10) --- */
 .nav-group {
-  margin-top: 14px;
-  padding: 0 8px 2px;
-  font-size: 10.5px;
+  margin-top: 6px;
+}
+
+.nav-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  margin: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nav-group-toggle:hover {
+  background: rgba(140, 130, 120, 0.08);
+}
+
+.nav-group-toggle .nav-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.nav-group-name {
+  flex: 1 1 auto;
+}
+
+.nav-chevron {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
   color: var(--muted, #8a8f98);
+  transition: transform 0.28s ease;
+}
+
+.nav-chevron svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-group.open .nav-chevron {
+  transform: rotate(180deg);
+}
+
+.nav-group-items {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s ease;
+}
+
+.nav-group.open .nav-group-items {
+  grid-template-rows: 1fr;
+}
+
+.nav-group-items-inner {
+  overflow: hidden;
+  min-height: 0;
+  visibility: hidden;
+  transition: visibility 0s linear 0.28s;
+}
+
+.nav-group.open .nav-group-items-inner {
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 .nav-item.sub {
-  min-height: 40px;
-  padding-left: 34px;
+  min-height: 44px;
+  padding-left: 40px;
   font-size: 13.5px;
 }
 
-.nav-item.sub .nav-icon {
-  width: 15px;
-  height: 15px;
-}
 
 /* --- Halaman placeholder menu baru --- */
 .placeholder-panel {

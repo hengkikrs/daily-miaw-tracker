@@ -150,6 +150,23 @@
   let state = loadState();
   let activeYear = Number(state.selectedYear) || runtimeYear;
   let activeView = state.selectedView || 'dashboard';
+  const NAV_GROUP_OF = {
+    task: 'aktivitas', jadwal: 'aktivitas', kalender: 'aktivitas',
+    habits: 'diri', goals: 'diri', progress: 'diri',
+    project: 'organisasi', catatan: 'organisasi', dokumen: 'organisasi',
+    transaksi: 'keuangan', budget: 'keuangan', tabungan: 'keuangan', 'laporan-keuangan': 'keuangan',
+  };
+  let openNavGroups = new Set(state.openNavGroups || (NAV_GROUP_OF[activeView] ? [NAV_GROUP_OF[activeView]] : []));
+
+  function syncNavGroups() {
+    document.querySelectorAll('.nav-group').forEach((group) => {
+      const key = group.dataset.group;
+      const isOpen = openNavGroups.has(key);
+      group.classList.toggle('open', isOpen);
+      const toggle = group.querySelector('.nav-group-toggle');
+      if (toggle) toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  }
   let activeMonth = Number.isInteger(state.selectedMonth) ? state.selectedMonth : new Date().getMonth();
   let mobileDailyExpanded = false;
   let mobileOpenSections = new Set(['daily']);
@@ -352,6 +369,7 @@
     state.selectedYear = activeYear;
     state.selectedView = activeView;
     state.selectedMonth = activeMonth;
+    state.openNavGroups = [...openNavGroups];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     queueRemoteSave();
   }
@@ -557,6 +575,7 @@
         activeYear = Number(state.selectedYear) || runtimeYear;
         activeView = state.selectedView || 'dashboard';
         activeMonth = Number.isInteger(state.selectedMonth) ? state.selectedMonth : new Date().getMonth();
+        openNavGroups = new Set(state.openNavGroups || (NAV_GROUP_OF[activeView] ? [NAV_GROUP_OF[activeView]] : []));
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         ensureYear(activeYear);
         renderShell();
@@ -984,6 +1003,7 @@
     document.querySelectorAll('[data-view]').forEach((button) => {
       button.classList.toggle('active', activeView === button.dataset.view);
     });
+    syncNavGroups();
 
     if (activeView === 'dashboard') {
       dom.pageTitle.textContent = 'Dasbor';
@@ -2187,9 +2207,24 @@
     });
 
     document.addEventListener('click', (event) => {
+      const groupToggle = event.target.closest('[data-group-toggle]');
+      if (groupToggle) {
+        const key = groupToggle.dataset.groupToggle;
+        if (openNavGroups.has(key)) {
+          openNavGroups.delete(key);
+        } else {
+          openNavGroups.add(key);
+        }
+        saveState();
+        syncNavGroups();
+        return;
+      }
+
       const viewButton = event.target.closest('[data-view]');
       if (viewButton) {
         activeView = viewButton.dataset.view;
+        const groupKey = NAV_GROUP_OF[activeView];
+        if (groupKey) openNavGroups.add(groupKey);
         if (activeView === 'habits') {
           const current = currentTrackingDate();
           activeYear = current.year;

@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260910-ui4" />
-  <link rel="stylesheet" href="theme.css?v=20260910-ui4" />
+  <link rel="stylesheet" href="styles.css?v=20260910-ui5" />
+  <link rel="stylesheet" href="theme.css?v=20260910-ui5" />
   <link rel="icon" href="cat-logo.svg" />
 </head>
 <body class="auth-required">
@@ -34,32 +34,72 @@
       </button>
 
       <div class="nav-group" data-group="aktivitas">
-        <div class="nav-group-label">Aktivitas</div>
-        <button class="nav-item nav-sub" type="button" data-view="task"><span>Task</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="jadwal"><span>Jadwal</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="kalender"><span>Kalender</span></button>
+        <button class="nav-group-toggle" type="button" data-group-toggle="aktivitas" aria-expanded="false">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L9.5 22 18 10.5h-6.5L13 2z"/></svg>
+          </span>
+          <span class="nav-group-name">Aktivitas</span>
+          <span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <div class="nav-group-items">
+          <div class="nav-group-items-inner">
+            <button class="nav-item sub" type="button" data-view="task"><span>Task</span></button>
+            <button class="nav-item sub" type="button" data-view="jadwal"><span>Jadwal</span></button>
+            <button class="nav-item sub" type="button" data-view="kalender"><span>Kalender</span></button>
+          </div>
+        </div>
       </div>
 
       <div class="nav-group" data-group="diri">
-        <div class="nav-group-label">Pengembangan Diri</div>
-        <button class="nav-item nav-sub" type="button" data-view="habits"><span>Kebiasaan</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="goals"><span>Goals</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="progress"><span>Progress</span></button>
+        <button class="nav-group-toggle" type="button" data-group-toggle="diri" aria-expanded="false">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 20v-6"/><path d="M12 14c-4 0-6-2.5-6-6 3 0 6 1 6 6z"/><path d="M12 14c4 0 6-2.5 6-6-3 0-6 1-6 6z"/></svg>
+          </span>
+          <span class="nav-group-name">Pengembangan Diri</span>
+          <span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <div class="nav-group-items">
+          <div class="nav-group-items-inner">
+            <button class="nav-item sub" type="button" data-view="habits"><span>Kebiasaan</span></button>
+            <button class="nav-item sub" type="button" data-view="goals"><span>Goals</span></button>
+            <button class="nav-item sub" type="button" data-view="progress"><span>Progress</span></button>
+          </div>
+        </div>
       </div>
 
       <div class="nav-group" data-group="organisasi">
-        <div class="nav-group-label">Organisasi</div>
-        <button class="nav-item nav-sub" type="button" data-view="project"><span>Project</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="catatan"><span>Catatan</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="dokumen"><span>Dokumen</span></button>
+        <button class="nav-group-toggle" type="button" data-group-toggle="organisasi" aria-expanded="false">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg>
+          </span>
+          <span class="nav-group-name">Organisasi</span>
+          <span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <div class="nav-group-items">
+          <div class="nav-group-items-inner">
+            <button class="nav-item sub" type="button" data-view="project"><span>Project</span></button>
+            <button class="nav-item sub" type="button" data-view="catatan"><span>Catatan</span></button>
+            <button class="nav-item sub" type="button" data-view="dokumen"><span>Dokumen</span></button>
+          </div>
+        </div>
       </div>
 
       <div class="nav-group" data-group="keuangan">
-        <div class="nav-group-label">Keuangan</div>
-        <button class="nav-item nav-sub" type="button" data-view="transaksi"><span>Transaksi</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="budget"><span>Budget</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="tabungan"><span>Tabungan</span></button>
-        <button class="nav-item nav-sub" type="button" data-view="laporan-keuangan"><span>Laporan</span></button>
+        <button class="nav-group-toggle" type="button" data-group-toggle="keuangan" aria-expanded="false">
+          <span class="nav-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg>
+          </span>
+          <span class="nav-group-name">Keuangan</span>
+          <span class="nav-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <div class="nav-group-items">
+          <div class="nav-group-items-inner">
+            <button class="nav-item sub" type="button" data-view="transaksi"><span>Transaksi</span></button>
+            <button class="nav-item sub" type="button" data-view="budget"><span>Budget</span></button>
+            <button class="nav-item sub" type="button" data-view="tabungan"><span>Tabungan</span></button>
+            <button class="nav-item sub" type="button" data-view="laporan-keuangan"><span>Laporan</span></button>
+          </div>
+        </div>
       </div>
 
       <button class="nav-item" type="button" data-view="reports">
@@ -124,6 +164,6 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="runtime-config.js?v=20260525"></script>
-  <script src="app.js?v=20260909-ui1"></script>
+  <script src="app.js?v=20260910-ui5"></script>
 </body>
 </html>
