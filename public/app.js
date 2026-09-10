@@ -1004,6 +1004,8 @@
       button.classList.toggle('active', activeView === button.dataset.view);
     });
     syncNavGroups();
+    const taskSearch = document.getElementById('taskSearchWrap');
+    if (taskSearch) taskSearch.hidden = activeView !== 'task';
 
     if (activeView === 'dashboard') {
       dom.pageTitle.textContent = 'Dasbor';
@@ -1030,6 +1032,18 @@
       return;
     }
 
+    if (activeView === 'task') {
+      dom.pageTitle.textContent = 'Task';
+      dom.pageSubtitle.textContent = 'Daftar tugas harian';
+      dom.content.innerHTML = renderTaskView();
+      if (taskAdding) {
+        const q = dom.content.querySelector('#taskQuickInput');
+        if (q) q.focus();
+      }
+      mountTaskSearch();
+      return;
+    }
+
     if (PLACEHOLDER_VIEWS[activeView]) {
       dom.pageTitle.textContent = PLACEHOLDER_VIEWS[activeView].title;
       dom.pageSubtitle.textContent = PLACEHOLDER_VIEWS[activeView].subtitle;
@@ -1043,7 +1057,6 @@
   }
 
   const PLACEHOLDER_VIEWS = {
-    task: { title: 'Task', subtitle: 'Daftar pekerjaan harian', emoji: '✅', hint: 'Kelola todo dan pekerjaan per hari di sini.' },
     jadwal: { title: 'Jadwal', subtitle: 'Rencana waktu harian & mingguan', emoji: '🗓️', hint: 'Atur agenda dan rutinitas harianmu.' },
     kalender: { title: 'Kalender', subtitle: 'Pandangan bulanan seluruh aktivitas', emoji: '📆', hint: 'Lihat task, jadwal, dan kebiasaan dalam satu kalender.' },
     goals: { title: 'Goals', subtitle: 'Target jangka pendek & panjang', emoji: '🎯', hint: 'Pasang target besar dan pecah jadi kebiasaan kecil.' },
@@ -1058,6 +1071,180 @@
     reports: { title: 'Laporan', subtitle: 'Laporan lintas aktivitas & kebiasaan', emoji: '📑', hint: 'Analitik gabungan dari seluruh modul tracker.' },
     miawai: { title: 'MiawAI', subtitle: 'Asisten cerdas produktivitas', emoji: '🤖', hint: 'Minta saran, ringkasan, dan rencana dari data tracker-mu.' },
   };
+
+  /* ============ MODUL TASK (daftar tugas personal) ============ */
+  const TASK_STORE_KEY = 'miaw-tracker.tasks.v1';
+  const TASK_FILTERS = [
+    { key: 'today', label: 'Hari Ini' },
+    { key: 'upcoming', label: 'Mendatang' },
+    { key: 'inbox', label: 'Inbox' },
+    { key: 'all', label: 'Semua' },
+  ];
+  let taskFilter = 'today';
+  let taskAdding = false;
+
+  function taskSeed() {
+    const today = taskTodayIso();
+    const later = taskDateOffset(1);
+    return [
+      { id: 't1', title: 'Buat landing page', project: 'Marketing', tag: 'Batu Bata', time: '19:00', priority: 'high', date: today, done: false },
+      { id: 't2', title: 'Follow up pelanggan', project: 'Sales', tag: '', time: '20:00', priority: 'high', date: today, done: false },
+      { id: 't3', title: 'Laporan keuangan', project: 'Keuangan', tag: '', time: '21:00', priority: 'med', date: today, done: false },
+      { id: 't4', title: 'Edit video promosi', project: 'Marketing', tag: '', time: '22:00', priority: 'low', date: today, done: false },
+      { id: 't5', title: 'Riset keyword', project: 'Marketing', tag: '', time: '10:30', priority: 'med', date: today, done: true },
+      { id: 't6', title: 'Cek stok bahan', project: 'Operasional', tag: '', time: '14:00', priority: 'low', date: today, done: true },
+      { id: 't7', title: 'Susun konten minggu depan', project: 'Marketing', tag: '', time: '', priority: 'med', date: later, done: false },
+    ];
+  }
+
+  function taskTodayIso() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function taskDateOffset(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function loadTasks() {
+    if (!state.tasks || !Array.isArray(state.tasks)) {
+      state.tasks = taskSeed();
+    }
+    return state.tasks;
+  }
+
+  function saveTasks() {
+    saveState();
+    if (typeof scheduleCloudSync === 'function') scheduleCloudSync();
+  }
+
+  function taskMatchKey(t, key, todayIso) {
+    if (key === 'all') return true;
+    if (key === 'today') return t.date === todayIso;
+    if (key === 'upcoming') return t.date > todayIso;
+    return t.date > todayIso || !t.date; // inbox = mendatang + tanpa tanggal
+  }
+
+  function taskMatchFilter(t, todayIso) {
+    return taskMatchKey(t, taskFilter, todayIso);
+  }
+
+  function renderTaskView() {
+    const tasks = loadTasks();
+    const todayIso = taskTodayIso();
+    const visible = tasks.filter((t) => taskMatchFilter(t, todayIso));
+    const active = visible.filter((t) => !t.done);
+    const done = visible.filter((t) => t.done);
+    const todayAll = tasks.filter((t) => t.date === todayIso);
+    const doneCount = todayAll.filter((t) => t.done).length;
+    const totalCount = todayAll.length;
+    const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+    const now = new Date();
+    const dateLabel = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const h = now.getHours();
+    const greet = h < 11 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 19 ? 'Selamat sore' : 'Selamat malam';
+
+    const pills = TASK_FILTERS.map((f) => {
+      const n = tasks.filter((t) => taskMatchKey(t, f.key, todayIso)).length;
+      return `<button class="task-pill ${taskFilter === f.key ? 'active' : ''}" type="button" data-task-filter="${f.key}">${f.label}<span>${n}</span></button>`;
+    }).join('');
+
+    const chip = (text, cls) => (text ? `<span class="task-chip ${cls || ''}">${escapeHtml(text)}</span>` : '');
+    const row = (t) => `
+      <label class="task-row ${t.done ? 'done' : ''}" data-task-id="${t.id}">
+        <span class="task-prio p-${t.priority || 'low'}" aria-label="Prioritas"></span>
+        <input class="task-check" type="checkbox" ${t.done ? 'checked' : ''} data-task-toggle="${t.id}" />
+        <span class="task-main">
+          <span class="task-name">${escapeHtml(t.title)}</span>
+          <span class="task-meta">${chip(t.project)}${t.tag ? chip(t.tag, 'tag') : ''}${t.time ? `<span class="task-time">⏱ ${escapeHtml(t.time)}</span>` : ''}</span>
+        </span>
+        <button class="task-del icon-button" type="button" data-task-delete="${t.id}" aria-label="Hapus task">✕</button>
+      </label>`;
+
+    const composer = taskAdding ? `
+      <form class="task-composer" id="taskComposer">
+        <input id="taskQuickInput" type="text" maxlength="120" placeholder="Nama task…" autocomplete="off" />
+        <input id="taskQuickWhen" type="date" value="${todayIso}" />
+        <input id="taskQuickProj" type="text" maxlength="24" placeholder="Project (opsional)" autocomplete="off" />
+        <div class="task-composer-actions">
+          <button type="button" class="ghost-button" data-task-cancel>Batal</button>
+          <button type="submit" class="primary-button">Simpan</button>
+        </div>
+      </form>` : '';
+
+    return `
+    <section class="task-page">
+      <div class="task-date"><strong>${greet}</strong> · ${escapeHtml(dateLabel)}</div>
+      <div class="task-card task-progress-card">
+        <div class="task-progress-head">
+          <strong>${doneCount} / ${totalCount} selesai</strong>
+          <span class="task-pct">${pct}%</span>
+        </div>
+        <div class="task-bar"><span style="width:${pct}%"></span></div>
+      </div>
+      <div class="task-pills" role="tablist">${pills}</div>
+      ${composer}
+      <section class="task-card task-section">
+        <h3>Fokus Hari Ini</h3>
+        <div class="task-list">
+          ${active.length ? active.map(row).join('') : '<p class="task-empty">Belum ada task di sini. Tambah satu lewat tombol +.</p>'}
+        </div>
+      </section>
+      ${done.length ? `
+      <section class="task-card task-section">
+        <h3>Selesai</h3>
+        <div class="task-list">${done.map(row).join('')}</div>
+      </section>` : ''}
+      <button class="task-fab" type="button" data-task-add aria-label="Tambah task baru">+</button>
+    </section>`;
+  }
+
+  function mountTaskSearch() {
+    const input = document.querySelector('#taskSearchInput');
+    if (!input || input.dataset.taskBound === '1') return;
+    input.dataset.taskBound = '1';
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      document.querySelectorAll('.task-page .task-row').forEach((el) => {
+        const text = el.textContent.toLowerCase();
+        el.style.display = !q || text.includes(q) ? '' : 'none';
+      });
+    });
+  }
+
+  function handleTaskAction(actionButton) {
+    if (actionButton.matches('[data-task-filter]')) {
+      taskFilter = actionButton.dataset.taskFilter;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-toggle]')) {
+      const t = loadTasks().find((x) => x.id === actionButton.dataset.taskToggle);
+      if (t) { t.done = !t.done; saveTasks(); renderShell(); }
+      return true;
+    }
+    if (actionButton.matches('[data-task-delete]')) {
+      const id = actionButton.dataset.taskDelete;
+      state.tasks = loadTasks().filter((x) => x.id !== id);
+      saveTasks();
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-add]')) {
+      taskAdding = true;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-cancel]')) {
+      taskAdding = false;
+      renderShell();
+      return true;
+    }
+    return false;
+  }
+
 
   function renderPlaceholderView(viewKey) {
     const meta = PLACEHOLDER_VIEWS[viewKey];
@@ -2220,6 +2407,9 @@
         return;
       }
 
+      const taskBtn = event.target.closest('[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel]');
+      if (taskBtn && handleTaskAction(taskBtn)) return;
+
       const viewButton = event.target.closest('[data-view]');
       if (viewButton) {
         activeView = viewButton.dataset.view;
@@ -2285,8 +2475,26 @@
       if (action === 'delete-account-data') deleteAccountData();
     });
 
+    dom.content.addEventListener('change', (event) => {
+      const taskCheck = event.target.closest('[data-task-toggle]');
+      if (taskCheck) handleTaskAction(taskCheck);
+    });
+
     dom.content.addEventListener('submit', (event) => {
       event.preventDefault();
+      if (event.target.id === 'taskComposer') {
+        const form = event.target;
+        const title = form.querySelector('#taskQuickInput').value.trim();
+        if (!title) { taskAdding = false; renderShell(); return; }
+        const date = form.querySelector('#taskQuickWhen').value || taskTodayIso();
+        const project = form.querySelector('#taskQuickProj').value.trim();
+        loadTasks().push({ id: `t${Date.now()}`, title, project, tag: '', time: '', priority: 'low', date, done: false });
+        taskAdding = false;
+        if (date !== taskTodayIso()) taskFilter = 'all';
+        saveTasks();
+        renderShell();
+        return;
+      }
       if (event.target.id === 'habitForm') addHabit(event.target);
       if (event.target.id === 'accountProfileForm') updateAccountProfile(event.target);
       if (event.target.id === 'accountPasswordForm') changeAccountPassword(event.target);
