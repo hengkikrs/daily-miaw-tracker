@@ -1040,6 +1040,7 @@
         const q = dom.content.querySelector('#taskQuickInput');
         if (q) q.focus();
       }
+      if (focusStartedAt) setTimeout(tickFocusDisplay, 0);
       mountTaskSearch();
       return;
     }
@@ -1083,12 +1084,31 @@
   let taskFilter = 'today';
   let taskAdding = false;
   let taskDetailId = null;
+  let taskEditing = false;
+  let focusStartedAt = null;
+  let focusInterval = null;
 
   function taskSeed() {
     const today = taskTodayIso();
     const later = taskDateOffset(1);
     return [
-      { id: 't1', title: 'Buat landing page', project: 'Marketing', tag: 'Batu Bata', time: '19:00', priority: 'high', date: today, done: false },
+      { id: 't1', title: 'Buat landing page', project: 'Marketing Batu Bata', tag: '', time: '19:00', priority: 'high', date: today, done: false,
+        notes: 'Bangun landing page satu halaman yang sederhana dan cepat untuk menarik pembeli batu bata dari Google dan Facebook.',
+        memo: 'Pakai template satu kolom. CTA utama: tombol WhatsApp. Target publish sebelum akhir pekan.',
+        estimate: 120,
+        actual: 75,
+        checklist: [
+          { id: 'c1', text: 'Riset kompetitor', done: true },
+          { id: 'c2', text: 'Buat struktur landing page', done: true },
+          { id: 'c3', text: 'Tulis copywriting', done: true },
+          { id: 'c4', text: 'Publish', done: false },
+        ],
+        attachments: ['landing-wireframe.png', 'copy-v1.docx'],
+        activity: [
+          { text: 'Checklist "Tulis copywriting" selesai', at: Date.now() - 40 * 60000 },
+          { text: 'Sesi fokus 45 mnt selesai', at: Date.now() - 55 * 60000 },
+          { text: 'Task dibuat', at: Date.now() - 26 * 3600000 },
+        ] },
       { id: 't2', title: 'Follow up pelanggan', project: 'Sales', tag: '', time: '20:00', priority: 'high', date: today, done: false },
       { id: 't3', title: 'Laporan keuangan', project: 'Keuangan', tag: '', time: '21:00', priority: 'med', date: today, done: false },
       { id: 't4', title: 'Edit video promosi', project: 'Marketing', tag: '', time: '22:00', priority: 'low', date: today, done: false },
@@ -1113,6 +1133,15 @@
     if (!state.tasks || !Array.isArray(state.tasks)) {
       state.tasks = taskSeed();
     }
+    // lengkapi field demo yang belum ada pada task lama (id cocok dengan seed)
+    const seedById = new Map(taskSeed().map((s) => [s.id, s]));
+    state.tasks.forEach((t) => {
+      const s = seedById.get(t.id);
+      if (!s) return;
+      ['notes', 'memo', 'estimate', 'actual', 'checklist', 'attachments', 'activity'].forEach((k) => {
+        if (t[k] === undefined && s[k] !== undefined) t[k] = s[k];
+      });
+    });
     return state.tasks;
   }
 
@@ -1139,6 +1168,61 @@
     return t.time ? `${label}&nbsp;·&nbsp;${escapeHtml(t.time)}` : label;
   }
 
+  function taskMinutesLabel(mins) {
+    const m = Math.max(0, Math.round(mins || 0));
+    const h = Math.floor(m / 60);
+    return h ? `${h} jam ${m % 60 ? `${m % 60} mnt` : ''}`.trim() : `${m} mnt`;
+  }
+
+  function taskRelTime(ts) {
+    const diff = Date.now() - ts;
+    const m = Math.round(diff / 60000);
+    if (m < 1) return 'baru saja';
+    if (m < 60) return `${m} mnt lalu`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h} jam lalu`;
+    return `${Math.round(h / 24)} hari lalu`;
+  }
+
+  function taskFocusElapsedMin(t) {
+    return t && t.focusAt ? Math.max(0, (Date.now() - t.focusAt) / 60000) : 0;
+  }
+
+  function logTaskActivity(t, text) {
+    if (!Array.isArray(t.activity)) t.activity = [];
+    t.activity.push({ at: Date.now(), text });
+    if (t.activity.length > 30) t.activity = t.activity.slice(-30);
+  }
+
+  function startFocus(ts) {
+    if (focusStartedAt) return;
+    const t = loadTasks().find((x) => x.id === taskDetailId);
+    if (t) { t.actual = (t.actual || 0) + taskFocusElapsedMin(t); t.focusAt = ts; logTaskActivity(t, 'Sesi fokus dimulai.'); saveTasks(); }
+    focusStartedAt = ts;
+    if (!focusInterval) focusInterval = setInterval(tickFocusDisplay, 15000);
+  }
+
+  function stopFocus() {
+    const t = loadTasks().find((x) => x.id === taskDetailId);
+    if (t) {
+      t.actual = (t.actual || 0) + taskFocusElapsedMin(t);
+      t.focusAt = null;
+      logTaskActivity(t, 'Sesi fokus dihentikan.');
+      saveTasks();
+    }
+    focusStartedAt = null;
+    if (focusInterval) { clearInterval(focusInterval); focusInterval = null; }
+  }
+
+  function tickFocusDisplay() {
+    if (!focusStartedAt) return;
+    const t = loadTasks().find((x) => x.id === taskDetailId);
+    if (!t) return;
+    const mins = (t.actual || 0) + taskFocusElapsedMin(t);
+    const live = taskMinutesLabel(mins);
+    document.querySelectorAll('[data-focus-live]').forEach((el) => { el.textContent = live; });
+  }
+
   function renderTaskDetail() {
     const t = loadTasks().find((x) => x.id === taskDetailId);
     if (!t) return '';
@@ -1147,11 +1231,61 @@
     const projLabel = [t.project, t.tag].filter(Boolean).join(' ');
     const deadline = taskDeadlineLabel(t);
     const desc = t.notes ? `<p class="task-detail-desc">${escapeHtml(t.notes)}</p>` : '';
+
+    if (taskEditing) {
+      return `
+    <section class="task-page task-detail">
+      <div class="task-detail-top">
+        <button class="icon-button task-back" type="button" data-task-back aria-label="Kembali">←</button>
+        <strong>Edit Task</strong>
+      </div>
+      <form class="task-card task-edit-form" id="taskEditForm">
+        <label>Judul<input name="title" type="text" maxlength="120" required value="${escapeHtml(t.title)}" /></label>
+        <label>Project<input name="project" type="text" maxlength="40" value="${escapeHtml(t.project || '')}" /></label>
+        <div class="task-edit-row">
+          <label>Deadline<input name="date" type="date" value="${t.date || ''}" /></label>
+          <label>Jam<input name="time" type="time" value="${t.time || ''}" /></label>
+        </div>
+        <label>Prioritas
+          <select name="priority">
+            <option value="high" ${t.priority === 'high' ? 'selected' : ''}>Tinggi</option>
+            <option value="med" ${t.priority === 'med' ? 'selected' : ''}>Sedang</option>
+            <option value="low" ${t.priority === 'low' ? 'selected' : ''}>Rendah</option>
+          </select>
+        </label>
+        <label>Deskripsi<textarea name="notes" rows="3" maxlength="400">${escapeHtml(t.notes || '')}</textarea></label>
+        <div class="task-composer-actions">
+          <button type="button" class="ghost-button" data-task-cancel-edit>Batal</button>
+          <button type="submit" class="primary-button">Simpan</button>
+        </div>
+      </form>
+    </section>`;
+    }
+
+    const cl = Array.isArray(t.checklist) ? t.checklist : [];
+    const clDone = cl.filter((c) => c.done).length;
+    const clPct = cl.length ? Math.round((clDone / cl.length) * 100) : 0;
+    const clItems = cl.length ? cl.map((c) => `
+        <label class="task-sub ${c.done ? 'done' : ''}">
+          <input class="task-check" type="checkbox" ${c.done ? 'checked' : ''} data-task-sub="${t.id}" data-sub-id="${c.id}" />
+          <span>${escapeHtml(c.text)}</span>
+        </label>`).join('') : '<p class="task-empty">Belum ada subtask.</p>';
+    const atts = Array.isArray(t.attachments) ? t.attachments : [];
+    const acts = Array.isArray(t.activity) ? [...t.activity].sort((a, b) => b.at - a.at) : [];
+    const menu = `
+        <div class="task-menu">
+          <button class="icon-button task-menu-btn" type="button" data-task-menu aria-label="Menu">⋮</button>
+          <div class="task-menu-pop" hidden>
+            <button type="button" data-task-edit>Edit Task</button>
+            <button type="button" class="danger" data-task-delete="${t.id}">Delete</button>
+          </div>
+        </div>`;
     return `
     <section class="task-page task-detail">
       <div class="task-detail-top">
         <button class="icon-button task-back" type="button" data-task-back aria-label="Kembali">←</button>
         <strong>Detail Task</strong>
+        ${menu}
       </div>
       <div class="task-card task-detail-head">
         <div class="task-detail-chips">
@@ -1159,7 +1293,6 @@
           <span class="task-chip status ${status[1]}">${status[0]}</span>
         </div>
         <h2 class="task-detail-title">${escapeHtml(t.title)}</h2>
-        ${desc}
       </div>
       <div class="task-card task-detail-info">
         <div class="task-info-grid">
@@ -1172,11 +1305,50 @@
             <span class="task-info-value">${deadline || '—'}</span>
           </div>
         </div>
+        <div class="task-info-grid">
+          <div class="task-info-cell">
+            <span class="task-info-label">Estimasi</span>
+            <span class="task-info-value">${taskMinutesLabel(t.estimate)}</span>
+          </div>
+          <div class="task-info-cell">
+            <span class="task-info-label">Aktual</span>
+            <span class="task-info-value">${focusStartedAt ? '<span class="task-actual-live" data-focus-live></span>' : taskMinutesLabel(t.actual)}</span>
+          </div>
+        </div>
       </div>
+      ${t.notes ? `
+      <section class="task-card task-detail-sec">
+        <h3>Deskripsi</h3>
+        ${desc}
+      </section>` : ''}
+      <section class="task-card task-detail-sec">
+        <div class="task-sec-head">
+          <h3>Checklist</h3>
+          ${cl.length ? `<span class="task-sec-meta">${clDone} / ${cl.length} selesai</span>` : ''}
+        </div>
+        ${cl.length ? `<div class="task-bar slim"><span style="width:${clPct}%"></span></div>` : ''}
+        <div class="task-sub-list">${clItems}</div>
+      </section>
+      <section class="task-card task-detail-sec">
+        <h3>Catatan</h3>
+        <p class="task-detail-desc">${t.memo ? escapeHtml(t.memo) : 'Belum ada catatan tambahan.'}</p>
+      </section>
+      <section class="task-card task-detail-sec">
+        <h3>Attachment</h3>
+        <div class="task-attach-list">
+          ${atts.length ? atts.map((a) => `<span class="task-chip att">📎 ${escapeHtml(String(a))}</span>`).join('') : '<p class="task-empty">Belum ada lampiran.</p>'}
+        </div>
+      </section>
       <div class="task-detail-actions">
-        <button class="primary-button" type="button" data-task-toggle="${t.id}">${t.done ? 'Tandai Belum Selesai' : 'Tandai Selesai'}</button>
-        <button class="ghost-button danger" type="button" data-task-delete="${t.id}">Hapus Task</button>
+        ${t.done ? `<button class="primary-button" type="button" data-task-toggle="${t.id}">Tandai Belum Selesai</button>` : `<button class="primary-button task-focus-btn" type="button" data-task-focus="${t.id}">${focusStartedAt ? 'Hentikan Fokus' : 'Mulai Fokus'}</button>
+        ${focusStartedAt ? '<p class="task-focus-live">Sesi fokus berjalan — <span data-focus-live></span></p>' : ''}`}
       </div>
+      <section class="task-card task-detail-sec">
+        <h3>Activity</h3>
+        <ul class="task-activity">
+          ${acts.length ? acts.map((a) => `<li><span>${escapeHtml(a.text)}</span><time>${taskRelTime(a.at)}</time></li>`).join('') : '<li class="task-empty">Belum ada aktivitas.</li>'}
+        </ul>
+      </section>
     </section>`;
   }
 
@@ -1277,7 +1449,39 @@
       return true;
     }
     if (actionButton.matches('[data-task-back]')) {
+      if (taskEditing) { taskEditing = false; renderShell(); return true; }
       taskDetailId = null;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-menu]')) {
+      const pop = actionButton.parentElement.querySelector('.task-menu-pop');
+      if (pop) pop.hidden = !pop.hidden;
+      return true;
+    }
+    if (actionButton.matches('[data-task-edit]')) {
+      taskEditing = true;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-cancel-edit]')) {
+      taskEditing = false;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-sub]')) {
+      const t = loadTasks().find((x) => x.id === actionButton.dataset.taskSub);
+      const c = t && Array.isArray(t.checklist) ? t.checklist.find((y) => y.id === actionButton.dataset.subId) : null;
+      if (c) {
+        c.done = !c.done;
+        logTaskActivity(t, c.done ? `Checklist "${c.text}" selesai` : `Checklist "${c.text}" dibuka kembali`);
+        saveTasks();
+        renderShell();
+      }
+      return true;
+    }
+    if (actionButton.matches('[data-task-focus]')) {
+      if (focusStartedAt) stopFocus(); else startFocus(Date.now());
       renderShell();
       return true;
     }
@@ -1288,13 +1492,19 @@
     }
     if (actionButton.matches('[data-task-toggle]')) {
       const t = loadTasks().find((x) => x.id === actionButton.dataset.taskToggle);
-      if (t) { t.done = !t.done; saveTasks(); renderShell(); }
+      if (t) {
+        t.done = !t.done;
+        logTaskActivity(t, t.done ? 'Task ditandai selesai' : 'Task dibuka kembali');
+        saveTasks();
+        renderShell();
+      }
       return true;
     }
     if (actionButton.matches('[data-task-delete]')) {
       const id = actionButton.dataset.taskDelete;
       state.tasks = loadTasks().filter((x) => x.id !== id);
       saveTasks();
+      if (taskDetailId === id) { taskDetailId = null; taskEditing = false; }
       renderShell();
       return true;
     }
@@ -2473,7 +2683,7 @@
         return;
       }
 
-      const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel]');
+      const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus]');
       if (taskBtn && event.target.tagName !== 'INPUT' && handleTaskAction(taskBtn)) return;
 
       const viewButton = event.target.closest('[data-view]');
@@ -2542,7 +2752,7 @@
     });
 
     dom.content.addEventListener('change', (event) => {
-      const taskCheck = event.target.closest('[data-task-toggle]');
+      const taskCheck = event.target.closest('[data-task-toggle],[data-task-sub]');
       if (taskCheck) handleTaskAction(taskCheck);
     });
 
@@ -2561,6 +2771,27 @@
         renderShell();
         return;
       }
+      if (event.target.id === 'taskEditForm') {
+        const form = event.target;
+        const t = loadTasks().find((x) => x.id === taskDetailId);
+        if (t) {
+          const title = form.querySelector('[name=title]').value.trim();
+          if (title && title !== t.title) { t.title = title; logTaskActivity(t, 'Judul diubah'); }
+          const proj = form.querySelector('[name=project]').value.trim();
+          if (proj !== (t.project || '')) { t.project = proj; logTaskActivity(t, 'Project diubah'); }
+          const date = form.querySelector('[name=date]').value;
+          const time = form.querySelector('[name=time]').value;
+          if (date !== (t.date || '') || time !== (t.time || '')) { t.date = date; t.time = time; logTaskActivity(t, 'Deadline diubah'); }
+          const prio = form.querySelector('[name=priority]').value;
+          if (prio !== t.priority) { t.priority = prio; logTaskActivity(t, 'Prioritas diubah'); }
+          const notes = form.querySelector('[name=notes]').value.trim();
+          if (notes !== (t.notes || '')) { t.notes = notes; logTaskActivity(t, 'Deskripsi diperbarui'); }
+          saveTasks();
+        }
+        taskEditing = false;
+        renderShell();
+        return;
+      }
       if (event.target.id === 'habitForm') addHabit(event.target);
       if (event.target.id === 'accountProfileForm') updateAccountProfile(event.target);
       if (event.target.id === 'accountPasswordForm') changeAccountPassword(event.target);
@@ -2571,6 +2802,15 @@
       if (!input) return;
       toggleSlot(input);
     });
+
+    // Pulihkan sesi fokus yang berjalan setelah reload
+    {
+      const running = loadTasks().find((x) => x.focusAt);
+      if (running) {
+        focusStartedAt = running.focusAt;
+        if (!focusInterval) focusInterval = setInterval(tickFocusDisplay, 15000);
+      }
+    }
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') queueRemoteSave({ immediate: true, keepalive: true });
