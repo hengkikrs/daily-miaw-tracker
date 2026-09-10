@@ -318,7 +318,12 @@ svg {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-right: 4px;
 }
 
 .nav-item,
@@ -421,9 +426,7 @@ svg {
 .month-list {
   display: grid;
   gap: 4px;
-  overflow: auto;
   padding-right: 2px;
-  max-height: clamp(120px, calc(100vh - 500px), 340px);
 }
 
 .auth-panel {
@@ -2557,7 +2560,7 @@ svg {
   border: 0;
   border-radius: 12px;
   background: transparent;
-  color: var(--text);
+  color: var(--sidebar-text, #f4ecdf);
   font: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -2567,7 +2570,7 @@ svg {
 }
 
 .nav-group-toggle:hover {
-  background: rgba(140, 130, 120, 0.08);
+  background: var(--sidebar-soft, rgba(255, 255, 255, 0.07));
 }
 
 .nav-group-toggle .nav-icon {
@@ -2585,7 +2588,7 @@ svg {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
-  color: var(--muted, #8a8f98);
+  color: color-mix(in srgb, var(--sidebar-text, #f4ecdf) 55%, transparent);
   transition: transform 0.28s ease;
 }
 
