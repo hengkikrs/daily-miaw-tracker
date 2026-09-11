@@ -1085,6 +1085,9 @@
   let taskAdding = false;
   let taskDetailId = null;
   let taskEditing = false;
+  let taskPageAdding = false;
+  let taskAddOptions = false;
+  let taskAddDraft = { time: '19:00', priority: 'high', project: 'Marketing Batu Bata', category: 'Marketing' };
   let focusStartedAt = null;
   let focusInterval = null;
 
@@ -1353,6 +1356,7 @@
   }
 
   function renderTaskView() {
+    if (taskPageAdding) return renderTaskAddPage();
     if (taskDetailId) {
       const detail = renderTaskDetail();
       if (detail) return detail;
@@ -1429,6 +1433,131 @@
     </section>`;
   }
 
+  function renderTaskAddPage() {
+    const todayIso = taskTodayIso();
+    const d = taskAddDraft;
+    const prio = { high: 'High', med: 'Medium', low: 'Low' }[d.priority] || 'Low';
+    const dot = (cls) => `<span class="dot ${cls}"></span>`;
+    const row = (icon, label, valueHtml, extra = '') => `
+        <div class="task-add-row" ${extra}>
+          <span class="task-add-ico">${icon}</span>
+          <span class="task-add-label">${label}</span>
+          <span class="task-add-value">${valueHtml}</span>
+          <span class="task-add-chev">›</span>
+        </div>`;
+    const cal = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>';
+    const clock = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+    const prioIco = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l8.5 8.5L12 20.5 3.5 12z"/></svg>';
+    const board = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M10 4v16"/></svg>';
+    const grid = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>';
+    const optRows = taskAddOptions ? `
+        <div class="task-add-opt-sep"></div>
+        <label class="task-add-row task-add-desk">
+          <span class="task-add-label">Deskripsi</span>
+          <textarea name="opt-notes" rows="2" maxlength="400" placeholder="Jelaskan task ini… (opsional)"></textarea>
+        </label>
+        <div class="task-add-row">
+          <span class="task-add-label">Deadline</span>
+          <span class="task-add-value"><input name="opt-deadline" type="date" value="${todayIso}" /></span>
+        </div>
+        <div class="task-add-row">
+          <span class="task-add-label">Reminder</span>
+          <span class="task-add-value"><select name="opt-reminder">
+            <option value="">Tidak ada</option>
+            <option value="30">30 menit sebelum</option>
+            <option value="60">1 jam sebelum</option>
+            <option value="1440">1 hari sebelum</option>
+          </select></span>
+        </div>
+        <div class="task-add-row">
+          <span class="task-add-label">Tag</span>
+          <span class="task-add-value"><input name="opt-tag" type="text" maxlength="24" placeholder="mis. promosi" /></span>
+        </div>
+        <div class="task-add-row">
+          <span class="task-add-label">Recurring</span>
+          <span class="task-add-value"><select name="opt-recurring">
+            <option value="">Tidak berulang</option>
+            <option value="daily">Harian</option>
+            <option value="weekly">Mingguan</option>
+            <option value="monthly">Bulanan</option>
+          </select></span>
+        </div>` : '';
+    return `
+    <section class="task-page task-add-page">
+      <div class="task-detail-top">
+        <button class="icon-button task-back" type="button" data-task-add-close aria-label="Kembali">←</button>
+        <strong>Tambah Task</strong>
+      </div>
+      <form class="task-add-form" id="taskAddForm">
+        <div class="task-card task-add-title-card">
+          <input id="taskAddTitle" name="title" type="text" maxlength="120" placeholder="Apa yang ingin dikerjakan?" autocomplete="off" />
+          <div class="task-add-hint">Contoh: Buat konten promosi batu bata</div>
+        </div>
+        <div class="task-card task-add-rows">
+          ${row(cal, 'Tanggal', `<input name="date" type="date" value="${todayIso}" />`)}
+          ${row(clock, 'Jam', `<input name="time" type="time" value="${d.time}" />`)}
+          ${row(`<span class="task-add-ico prio">${prioIco}</span>`, 'Prioritas', `<select name="priority"><option value="high" ${d.priority === 'high' ? 'selected' : ''}>High</option><option value="med" ${d.priority === 'med' ? 'selected' : ''}>Medium</option><option value="low" ${d.priority === 'low' ? 'selected' : ''}>Low</option></select>`)}
+          ${row(board, 'Project', `<input name="project" type="text" maxlength="40" value="${escapeHtml(d.project)}" list="taskAddProjects" />`)}
+          ${row(grid, 'Kategori', `<input name="category" type="text" maxlength="24" value="${escapeHtml(d.category)}" list="taskAddCats" />`)}
+          <datalist id="taskAddProjects"><option value="Marketing Batu Bata"></option><option value="Marketing"></option><option value="Sales"></option><option value="Operasional"></option><option value="Keuangan"></option></datalist>
+          <datalist id="taskAddCats"><option value="Marketing"></option><option value="Operasional"></option><option value="Keuangan"></option><option value="Konten"></option></datalist>
+          <button class="task-add-row task-add-more" type="button" data-task-options>
+            <span class="task-add-label" style="font-weight:800; color:var(--text)">Opsi Lainnya</span>
+            <span class="task-add-chev ${taskAddOptions ? 'open' : ''}">⌄</span>
+          </button>
+          ${optRows}
+        </div>
+        <div class="task-add-actions">
+          <button type="submit" class="primary-button">Simpan</button>
+          <button type="button" class="secondary-button" data-task-add-again>Simpan &amp; Tambah Lagi</button>
+        </div>
+      </form>
+    </section>`;
+  }
+
+  function taskAddCollect(form) {
+    const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
+    return {
+      title: val('title'),
+      date: val('date') || taskTodayIso(),
+      time: val('time'),
+      priority: form.querySelector('[name=priority]')?.value || 'low',
+      project: val('project'),
+      tag: val('opt-tag'),
+      notes: val('opt-notes'),
+      reminder: val('opt-reminder'),
+      recurring: val('opt-recurring'),
+      deadline: val('opt-deadline'),
+    };
+  }
+
+  function submitTaskAdd(form, again) {
+    const data = taskAddCollect(form);
+    if (!data.title) {
+      const el = form.querySelector('#taskAddTitle');
+      el.focus();
+      return false;
+    }
+    taskAddDraft = { time: data.time || '19:00', priority: data.priority, project: data.project || 'Marketing Batu Bata', category: val2(form, 'category') };
+    loadTasks().push({
+      id: `t${Date.now()}`, title: data.title, project: data.project, tag: data.tag || val2(form, 'category') || data.category, time: data.time, priority: data.priority, date: data.date, done: false,
+      notes: data.notes || undefined,
+      memo: data.reminder ? `Reminder: ${data.reminder === '30' ? '30 mnt' : data.reminder === '60' ? '1 jam' : '1 hari'} sebelum` : undefined,
+    });
+    saveTasks();
+    return true;
+  }
+
+  function val2(form, name) {
+    return form.querySelector(`[name=${name}]`)?.value.trim() || '';
+  }
+
+  function logActivityLastTask(text) {
+    const tasks = loadTasks();
+    const t = tasks[tasks.length - 1];
+    if (t) logTaskActivity(t, text);
+  }
+
   function mountTaskSearch() {
     const input = document.querySelector('#taskSearchInput');
     if (!input || input.dataset.taskBound === '1') return;
@@ -1452,6 +1581,26 @@
       if (taskEditing) { taskEditing = false; renderShell(); return true; }
       taskDetailId = null;
       renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-add-close]')) {
+      taskPageAdding = false;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-options]')) {
+      taskAddOptions = !taskAddOptions;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-add-again]')) {
+      const form = document.querySelector('#taskAddForm');
+      if (form && submitTaskAdd(form, true)) {
+        logActivityLastTask('Task dibuat');
+        taskAddOptions = false;
+        renderShell();
+        setTimeout(() => document.querySelector('#taskAddTitle')?.focus(), 50);
+      }
       return true;
     }
     if (actionButton.matches('[data-task-menu]')) {
@@ -1509,8 +1658,10 @@
       return true;
     }
     if (actionButton.matches('[data-task-add]')) {
-      taskAdding = true;
+      taskPageAdding = true;
+      taskAddOptions = false;
       renderShell();
+      setTimeout(() => document.querySelector('#taskAddTitle')?.focus(), 60);
       return true;
     }
     if (actionButton.matches('[data-task-cancel]')) {
@@ -2683,8 +2834,8 @@
         return;
       }
 
-      const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus]');
-      if (taskBtn && event.target.tagName !== 'INPUT' && handleTaskAction(taskBtn)) return;
+      const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus],[data-task-add-close],[data-task-options],[data-task-add-again]');
+      if (taskBtn && event.target.tagName !== 'INPUT' && event.target.tagName !== 'SELECT' && event.target.tagName !== 'TEXTAREA' && handleTaskAction(taskBtn)) return;
 
       const viewButton = event.target.closest('[data-view]');
       if (viewButton) {
@@ -2769,6 +2920,15 @@
         if (date !== taskTodayIso()) taskFilter = 'all';
         saveTasks();
         renderShell();
+        return;
+      }
+      if (event.target.id === 'taskAddForm') {
+        const form = event.target;
+        if (submitTaskAdd(form, false)) {
+          taskPageAdding = false;
+          logActivityLastTask('Task dibuat');
+          renderShell();
+        }
         return;
       }
       if (event.target.id === 'taskEditForm') {
