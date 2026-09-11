@@ -1433,11 +1433,22 @@
     </section>`;
   }
 
+  function taskDateRead(iso) {
+    if (!iso) return 'Pilih tanggal';
+    if (iso === taskTodayIso()) return 'Hari ini';
+    const [y, m, d] = iso.split('-').map(Number);
+    const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return `${d} ${bulan[(m || 1) - 1]} ${y}`;
+  }
+
+  function taskTimeRead(v) {
+    return v || 'Pilih jam';
+  }
+
   function renderTaskAddPage() {
     const todayIso = taskTodayIso();
     const d = taskAddDraft;
     const prio = { high: 'High', med: 'Medium', low: 'Low' }[d.priority] || 'Low';
-    const dot = (cls) => `<span class="dot ${cls}"></span>`;
     const row = (icon, label, valueHtml, extra = '') => `
         <div class="task-add-row" ${extra}>
           <span class="task-add-ico">${icon}</span>
@@ -1494,11 +1505,11 @@
           <div class="task-add-hint">Contoh: Buat konten promosi batu bata</div>
         </div>
         <div class="task-card task-add-rows">
-          ${row(cal, 'Tanggal', `<input name="date" type="date" value="${todayIso}" />`)}
-          ${row(clock, 'Jam', `<input name="time" type="time" value="${d.time}" />`)}
-          ${row(`<span class="task-add-ico prio">${prioIco}</span>`, 'Prioritas', `<select name="priority"><option value="high" ${d.priority === 'high' ? 'selected' : ''}>High</option><option value="med" ${d.priority === 'med' ? 'selected' : ''}>Medium</option><option value="low" ${d.priority === 'low' ? 'selected' : ''}>Low</option></select>`)}
-          ${row(board, 'Project', `<input name="project" type="text" maxlength="40" value="${escapeHtml(d.project)}" list="taskAddProjects" />`)}
-          ${row(grid, 'Kategori', `<input name="category" type="text" maxlength="24" value="${escapeHtml(d.category)}" list="taskAddCats" />`)}
+          ${row(cal, 'Tanggal', `<span class="task-add-native-wrap"><span class="task-add-read">${taskDateRead(todayIso)}</span><input name="date" type="date" value="${todayIso}" data-add-sync="date" /></span>`)}
+          ${row(clock, 'Jam', `<span class="task-add-native-wrap"><span class="task-add-read">${taskTimeRead(d.time)}</span><input name="time" type="time" value="${d.time}" data-add-sync="time" /></span>`)}
+          ${row(`<span class="task-add-ico prio">${prioIco}</span>`, 'Prioritas', `<span class="task-dot dot-red"></span><select name="priority"><option value="high" ${d.priority === 'high' ? 'selected' : ''}>High</option><option value="med" ${d.priority === 'med' ? 'selected' : ''}>Medium</option><option value="low" ${d.priority === 'low' ? 'selected' : ''}>Low</option></select>`)}
+          ${row(board, 'Project', `<span class="task-dot dot-red"></span><input name="project" type="text" maxlength="40" value="${escapeHtml(d.project)}" list="taskAddProjects" />`)}
+          ${row(grid, 'Kategori', `<span class="task-dot dot-ring"></span><input name="category" type="text" maxlength="24" value="${escapeHtml(d.category)}" list="taskAddCats" />`)}
           <datalist id="taskAddProjects"><option value="Marketing Batu Bata"></option><option value="Marketing"></option><option value="Sales"></option><option value="Operasional"></option><option value="Keuangan"></option></datalist>
           <datalist id="taskAddCats"><option value="Marketing"></option><option value="Operasional"></option><option value="Keuangan"></option><option value="Konten"></option></datalist>
           <button class="task-add-row task-add-more" type="button" data-task-options>
@@ -2958,6 +2969,11 @@
     });
 
     dom.content.addEventListener('change', (event) => {
+      const syncEl = event.target.closest('[data-add-sync]');
+      if (syncEl) {
+        const read = syncEl.parentElement.querySelector('.task-add-read');
+        if (read) read.textContent = syncEl.dataset.addSync === 'date' ? taskDateRead(syncEl.value) : taskTimeRead(syncEl.value);
+      }
       const input = event.target.closest('[data-action="toggle-slot"]');
       if (!input) return;
       toggleSlot(input);

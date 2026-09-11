@@ -3213,7 +3213,7 @@ svg {
 .task-add-ico { flex: 0 0 24px; display: inline-flex; color: var(--muted); }
 .task-add-ico.prio { color: var(--danger); }
 .task-add-label { flex: 0 0 auto; font-size: 14px; font-weight: 600; color: var(--text); }
-.task-add-value { flex: 1 1 auto; display: flex; justify-content: flex-end; }
+.task-add-value { flex: 1 1 auto; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .task-add-value input,
 .task-add-value select {
   border: 0;
@@ -3224,8 +3224,9 @@ svg {
   font-weight: 700;
   color: var(--text);
   text-align: right;
-  max-width: 72%;
+  max-width: 100%;
   min-width: 0;
+  flex: 0 1 auto;
   min-height: 44px;
   cursor: pointer;
 }
@@ -3237,6 +3238,12 @@ svg {
 .task-add-value input[type="date"]::-webkit-calendar-picker-indicator,
 .task-add-value input[type="time"]::-webkit-calendar-picker-indicator { opacity: 0; width: 0; margin: 0; }
 .task-add-value select { text-align: right; text-align-last: right; -webkit-appearance: none; appearance: none; padding-right: 2px; }
+.task-add-native-wrap { position: relative; display: inline-flex; align-items: center; }
+.task-add-native-wrap input { position: absolute; inset: 0; opacity: 0; width: 100%; min-width: 84px; cursor: pointer; }
+.task-add-read { font-size: 14px; font-weight: 700; color: var(--text); }
+.task-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; display: inline-block; align-self: center; }
+.task-dot.dot-red { background: var(--danger); }
+.task-dot.dot-ring { background: transparent; border: 2px solid var(--amber); }
 .task-add-value textarea {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -3256,8 +3263,15 @@ svg {
 .task-add-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
 .task-add-actions .primary-button,
 .task-add-actions .secondary-button { width: 100%; min-height: 52px; border-radius: 16px; font-size: 15px; }
+.task-add-actions .primary-button {
+  border: 0;
+  background: linear-gradient(135deg, #6a564a, #57443a);
+  color: #f7f1e6;
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, #57443a 70%, transparent);
+}
+.task-add-actions .primary-button:hover { filter: brightness(1.06); }
 .secondary-button {
-  border: 1px solid var(--line);
+  border: 0;
   background: var(--panel-soft);
   color: var(--text);
   font-weight: 800;
