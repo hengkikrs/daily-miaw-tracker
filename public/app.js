@@ -976,6 +976,176 @@
     `;
   }
 
+  /* ============ MODUL JADWAL (kalender + agenda harian) ============ */
+  const JADWAL_STORE_KEY = 'miaw-tracker.jadwal.v1';
+  const JADWAL_COLORS = {
+    kantor: '#35a7b0', sales: '#efc343', marketing: '#9c5fd1', konten: '#d96a6a',
+    keuangan: '#4c9f70', pribadi: '#e8a33d', belajar: '#8b6f47',
+  };
+  let jadwalMode = 'kalender';           // 'kalender' | 'daftar'
+  let jadwalSelIso = taskTodayIso();
+  let jadwalMonthOffset = 0;             // offset bulan dari bulan ini
+  let jadwalAdding = false;
+
+  function jadwalCatColor(cat) {
+    return JADWAL_COLORS[String(cat || '').toLowerCase()] || '#a9885f';
+  }
+
+  function loadJadwalEvents() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(JADWAL_STORE_KEY) || 'null');
+      if (Array.isArray(raw)) return raw;
+    } catch { /* seed ulang */ }
+    const seed = [
+      { id: 'j1', date: '2026-09-07', time: '19:30', title: 'Live shopping', category: 'Konten', kind: 'event' },
+      { id: 'j2', date: '2026-09-10', time: '09:00', title: 'Meeting tim', category: 'Kantor', kind: 'event' },
+      { id: 'j3', date: '2026-09-10', time: '11:00', title: 'Follow up pelanggan', category: 'Sales', kind: 'event' },
+      { id: 'j4', date: '2026-09-10', time: '19:00', title: 'Upload konten', category: 'Konten', kind: 'event' },
+      { id: 'j5', date: '2026-09-11', time: '08:00', title: 'Setoran harian', category: 'Keuangan', kind: 'event' },
+      { id: 'j6', date: '2026-09-11', time: '16:00', title: 'Rapat vendor', category: 'Pribadi', kind: 'event' },
+      { id: 'j7', date: '2026-09-16', time: '13:00', title: 'Kelas desain', category: 'Belajar', kind: 'event' },
+      { id: 'j8', date: '2026-09-25', time: '10:00', title: 'Kumpul keluarga', category: 'Pribadi', kind: 'event' },
+      { id: 'j9', date: '2026-09-27', time: '09:00', title: 'Bayar pajak', category: 'Keuangan', kind: 'event' },
+    ];
+    try { localStorage.setItem(JADWAL_STORE_KEY, JSON.stringify(seed)); } catch { /* ignore */ }
+    return seed;
+  }
+
+  function saveJadwalEvents(list) {
+    try { localStorage.setItem(JADWAL_STORE_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+  }
+
+  function jadwalItems(iso) {
+    const items = loadJadwalEvents()
+      .filter((e) => e.date === iso)
+      .map((e) => ({ time: e.time || '', title: e.title, sub: e.category || '', color: jadwalCatColor(e.category), kind: e.kind === 'task' ? 'task' : 'event', done: false }));
+    loadTasks().forEach((t) => {
+      if (t.date === iso) items.push({ time: t.time || '', title: t.title, sub: [t.project, t.tag].filter(Boolean).join(' · ') || 'Task', color: jadwalCatColor(t.tag || t.project), kind: 'task', done: !!t.done });
+    });
+    items.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    return items;
+  }
+
+  function jadwalMonthGrid() {
+    const now = new Date();
+    const view = new Date(now.getFullYear(), now.getMonth() + jadwalMonthOffset, 1);
+    const y = view.getFullYear();
+    const m = view.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // Senin = 0
+    const cells = [];
+    for (let i = 0; i < firstDow; i += 1) cells.push(null);
+    for (let d = 1; d <= days; d += 1) cells.push(`${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    return { y, m, cells };
+  }
+
+  function jadwalDayTitle(iso) {
+    const d = new Date(`${iso}T00:00:00`);
+    return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function jadwalRowHtml(it) {
+    const dot = it.kind === 'task'
+      ? `<span class="jadwal-dot ring" style="--jc:${it.color}"></span>`
+      : `<span class="jadwal-dot" style="background:${it.color}"></span>`;
+    return `<div class="jadwal-row${it.done ? ' done' : ''}">
+        <span class="jadwal-time">${escapeHtml(it.time || '—')}</span>
+        ${dot}
+        <span class="jadwal-info"><span class="jadwal-title">${escapeHtml(it.title)}</span><span class="jadwal-sub">${escapeHtml(it.sub)}</span></span>
+        <span class="jadwal-chev">›</span>
+      </div>`;
+  }
+
+  function renderJadwalView() {
+    const { y, m, cells } = jadwalMonthGrid();
+    const monthLabel = `${MONTHS[m]} ${y}`;
+    const seg = `<div class="jadwal-seg" role="tablist">
+        <button type="button" class="jadwal-seg-btn${jadwalMode === 'kalender' ? ' active' : ''}" data-jadwal-mode="kalender">Kalender</button>
+        <button type="button" class="jadwal-seg-btn${jadwalMode === 'daftar' ? ' active' : ''}" data-jadwal-mode="daftar">Daftar</button>
+      </div>`;
+
+    const addForm = jadwalAdding ? `
+      <form class="jadwal-add-card" id="jadwalAddForm">
+        <div class="jadwal-add-head"><span>Tambah Jadwal</span><button type="button" class="task-add-x" data-jadwal-cancel aria-label="Batal">×</button></div>
+        <input name="title" type="text" maxlength="80" placeholder="Judul jadwal…" autocomplete="off" required />
+        <div class="jadwal-add-grid">
+          <label><span>Tanggal</span><input name="date" type="date" value="${escapeHtml(jadwalSelIso)}" /></label>
+          <label><span>Jam</span><input name="time" type="time" value="09:00" /></label>
+          <label><span>Kategori</span><input name="category" type="text" maxlength="24" placeholder="Kantor" autocomplete="off" list="jadwalCats" /></label>
+          <label><span>Tipe</span><select name="kind"><option value="event">Event</option><option value="task">Task</option></select></label>
+        </div>
+        <datalist id="jadwalCats">${Object.keys(JADWAL_COLORS).map((c) => `<option value="${c}"></option>`).join('')}</datalist>
+        <button class="primary-button jadwal-add-save" type="submit">Simpan</button>
+      </form>` : '';
+
+    let body = '';
+    if (jadwalMode === 'kalender') {
+      const week = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      const grid = cells.map((iso) => {
+        if (!iso) return '<span class="jadwal-cell empty"></span>';
+        const items = jadwalItems(iso);
+        const dots = items.slice(0, 3).map((it) => (it.kind === 'task'
+          ? `<span class="jadwal-mdot ring" style="--jc:${it.color}"></span>`
+          : `<span class="jadwal-mdot" style="background:${it.color}"></span>`)).join('');
+        const sel = iso === jadwalSelIso ? ' sel' : '';
+        const today = iso === taskTodayIso() ? ' today' : '';
+        return `<button type="button" class="jadwal-cell${sel}${today}" data-jadwal-day="${iso}"><span>${Number(iso.slice(8))}</span><span class="jadwal-mdots">${dots}</span></button>`;
+      }).join('');
+      body = `
+        <div class="jadwal-card">
+          <div class="jadwal-month-head">
+            <span class="jadwal-month-label">${monthLabel}</span>
+            <span class="jadwal-month-nav">
+              <button type="button" class="jadwal-navbtn" data-jadwal-prev aria-label="Bulan sebelumnya">‹</button>
+              <button type="button" class="jadwal-navbtn" data-jadwal-next aria-label="Bulan berikutnya">›</button>
+            </span>
+          </div>
+          <div class="jadwal-week">${week.map((w) => `<span>${w}</span>`).join('')}</div>
+          <div class="jadwal-grid">${grid}</div>
+        </div>
+        <h3 class="jadwal-day-title">${jadwalDayTitle(jadwalSelIso)}</h3>
+        <div class="jadwal-card jadwal-list">
+          ${jadwalItems(jadwalSelIso).length ? jadwalItems(jadwalSelIso).map(jadwalRowHtml).join('') : '<p class="task-empty">Tidak ada jadwal pada hari ini.</p>'}
+        </div>`;
+    } else {
+      const today = taskTodayIso();
+      const isoSet = new Set();
+      loadJadwalEvents().forEach((e) => { if (e.date >= today) isoSet.add(e.date); });
+      loadTasks().forEach((t) => { if (t.date && t.date >= today) isoSet.add(t.date); });
+      const isos = [...isoSet].sort();
+      body = `<div class="jadwal-card jadwal-list">
+          ${isos.length ? isos.map((iso) => `
+            <div class="jadwal-group">${jadwalDayTitle(iso)}</div>
+            ${jadwalItems(iso).map(jadwalRowHtml).join('')}`).join('') : '<p class="task-empty">Belum ada jadwal mendatang.</p>'}
+        </div>`;
+    }
+
+    return `<div class="jadwal-page">
+        ${seg}
+        ${addForm}
+        ${body}
+        <button class="task-fab" type="button" data-jadwal-add aria-label="Tambah jadwal baru">+</button>
+      </div>`;
+  }
+
+  function handleJadwalAction(btn) {
+    if (btn.matches('[data-jadwal-mode]')) {
+      jadwalMode = btn.dataset.jadwalMode;
+      renderShell();
+      return true;
+    }
+    if (btn.matches('[data-jadwal-prev]')) { jadwalMonthOffset -= 1; renderShell(); return true; }
+    if (btn.matches('[data-jadwal-next]')) { jadwalMonthOffset += 1; renderShell(); return true; }
+    if (btn.matches('[data-jadwal-day]')) {
+      jadwalSelIso = btn.dataset.jadwalDay;
+      renderShell();
+      return true;
+    }
+    if (btn.matches('[data-jadwal-add]')) { jadwalAdding = true; renderShell(); setTimeout(() => document.querySelector('#jadwalAddForm [name=title]')?.focus(), 30); return true; }
+    if (btn.matches('[data-jadwal-cancel]')) { jadwalAdding = false; renderShell(); return true; }
+    return false;
+  }
+
   function renderShell() {
     if (!isLoggedIn()) {
       dom.content.innerHTML = '';
@@ -1042,6 +1212,13 @@
       }
       if (focusTaskId) setTimeout(tickFocusDisplay, 0);
       mountTaskSearch();
+      return;
+    }
+
+    if (activeView === 'jadwal') {
+      dom.pageTitle.textContent = 'Jadwal';
+      dom.pageSubtitle.textContent = 'Rencana waktu harian & mingguan';
+      dom.content.innerHTML = renderJadwalView();
       return;
     }
 
@@ -3002,6 +3179,9 @@
         return;
       }
 
+      const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel]');
+      if (jadwalBtn && handleJadwalAction(jadwalBtn)) return;
+
       const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus],[data-task-focus-pause],[data-task-add-close],[data-task-options],[data-task-add-again],[data-task-sub-add],[data-task-sub-del],[data-task-att-add],[data-task-att-del]');
       if (taskBtn && event.target.tagName !== 'INPUT' && event.target.tagName !== 'SELECT' && event.target.tagName !== 'TEXTAREA' && handleTaskAction(taskBtn)) return;
 
@@ -3097,6 +3277,21 @@
           logActivityLastTask('Task dibuat');
           renderShell();
         }
+        return;
+      }
+      if (event.target.id === 'jadwalAddForm') {
+        event.preventDefault();
+        const form = event.target;
+        const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
+        const title = val('title');
+        if (!title) return;
+        const items = loadJadwalEvents();
+        const date = val('date') || taskTodayIso();
+        items.push({ id: `j${Date.now()}`, title, date, time: val('time') || '09:00', category: val('category') || 'Pribadi', kind: val('kind') === 'task' ? 'task' : 'event' });
+        saveJadwalEvents(items);
+        jadwalSelIso = date;
+        jadwalAdding = false;
+        renderShell();
         return;
       }
       if (event.target.id === 'taskEditForm') {

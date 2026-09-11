@@ -3429,3 +3429,186 @@ svg {
   .task-composer { grid-template-columns: 2fr 1fr 1.4fr auto; align-items: center; }
   .task-composer-actions { grid-column: 1 / -1; }
 }
+
+/* ===== Modul Jadwal ===== */
+.jadwal-page { position: relative; padding-bottom: 90px; }
+.jadwal-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+.jadwal-seg-btn {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.jadwal-seg-btn:not(.active) { color: color-mix(in srgb, var(--muted) 78%, var(--text)); }
+.jadwal-seg-btn.active { background: #7d685c; color: #f7f1e8; box-shadow: 0 6px 14px rgba(109, 86, 72, 0.28); }
+:root[data-theme="dark"] .jadwal-seg-btn.active { background: #8a7263; color: #fff9f2; }
+.jadwal-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: 14px 12px;
+}
+.jadwal-month-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 10px;
+}
+.jadwal-month-label { font-size: 16.5px; font-weight: 800; letter-spacing: -0.01em; }
+.jadwal-month-nav { display: flex; gap: 6px; }
+.jadwal-navbtn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.jadwal-navbtn:active { transform: scale(0.93); }
+.jadwal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding-bottom: 2px;
+}
+.jadwal-week span {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 6px 0;
+}
+.jadwal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.jadwal-cell {
+  position: relative;
+  min-height: 46px;
+  border: 0;
+  background: transparent;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.jadwal-cell.empty { cursor: default; }
+.jadwal-cell > span:first-child { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; }
+.jadwal-cell.sel { background: transparent; color: var(--text); font-weight: 600; }
+.jadwal-cell.sel > span:first-child { background: #7d685c; color: #fff9f2; font-weight: 800; }
+:root[data-theme="dark"] .jadwal-cell.sel > span:first-child { background: #8a7263; }
+.jadwal-cell.today:not(.sel) > span:first-child { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #7d685c 55%, transparent); }
+.jadwal-mdots { display: flex; gap: 3px; justify-content: center; min-height: 5px; }
+.jadwal-mdot { width: 5px; height: 5px; border-radius: 50%; }
+.jadwal-mdot.ring { background: transparent; border: 1.5px solid var(--jc, #a9885f); width: 4px; height: 4px; }
+.jadwal-cell.sel .jadwal-mdots { opacity: 0; }
+.jadwal-day-title { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; padding: 16px 4px 10px; }
+.jadwal-list { padding: 6px 10px; }
+.jadwal-group {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  padding: 12px 6px 6px;
+}
+.jadwal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 6px;
+  cursor: default;
+}
+.jadwal-row + .jadwal-row { border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent); }
+.jadwal-time { font-size: 13px; font-weight: 800; color: var(--muted); min-width: 42px; font-variant-numeric: tabular-nums; }
+.jadwal-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.jadwal-dot.ring { background: transparent !important; border: 2px solid var(--jc, #a9885f); }
+.jadwal-info { flex: 1; min-width: 0; display: block; }
+.jadwal-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jadwal-row.done .jadwal-title { text-decoration: line-through; color: var(--muted); }
+.jadwal-sub { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jadwal-chev { color: var(--muted); font-size: 17px; flex: none; }
+.jadwal-add-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.jadwal-add-card > input {
+  width: 100%;
+  min-height: 46px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 0 14px;
+  margin-bottom: 10px;
+}
+.jadwal-add-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14.5px;
+  font-weight: 800;
+  padding: 0 2px 10px;
+}
+.jadwal-add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.jadwal-add-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.jadwal-add-grid input, .jadwal-add-grid select {
+  min-height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  background: var(--panel-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 12px;
+}
+:root[data-theme="dark"] .jadwal-add-grid input[type="date"], :root[data-theme="dark"] .jadwal-add-grid input[type="time"] { color-scheme: dark; }
+.jadwal-add-save { width: 100%; }
