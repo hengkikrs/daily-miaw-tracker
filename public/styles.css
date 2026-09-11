@@ -3300,6 +3300,34 @@ svg {
 .task-add-desk { flex-wrap: wrap; }
 .task-add-desk textarea { flex: 1 1 100%; margin-top: 4px; resize: none; }
 .task-add-opt-sep { height: 1px; background: var(--line); margin: 2px -16px; }
+.task-add-block { padding: 4px 2px 6px; }
+.task-add-block-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: 0.2px; margin: 6px 0 4px; }
+.task-add-block-head em { font-style: normal; font-weight: 700; color: var(--muted); }
+.task-add-block-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border-radius: 12px; background: var(--panel-soft); font-size: 13.5px; font-weight: 600; margin-bottom: 6px; }
+.task-add-block-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-add-inline { display: flex; gap: 8px; align-items: center; }
+.task-add-inline input { flex: 1 1 auto; min-width: 0; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 13.5px; color: var(--text); outline: none; }
+.task-add-inline input:focus { border-color: var(--muted); }
+.task-add-mini { flex: 0 0 auto; min-height: 40px; padding: 0 14px; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--brown, #57443a) 12%, var(--panel)); color: var(--text); font-weight: 800; font-size: 13px; cursor: pointer; }
+.task-add-mini:hover { background: color-mix(in srgb, var(--brown, #57443a) 20%, var(--panel)); }
+.task-add-x { flex: 0 0 auto; width: 26px; height: 26px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 16px; line-height: 1; cursor: pointer; }
+.task-add-x:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+.task-add-att-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.task-add-att-chips .task-chip.att { display: inline-flex; align-items: center; gap: 4px; }
+
+/* Kartu timer fokus pada Detail Task */
+.task-focus-timer-card { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.task-focus-timer { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; background: var(--panel-soft); border: 1px solid var(--line); }
+.task-focus-timer strong { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 20px; letter-spacing: 0.5px; color: var(--text); }
+.task-focus-state { font-size: 12.5px; font-weight: 800; color: var(--muted); }
+.task-focus-dotpulse { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); animation: focusPulse 1.4s ease-in-out infinite; }
+.task-focus-timer.paused .task-focus-dotpulse { background: var(--muted); animation: none; }
+.task-focus-timer.paused strong { opacity: 0.6; }
+@keyframes focusPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
+.task-focus-btns { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; }
+.task-focus-btns .primary-button, .task-focus-btns .secondary-button { width: 100%; border-radius: 18px; }
+.task-focus-btns .secondary-button { border: 1.5px solid color-mix(in srgb, var(--muted) 35%, var(--line)); }
+.task-actual-live { font-variant-numeric: tabular-nums; }
 .task-add-row .task-add-value input[type="date"]::-webkit-calendar-picker-indicator,
 .task-add-row .task-add-value input[type="time"]::-webkit-calendar-picker-indicator { opacity: 0; width: 0; margin: 0; }
 .task-add-row .task-add-value input::placeholder { color: var(--muted); font-weight: 600; }

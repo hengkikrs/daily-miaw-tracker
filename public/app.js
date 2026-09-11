@@ -1040,7 +1040,7 @@
         const q = dom.content.querySelector('#taskQuickInput');
         if (q) q.focus();
       }
-      if (focusStartedAt) setTimeout(tickFocusDisplay, 0);
+      if (focusTaskId) setTimeout(tickFocusDisplay, 0);
       mountTaskSearch();
       return;
     }
@@ -1087,8 +1087,9 @@
   let taskEditing = false;
   let taskPageAdding = false;
   let taskAddOptions = false;
-  let taskAddDraft = { time: '19:00', priority: 'high', project: 'Marketing Batu Bata', category: 'Marketing' };
-  let focusStartedAt = null;
+  const taskAddDefaults = () => ({ title: '', date: taskTodayIso(), time: '19:00', priority: 'high', project: 'Marketing Batu Bata', category: 'Marketing', notes: '', memo: '', deadline: '', reminder: '', tag: '', recurring: '', estimate: '', checklist: [], attachments: [] });
+  let taskAddDraft = taskAddDefaults();
+  let focusTaskId = null;
   let focusInterval = null;
 
   function taskSeed() {
@@ -1165,8 +1166,9 @@
   }
 
   function taskDeadlineLabel(t) {
-    if (!t.date) return '';
-    const d = new Date(`${t.date}T00:00:00`);
+    const iso = t.deadlineDate || t.date;
+    if (!iso) return '';
+    const d = new Date(`${iso}T00:00:00`);
     const label = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     return t.time ? `${label}&nbsp;·&nbsp;${escapeHtml(t.time)}` : label;
   }
@@ -1188,7 +1190,24 @@
   }
 
   function taskFocusElapsedMin(t) {
-    return t && t.focusAt ? Math.max(0, (Date.now() - t.focusAt) / 60000) : 0;
+    return t && t.focusAt ? focusElapsedMs(t) / 60000 : 0;
+  }
+
+  function focusElapsedMs(t) {
+    if (!t || !t.focusAt) return 0;
+    let ms = Date.now() - t.focusAt - (t.focusPauseAccum || 0);
+    if (t.focusPausedSince) ms -= Date.now() - t.focusPausedSince;
+    return Math.max(0, ms);
+  }
+
+  function focusSecondsLabel(ms) {
+    const total = Math.floor(ms / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const mm = `${m}`.padStart(2, '0');
+    const ss = `${s}`.padStart(2, '0');
+    return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
   }
 
   function logTaskActivity(t, text) {
@@ -1197,33 +1216,66 @@
     if (t.activity.length > 30) t.activity = t.activity.slice(-30);
   }
 
-  function startFocus(ts) {
-    if (focusStartedAt) return;
+  function focusTask() {
+    return focusTaskId ? loadTasks().find((x) => x.id === focusTaskId) : null;
+  }
+
+  function startFocus() {
+    if (focusTaskId) return;
     const t = loadTasks().find((x) => x.id === taskDetailId);
-    if (t) { t.actual = (t.actual || 0) + taskFocusElapsedMin(t); t.focusAt = ts; logTaskActivity(t, 'Sesi fokus dimulai.'); saveTasks(); }
-    focusStartedAt = ts;
-    if (!focusInterval) focusInterval = setInterval(tickFocusDisplay, 15000);
+    if (!t) return;
+    t.actual = (t.actual || 0) + taskFocusElapsedMin(t);
+    t.focusAt = Date.now();
+    t.focusPausedSince = null;
+    t.focusPauseAccum = 0;
+    logTaskActivity(t, 'Sesi fokus dimulai.');
+    saveTasks();
+    focusTaskId = t.id;
+    if (!focusInterval) focusInterval = setInterval(tickFocusDisplay, 1000);
+  }
+
+  function pauseFocus() {
+    const t = focusTask();
+    if (!t || !t.focusAt || t.focusPausedSince) return;
+    t.focusPausedSince = Date.now();
+    logTaskActivity(t, 'Fokus dijeda.');
+    saveTasks();
+  }
+
+  function resumeFocus() {
+    const t = focusTask();
+    if (!t || !t.focusPausedSince) return;
+    t.focusPauseAccum = (t.focusPauseAccum || 0) + (Date.now() - t.focusPausedSince);
+    t.focusPausedSince = null;
+    logTaskActivity(t, 'Fokus dilanjutkan.');
+    saveTasks();
   }
 
   function stopFocus() {
-    const t = loadTasks().find((x) => x.id === taskDetailId);
+    const t = focusTask();
     if (t) {
       t.actual = (t.actual || 0) + taskFocusElapsedMin(t);
       t.focusAt = null;
+      t.focusPausedSince = null;
+      t.focusPauseAccum = 0;
       logTaskActivity(t, 'Sesi fokus dihentikan.');
       saveTasks();
     }
-    focusStartedAt = null;
+    focusTaskId = null;
     if (focusInterval) { clearInterval(focusInterval); focusInterval = null; }
   }
 
   function tickFocusDisplay() {
-    if (!focusStartedAt) return;
-    const t = loadTasks().find((x) => x.id === taskDetailId);
-    if (!t) return;
-    const mins = (t.actual || 0) + taskFocusElapsedMin(t);
-    const live = taskMinutesLabel(mins);
-    document.querySelectorAll('[data-focus-live]').forEach((el) => { el.textContent = live; });
+    const t = focusTask();
+    if (!t || !t.focusAt) return;
+    const ms = focusElapsedMs(t);
+    const running = !t.focusPausedSince;
+    const txt = focusSecondsLabel(ms);
+    document.querySelectorAll('[data-focus-live]').forEach((el) => { el.textContent = txt; });
+    const pauseBtn = document.querySelector('[data-task-focus-pause]');
+    if (pauseBtn) pauseBtn.textContent = t.focusPausedSince ? 'Lanjut' : 'Jeda';
+    const line = document.querySelector('.task-focus-state');
+    if (line) line.textContent = running ? 'Sesi fokus berjalan' : 'Fokus dijeda';
   }
 
   function renderTaskDetail() {
@@ -1315,7 +1367,7 @@
           </div>
           <div class="task-info-cell">
             <span class="task-info-label">Aktual</span>
-            <span class="task-info-value">${focusStartedAt ? '<span class="task-actual-live" data-focus-live></span>' : taskMinutesLabel(t.actual)}</span>
+            <span class="task-info-value">${focusTaskId === t.id && t.focusAt ? '<span class="task-actual-live" data-focus-live></span>' : taskMinutesLabel(t.actual)}</span>
           </div>
         </div>
       </div>
@@ -1343,8 +1395,16 @@
         </div>
       </section>
       <div class="task-detail-actions">
-        ${t.done ? `<button class="primary-button" type="button" data-task-toggle="${t.id}">Tandai Belum Selesai</button>` : `<button class="primary-button task-focus-btn" type="button" data-task-focus="${t.id}">${focusStartedAt ? 'Hentikan Fokus' : 'Mulai Fokus'}</button>
-        ${focusStartedAt ? '<p class="task-focus-live">Sesi fokus berjalan — <span data-focus-live></span></p>' : ''}`}
+        ${t.done ? `<button class="primary-button" type="button" data-task-toggle="${t.id}">Tandai Belum Selesai</button>`
+      : focusTaskId === t.id && t.focusAt ? `
+        <div class="task-focus-timer-card">
+          <div class="task-focus-timer ${t.focusPausedSince ? 'paused' : ''}"><span class="task-focus-dotpulse"></span><span class="task-focus-state">${t.focusPausedSince ? 'Fokus dijeda' : 'Sesi fokus berjalan'}</span><strong data-focus-live>${focusSecondsLabel(focusElapsedMs(t))}</strong></div>
+          <div class="task-focus-btns">
+            <button class="secondary-button" type="button" data-task-focus-pause>${t.focusPausedSince ? 'Lanjut' : 'Jeda'}</button>
+            <button class="primary-button" type="button" data-task-focus="${t.id}">Stop</button>
+          </div>
+        </div>`
+      : `<button class="primary-button task-focus-btn" type="button" data-task-focus="${t.id}">Mulai Fokus</button>`}
       </div>
       <section class="task-card task-detail-sec">
         <h3>Activity</h3>
@@ -1465,33 +1525,64 @@
         <div class="task-add-opt-sep"></div>
         <label class="task-add-row task-add-desk">
           <span class="task-add-label">Deskripsi</span>
-          <textarea name="opt-notes" rows="2" maxlength="400" placeholder="Jelaskan task ini… (opsional)"></textarea>
+          <textarea name="opt-notes" rows="2" maxlength="400" placeholder="Jelaskan task ini… (opsional)">${escapeHtml(d.notes)}</textarea>
+        </label>
+        <label class="task-add-row task-add-desk">
+          <span class="task-add-label">Catatan</span>
+          <textarea name="opt-memo" rows="2" maxlength="400" placeholder="Catatan singkat (opsional)">${escapeHtml(d.memo)}</textarea>
         </label>
         <div class="task-add-row">
           <span class="task-add-label">Deadline</span>
-          <span class="task-add-value"><input name="opt-deadline" type="date" value="${todayIso}" /></span>
+          <span class="task-add-value"><input name="opt-deadline" type="date" value="${escapeHtml(d.deadline)}" /></span>
+        </div>
+        <div class="task-add-row">
+          <span class="task-add-label">Estimasi</span>
+          <span class="task-add-value"><select name="opt-estimate">
+            <option value="">Tanpa estimasi</option>
+            <option value="30" ${d.estimate === '30' ? 'selected' : ''}>30 menit</option>
+            <option value="60" ${d.estimate === '60' ? 'selected' : ''}>1 jam</option>
+            <option value="90" ${d.estimate === '90' ? 'selected' : ''}>1 jam 30 mnt</option>
+            <option value="120" ${d.estimate === '120' ? 'selected' : ''}>2 jam</option>
+            <option value="240" ${d.estimate === '240' ? 'selected' : ''}>4 jam</option>
+          </select></span>
         </div>
         <div class="task-add-row">
           <span class="task-add-label">Reminder</span>
           <span class="task-add-value"><select name="opt-reminder">
             <option value="">Tidak ada</option>
-            <option value="30">30 menit sebelum</option>
-            <option value="60">1 jam sebelum</option>
-            <option value="1440">1 hari sebelum</option>
+            <option value="30" ${d.reminder === '30' ? 'selected' : ''}>30 menit sebelum</option>
+            <option value="60" ${d.reminder === '60' ? 'selected' : ''}>1 jam sebelum</option>
+            <option value="1440" ${d.reminder === '1440' ? 'selected' : ''}>1 hari sebelum</option>
           </select></span>
         </div>
         <div class="task-add-row">
           <span class="task-add-label">Tag</span>
-          <span class="task-add-value"><input name="opt-tag" type="text" maxlength="24" placeholder="mis. promosi" /></span>
+          <span class="task-add-value"><input name="opt-tag" type="text" maxlength="24" placeholder="mis. promosi" value="${escapeHtml(d.tag)}" /></span>
         </div>
         <div class="task-add-row">
           <span class="task-add-label">Recurring</span>
           <span class="task-add-value"><select name="opt-recurring">
             <option value="">Tidak berulang</option>
-            <option value="daily">Harian</option>
-            <option value="weekly">Mingguan</option>
-            <option value="monthly">Bulanan</option>
+            <option value="daily" ${d.recurring === 'daily' ? 'selected' : ''}>Harian</option>
+            <option value="weekly" ${d.recurring === 'weekly' ? 'selected' : ''}>Mingguan</option>
+            <option value="monthly" ${d.recurring === 'monthly' ? 'selected' : ''}>Bulanan</option>
           </select></span>
+        </div>
+        <div class="task-add-block">
+          <div class="task-add-block-head"><span>Checklist Subtask</span>${d.checklist.length ? `<em>${d.checklist.length} item</em>` : ''}</div>
+          ${d.checklist.map((c, i) => `<div class="task-add-block-row"><span>${escapeHtml(c.text)}</span><button type="button" class="task-add-x" data-task-sub-del="${i}" aria-label="Hapus subtask">×</button></div>`).join('')}
+          <div class="task-add-inline">
+            <input name="opt-sub-new" type="text" maxlength="60" placeholder="Tambah subtask…" autocomplete="off" />
+            <button type="button" class="task-add-mini" data-task-sub-add>Tambah</button>
+          </div>
+        </div>
+        <div class="task-add-block">
+          <div class="task-add-block-head"><span>Attachment</span></div>
+          ${d.attachments.length ? `<div class="task-add-att-chips">${d.attachments.map((a, i) => `<span class="task-chip att">📎 ${escapeHtml(a.text || '')}<button type="button" class="task-add-x" data-task-att-del="${i}" aria-label="Hapus lampiran">×</button></span>`).join('')}</div>` : '<p class="task-empty">Belum ada lampiran.</p>'}
+          <div class="task-add-inline">
+            <input name="opt-att-new" type="text" maxlength="60" placeholder="Nama file / link…" autocomplete="off" />
+            <button type="button" class="task-add-mini" data-task-att-add>Tambah</button>
+          </div>
         </div>` : '';
     return `
     <section class="task-page task-add-page">
@@ -1501,11 +1592,11 @@
       </div>
       <form class="task-add-form" id="taskAddForm">
         <div class="task-card task-add-title-card">
-          <input id="taskAddTitle" name="title" type="text" maxlength="120" placeholder="Apa yang ingin dikerjakan?" autocomplete="off" />
+          <input id="taskAddTitle" name="title" type="text" maxlength="120" placeholder="Apa yang ingin dikerjakan?" autocomplete="off" value="${escapeHtml(d.title)}" />
           <div class="task-add-hint">Contoh: Buat konten promosi batu bata</div>
         </div>
         <div class="task-card task-add-rows">
-          ${row(cal, 'Tanggal', `<span class="task-add-native-wrap"><span class="task-add-read">${taskDateRead(todayIso)}</span><input name="date" type="date" value="${todayIso}" data-add-sync="date" /></span>`)}
+          ${row(cal, 'Tanggal', `<span class="task-add-native-wrap"><span class="task-add-read">${taskDateRead(d.date)}</span><input name="date" type="date" value="${escapeHtml(d.date)}" data-add-sync="date" /></span>`)}
           ${row(clock, 'Jam', `<span class="task-add-native-wrap"><span class="task-add-read">${taskTimeRead(d.time)}</span><input name="time" type="time" value="${d.time}" data-add-sync="time" /></span>`)}
           ${row(`<span class="task-add-ico prio">${prioIco}</span>`, 'Prioritas', `<span class="task-dot dot-red"></span><select name="priority"><option value="high" ${d.priority === 'high' ? 'selected' : ''}>High</option><option value="med" ${d.priority === 'med' ? 'selected' : ''}>Medium</option><option value="low" ${d.priority === 'low' ? 'selected' : ''}>Low</option></select>`)}
           ${row(board, 'Project', `<span class="task-dot dot-red"></span><input name="project" type="text" maxlength="40" value="${escapeHtml(d.project)}" list="taskAddProjects" />`)}
@@ -1527,35 +1618,61 @@
   }
 
   function taskAddCollect(form) {
-    const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
-    return {
+    const el = (n) => form.querySelector(`[name=${n}]`);
+    const val = (n) => el(n)?.value.trim() || '';
+    const data = {
       title: val('title'),
       date: val('date') || taskTodayIso(),
       time: val('time'),
-      priority: form.querySelector('[name=priority]')?.value || 'low',
+      priority: el('priority')?.value || 'low',
       project: val('project'),
-      tag: val('opt-tag'),
-      notes: val('opt-notes'),
-      reminder: val('opt-reminder'),
-      recurring: val('opt-recurring'),
-      deadline: val('opt-deadline'),
+      category: val('category'),
     };
+    // Field opsional hanya ikut terkumpul saat ada di DOM (section terbuka);
+    // kalau tidak ada, jangan timpa draft — cegah reset saat collapse.
+    if (el('opt-tag')) data.tag = val('opt-tag');
+    if (el('opt-notes')) data.notes = val('opt-notes');
+    if (el('opt-memo')) data.memo = val('opt-memo');
+    if (el('opt-reminder')) data.reminder = val('opt-reminder');
+    if (el('opt-recurring')) data.recurring = val('opt-recurring');
+    if (el('opt-deadline')) data.deadline = val('opt-deadline');
+    if (el('opt-estimate')) data.estimate = el('opt-estimate').value.trim();
+    return data;
+  }
+
+  // Simpan seluruh nilai form ke draft supaya tidak hilang saat form dirender ulang
+  function taskAddSyncDraft(form) {
+    if (!form) return;
+    Object.entries(taskAddCollect(form)).forEach(([k, v]) => { taskAddDraft[k] = v; });
+    taskAddDraft.checklist.forEach((c) => { if (c._live) c.text = c._live.value.trim() || c.text; });
+    taskAddDraft.attachments.forEach((a) => { if (a._live) a.text = String(a._live.value).trim() || a.text; });
+    taskAddDraft.checklist = taskAddDraft.checklist.filter((c) => c.text);
+    taskAddDraft.attachments = taskAddDraft.attachments.filter((a) => a.text);
   }
 
   function submitTaskAdd(form, again) {
-    const data = taskAddCollect(form);
+    taskAddSyncDraft(form);
+    const data = taskAddDraft;
     if (!data.title) {
       const el = form.querySelector('#taskAddTitle');
       el.focus();
       return false;
     }
-    taskAddDraft = { time: data.time || '19:00', priority: data.priority, project: data.project || 'Marketing Batu Bata', category: val2(form, 'category') };
+    const checklist = taskAddDraft.checklist.map((c, i) => ({ id: `s${Date.now()}${i}`, text: c.text, done: false }));
+    const attachments = taskAddDraft.attachments.map((a) => a.text);
     loadTasks().push({
-      id: `t${Date.now()}`, title: data.title, project: data.project, tag: data.tag || val2(form, 'category') || data.category, time: data.time, priority: data.priority, date: data.date, done: false,
+      id: `t${Date.now()}`, title: data.title, project: data.project, tag: data.tag || data.category, time: data.time, priority: data.priority, date: data.date, done: false,
       notes: data.notes || undefined,
-      memo: data.reminder ? `Reminder: ${data.reminder === '30' ? '30 mnt' : data.reminder === '60' ? '1 jam' : '1 hari'} sebelum` : undefined,
+      memo: data.memo || (data.reminder ? `Reminder: ${data.reminder === '30' ? '30 mnt' : data.reminder === '60' ? '1 jam' : '1 hari'} sebelum deadline` : undefined),
+      estimate: data.estimate ? Number(data.estimate) : undefined,
+      deadlineDate: data.deadline || undefined,
+      recurring: data.recurring || undefined,
+      checklist: checklist.length ? checklist : undefined,
+      attachments: attachments.length ? attachments : undefined,
     });
     saveTasks();
+    const keep = { time: data.time || '19:00', priority: data.priority, project: data.project || 'Marketing Batu Bata', category: data.category || 'Marketing', date: data.date };
+    taskAddDraft = Object.assign(taskAddDefaults(), again ? keep : {});
     return true;
   }
 
@@ -1600,7 +1717,40 @@
       return true;
     }
     if (actionButton.matches('[data-task-options]')) {
+      taskAddSyncDraft(document.querySelector('#taskAddForm'));
       taskAddOptions = !taskAddOptions;
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-sub-add]')) {
+      const form = actionButton.closest('#taskAddForm');
+      taskAddSyncDraft(form);
+      const el = form.querySelector('[name=opt-sub-new]');
+      const v = el ? el.value.trim() : '';
+      if (v) { taskAddDraft.checklist.push({ text: v }); renderShell(); setTimeout(() => document.querySelector('[name=opt-sub-new]')?.focus(), 30); }
+      else { el?.focus(); }
+      return true;
+    }
+    if (actionButton.matches('[data-task-sub-del]')) {
+      const form = actionButton.closest('#taskAddForm');
+      taskAddSyncDraft(form);
+      taskAddDraft.checklist.splice(Number(actionButton.dataset.taskSubDel), 1);
+      renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-att-add]')) {
+      const form = actionButton.closest('#taskAddForm');
+      taskAddSyncDraft(form);
+      const el = form.querySelector('[name=opt-att-new]');
+      const v = el ? el.value.trim() : '';
+      if (v) { taskAddDraft.attachments.push({ text: v }); renderShell(); setTimeout(() => document.querySelector('[name=opt-att-new]')?.focus(), 30); }
+      else { el?.focus(); }
+      return true;
+    }
+    if (actionButton.matches('[data-task-att-del]')) {
+      const form = actionButton.closest('#taskAddForm');
+      taskAddSyncDraft(form);
+      taskAddDraft.attachments.splice(Number(actionButton.dataset.taskAttDel), 1);
       renderShell();
       return true;
     }
@@ -1641,8 +1791,15 @@
       return true;
     }
     if (actionButton.matches('[data-task-focus]')) {
-      if (focusStartedAt) stopFocus(); else startFocus(Date.now());
+      if (focusTaskId) stopFocus(); else startFocus();
       renderShell();
+      return true;
+    }
+    if (actionButton.matches('[data-task-focus-pause]')) {
+      const t = focusTask();
+      if (t) { if (t.focusPausedSince) resumeFocus(); else pauseFocus(); }
+      renderShell();
+      setTimeout(tickFocusDisplay, 0);
       return true;
     }
     if (actionButton.matches('[data-task-filter]')) {
@@ -2845,7 +3002,7 @@
         return;
       }
 
-      const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus],[data-task-add-close],[data-task-options],[data-task-add-again]');
+      const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus],[data-task-focus-pause],[data-task-add-close],[data-task-options],[data-task-add-again],[data-task-sub-add],[data-task-sub-del],[data-task-att-add],[data-task-att-del]');
       if (taskBtn && event.target.tagName !== 'INPUT' && event.target.tagName !== 'SELECT' && event.target.tagName !== 'TEXTAREA' && handleTaskAction(taskBtn)) return;
 
       const viewButton = event.target.closest('[data-view]');
@@ -2983,8 +3140,8 @@
     {
       const running = loadTasks().find((x) => x.focusAt);
       if (running) {
-        focusStartedAt = running.focusAt;
-        if (!focusInterval) focusInterval = setInterval(tickFocusDisplay, 15000);
+        focusTaskId = running.id;
+        if (!focusInterval) focusInterval = setInterval(tickFocusDisplay, 1000);
       }
     }
 
