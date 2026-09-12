@@ -465,18 +465,79 @@
     return Math.max(0, Math.ceil((authOtpResendAt - Date.now()) / 1000));
   }
 
-  /* --- OAuth Google (implicit flow, tanpa OTP) --- */
-  function startGoogleLogin() {
+  /* --- OAuth Google (PKCE flow, tanpa OTP) --- */
+  const OAUTH_VERIFIER_KEY = 'miaw-tracker.oauth-verifier.v1';
+
+  function noteRandomB64url(len) {
+    const bytes = new Uint8Array(len);
+    crypto.getRandomValues(bytes);
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async function pkceChallenge(verifier) {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+    return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async function startGoogleLogin() {
     if (!remoteEnabled) {
       showToast('Konfigurasi Supabase belum tersedia.');
       return;
     }
     authIsBusy = true;
     renderAuthScreen();
-    const redirectTo = `${location.origin}${location.pathname}`;
-    const url = `${supabaseConfig.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
-    setTimeout(() => { location.assign(url); }, 50);
+    try {
+      const verifier = noteRandomB64url(48);
+      const challenge = await pkceChallenge(verifier);
+      sessionStorage.setItem(OAUTH_VERIFIER_KEY, verifier);
+      const redirectTo = `${location.origin}${location.pathname}`;
+      const url = `${supabaseConfig.url}/auth/v1/authorize?provider=google&flow_type=pkce&code_challenge_method=S256&code_challenge=${challenge}&redirect_to=${encodeURIComponent(redirectTo)}`;
+      location.assign(url);
+    } catch (error) {
+      console.warn(error);
+      authIsBusy = false;
+      renderAuthScreen();
+      showToast('Browser tidak mendukung login Google. Pakai email & password ya.');
+    }
   }
+
+  async function consumeOAuthCallback() {
+    // 1) Implicit-style: sesi di URL hash (fallback)
+    if (consumeOAuthHash()) return true;
+    // 2) PKCE: ?code=...&state=... di query -> tukar dengan sesi
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code');
+    if (params.get('error')) {
+      const desc = params.get('error_description') || params.get('error');
+      history.replaceState(null, '', location.pathname);
+      authIsBusy = false;
+      showToast(`Login Google dibatalkan: ${desc}`);
+      return false;
+    }
+    if (!code) return false;
+    const verifier = sessionStorage.getItem(OAUTH_VERIFIER_KEY) || '';
+    history.replaceState(null, '', location.pathname);
+    if (!verifier) {
+      showToast('Sesi login Google kedaluwarsa. Coba masuk lagi.');
+      return false;
+    }
+    try {
+      const session = await authFetch('/auth/v1/token?grant_type=pkce', {
+        method: 'POST',
+        body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+      });
+      sessionStorage.removeItem(OAUTH_VERIFIER_KEY);
+      completeLogin(session);
+      return true;
+    } catch (error) {
+      console.warn(error);
+      sessionStorage.removeItem(OAUTH_VERIFIER_KEY);
+      authIsBusy = false;
+      showToast('Gagal menukar kode Google. Coba lagi.');
+      return false;
+    }
+  }
+
 
   function consumeOAuthHash() {
     const hash = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
@@ -4881,7 +4942,7 @@
 
   async function init() {
     initTheme();
-    consumeOAuthHash();
+    await consumeOAuthCallback();
     if (authSession) await getAccessToken();
     ensureYear(activeYear);
     saveState();
