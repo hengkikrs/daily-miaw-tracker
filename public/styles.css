@@ -4298,3 +4298,82 @@ svg {
   .tx-row-act { opacity: 1; }
   .tx-cal-sum { width: 100%; }
 }
+
+/* ============ BUDGET (halaman finansial) ============ */
+.bud-page { display: grid; gap: 16px; }
+.bud-page .btn { min-height: 42px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); padding: 0 18px; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.bud-page .btn.primary { background: #16130F; color: #FAF6EF; border-color: #16130F; }
+.bud-page .btn.danger { color: #c2402f; border-color: rgba(194,64,47,.35); }
+.bud-page .btn.tiny { min-height: 34px; padding: 0 12px; font-size: 13px; border-radius: 10px; }
+.bud-hero { padding: 20px; display: grid; gap: 14px; }
+.bud-period { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.bud-period b { font-size: 17px; letter-spacing: .2px; }
+.bud-nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.bud-nums > div { background: var(--panel-soft, #F4EEE2); border-radius: 14px; padding: 12px 14px; display: grid; gap: 4px; }
+.bud-nums span { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.bud-nums b { font-size: 16.5px; font-variant-numeric: tabular-nums; }
+.bud-nums .coral, .coral { color: #c2402f; }
+.bud-nums .green, .green { color: #2e7d5b; }
+.bud-nums .amber, .amber { color: #b26a1f; }
+.bud-bar-wrap { display: grid; gap: 6px; }
+.bud-bar-wrap em { font-style: normal; font-size: 12.5px; color: var(--muted); }
+.bud-bar { height: 10px; border-radius: 999px; background: rgba(106,86,74,.14); overflow: hidden; }
+.bud-bar-lg { height: 14px; }
+.bud-bar span { display: block; height: 100%; border-radius: 999px; transition: width .45s ease; }
+.bud-pb-ok { background: linear-gradient(90deg, #67b98c, #2e7d5b); }
+.bud-pb-warn { background: linear-gradient(90deg, #eecb72, #d99a2b); }
+.bud-pb-over { background: linear-gradient(90deg, #ef9184, #c2402f); }
+.bud-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.bud-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.bud-tab { border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.bud-tab.on { background: #16130F; border-color: #16130F; color: #FAF6EF; }
+.bud-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.bud-card { text-align: left; padding: 18px; display: grid; gap: 12px; cursor: pointer; border: 1px solid transparent; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.bud-card:hover { transform: translateY(-2px); border-color: var(--line); }
+.bud-card.over { border-left: 4px solid #c2402f; }
+.bud-card.warn { border-left: 4px solid #d99a2b; }
+.bud-card-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.bud-ic { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 12px; background: rgba(106,86,74,.1); font-size: 19px; }
+.bud-ic.sm { width: 30px; height: 30px; font-size: 14px; border-radius: 9px; }
+.bud-ic.lg { width: 52px; height: 52px; font-size: 25px; border-radius: 15px; }
+.bud-card-name { flex: 1; min-width: 0; display: grid; }
+.bud-card-name b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bud-card-name small { color: var(--muted); font-size: 12px; font-weight: 600; }
+.bud-pill { flex: none; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; letter-spacing: .2px; }
+.bud-pill.ok { background: rgba(46,125,91,.12); color: #2e7d5b; }
+.bud-pill.warn { background: rgba(217,154,43,.15); color: #9a6a14; }
+.bud-pill.over { background: rgba(194,64,47,.12); color: #c2402f; }
+.bud-card-nums { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.bud-card-nums b { display: block; font-size: 13.5px; color: var(--text); font-variant-numeric: tabular-nums; }
+.bud-card-foot { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--muted); }
+.bud-card-foot .muted { color: var(--muted); }
+.bud-empty { padding: 36px 22px; text-align: center; display: grid; gap: 10px; justify-items: center; }
+.bud-empty-ic { font-size: 38px; }
+.bud-empty h3 { margin: 0; font-size: 17px; }
+.bud-empty p { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 380px; }
+.bud-empty div { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
+.bud-form { padding: 20px; display: grid; gap: 14px; }
+.bud-form h3 { margin: 0; font-size: 16px; }
+.bud-form h3 small { font-weight: 600; color: var(--muted); font-size: 12px; }
+.bud-field-wide { grid-column: 1 / -1; }
+.bud-recent { padding: 18px 20px; display: grid; gap: 10px; }
+.bud-recent h3, .bud-det-tx h3 { margin: 0; font-size: 15.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bud-recent h3 small, .bud-det-tx h3 small { font-weight: 600; color: var(--muted); font-size: 12px; }
+.bud-rtx { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-top: 1px solid var(--line); }
+.bud-rtx:first-of-type { border-top: 0; }
+.bud-rtx div { flex: 1; min-width: 0; display: grid; }
+.bud-rtx b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bud-rtx small { color: var(--muted); font-size: 12px; }
+.bud-rtx > span:last-child { font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; }
+.bud-recent .btn { justify-self: start; margin-top: 4px; }
+.bud-back { justify-self: start; }
+.bud-det-top { display: flex; align-items: center; gap: 14px; }
+.bud-det-top h2 { margin: 0; font-size: 19px; }
+.bud-det-top small { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; margin-top: 3px; flex-wrap: wrap; }
+.bud-det-note { margin: 0; font-size: 13.5px; color: var(--muted); background: var(--panel-soft, #F4EEE2); border-radius: 12px; padding: 10px 14px; }
+.bud-det-tx { padding: 18px 20px; display: grid; gap: 8px; }
+.bud-det-tx p.muted { font-size: 13.5px; }
+@media (max-width: 900px) {
+  .bud-grid { grid-template-columns: 1fr; }
+  .bud-nums { grid-template-columns: 1fr 1fr; }
+}
