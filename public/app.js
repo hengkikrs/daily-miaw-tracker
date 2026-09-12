@@ -147,6 +147,82 @@
   };
   const remoteEnabled = Boolean(supabaseConfig.url && supabaseConfig.key && supabaseConfig.table);
   const runtimeYear = new Date().getFullYear();
+  // Sesi dimuat lebih dulu supaya storage bisa di-scope per akun
+  let authSession = loadAuthSession();
+
+  // Semua kunci data pengguna diberi suffix id user => tiap akun punya datanya sendiri
+  function scopedKey(key) {
+    return authSession?.user?.id ? `${key}:${authSession.user.id}` : key;
+  }
+
+  const DATA_STORE_KEYS = ['miaw-tracker.state.v1', 'miaw-tracker.jadwal.v1', 'miaw-tracker.tasks.v1', 'miaw-tracker.goals.v1', 'proj-tracker.projects.v1', 'miaw-tracker.notes.v1'];
+
+  // Ganti lingkup storage ke user yang baru login: reload data milik akun ini (dummy baru otomatis di-seed)
+  function applyUserScope() {
+    state = loadState();
+    activeYear = Number(state.selectedYear) || runtimeYear;
+    activeView = state.selectedView || 'dashboard';
+    activeMonth = Number.isInteger(state.selectedMonth) ? state.selectedMonth : new Date().getMonth();
+    openNavGroups = new Set(state.openNavGroups || (NAV_GROUP_OF[activeView] ? [NAV_GROUP_OF[activeView]] : []));
+    mobileDailyExpanded = false;
+    taskFilter = 'today';
+    taskDetailId = null;
+    taskAdding = false;
+    taskPageAdding = false;
+    taskAddOptions = false;
+    taskAddDraft = taskAddDefaults();
+    focusTaskId = null;
+    goalsFilter = 'all';
+    goalsPage = 'list';
+    goalsDetailId = null;
+    goalsMonthOffset = 0;
+    goalsAddCat = 'Karier';
+    goalsCalSel = null;
+    projFilter = 'all';
+    projSearch = '';
+    projPage = 'list';
+    projDetailId = null;
+    projTab = 'overview';
+    projTaskFilter = 'all';
+    projMenuOpen = false;
+    projFormId = null;
+    projTaskAdding = false;
+    jadwalMode = 'kalender';
+    jadwalSelIso = taskTodayIso();
+    jadwalMonthOffset = 0;
+    jadwalAdding = false;
+    notePage = 'list';
+    noteId = null;
+    noteTab = 'Semua';
+    noteSearch = '';
+    noteSort = 'updated';
+    noteTagFilter = null;
+    noteMenuId = null;
+    noteDetailMenu = false;
+    ensureYear(activeYear);
+    saveState();
+  }
+
+  function removeUserDataFor(uid) {
+    if (!uid) return;
+    DATA_STORE_KEYS.forEach((k) => localStorage.removeItem(`${k}:${uid}`));
+  }
+
+  // Satu kali: data lama (kunci tanpa suffix) diadopsi oleh akun yang sedang login pertama kali,
+  // supaya pemilik data lama tidak kehilangan catatan sementara akun baru tetap dapat dummy sendiri.
+  function migrateLegacyStores() {
+    const uid = authSession?.user?.id;
+    if (!uid) return;
+    DATA_STORE_KEYS.forEach((k) => {
+      const legacy = localStorage.getItem(k);
+      if (legacy !== null && localStorage.getItem(`${k}:${uid}`) === null) {
+        localStorage.setItem(`${k}:${uid}`, legacy);
+        localStorage.removeItem(k);
+      }
+    });
+  }
+  migrateLegacyStores();
+
   let state = loadState();
   let activeYear = Number(state.selectedYear) || runtimeYear;
   let activeView = state.selectedView || 'dashboard';
@@ -177,7 +253,6 @@
   let remoteSaveInFlight = false;
   let remoteSaveQueued = false;
   let remoteSaveRevision = 0;
-  let authSession = loadAuthSession();
   let authMode = 'login';
   let authOtpEmail = '';
   let authPendingName = '';
@@ -354,7 +429,7 @@
 
   function loadState() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      const parsed = JSON.parse(localStorage.getItem(scopedKey(STORAGE_KEY)));
       if (parsed && parsed.schemaVersion === SCHEMA_VERSION && parsed.years) {
         return parsed;
       }
@@ -370,7 +445,7 @@
     state.selectedView = activeView;
     state.selectedMonth = activeMonth;
     state.openNavGroups = [...openNavGroups];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(scopedKey(STORAGE_KEY), JSON.stringify(state));
     queueRemoteSave();
   }
 
@@ -459,6 +534,8 @@
     clearInterval(authCooldownTimer);
     authIsBusy = false;
     remoteHydrated = false;
+    // Pindahkan lingkup storage ke data milik akun ini (terisolasi per user)
+    applyUserScope();
   }
 
   function otpRemainingSeconds() {
@@ -489,7 +566,8 @@
     try {
       const verifier = noteRandomB64url(48);
       const challenge = await pkceChallenge(verifier);
-      sessionStorage.setItem(OAUTH_VERIFIER_KEY, verifier);
+      // localStorage (bukan sessionStorage): Google sering buka tab baru di mobile
+      localStorage.setItem(OAUTH_VERIFIER_KEY, verifier);
       const redirectTo = `${location.origin}${location.pathname}`;
       const url = `${supabaseConfig.url}/auth/v1/authorize?provider=google&flow_type=pkce&code_challenge_method=S256&code_challenge=${challenge}&redirect_to=${encodeURIComponent(redirectTo)}`;
       location.assign(url);
@@ -515,11 +593,12 @@
       return false;
     }
     if (!code) return false;
-    const verifier = sessionStorage.getItem(OAUTH_VERIFIER_KEY) || '';
+    let verifier = localStorage.getItem(OAUTH_VERIFIER_KEY) || sessionStorage.getItem(OAUTH_VERIFIER_KEY) || '';
     history.replaceState(null, '', location.pathname);
     if (!verifier) {
-      showToast('Sesi login Google kedaluwarsa. Coba masuk lagi.');
-      return false;
+      // Verifier hilang (tab ditutup paksa dsb): restart otomatis alur Google
+      startGoogleLogin();
+      return true;
     }
     try {
       const session = await authFetch('/auth/v1/token?grant_type=pkce', {
@@ -527,11 +606,13 @@
         body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
       });
       sessionStorage.removeItem(OAUTH_VERIFIER_KEY);
+      localStorage.removeItem(OAUTH_VERIFIER_KEY);
       completeLogin(session);
       return true;
     } catch (error) {
       console.warn(error);
       sessionStorage.removeItem(OAUTH_VERIFIER_KEY);
+      localStorage.removeItem(OAUTH_VERIFIER_KEY);
       authIsBusy = false;
       showToast('Gagal menukar kode Google. Coba lagi.');
       return false;
@@ -687,7 +768,7 @@
         activeView = state.selectedView || 'dashboard';
         activeMonth = Number.isInteger(state.selectedMonth) ? state.selectedMonth : new Date().getMonth();
         openNavGroups = new Set(state.openNavGroups || (NAV_GROUP_OF[activeView] ? [NAV_GROUP_OF[activeView]] : []));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(scopedKey(STORAGE_KEY), JSON.stringify(state));
         ensureYear(activeYear);
         renderShell();
         isApplyingRemoteState = false;
@@ -1112,7 +1193,7 @@
 
   function loadJadwalEvents() {
     try {
-      const raw = JSON.parse(localStorage.getItem(JADWAL_STORE_KEY) || 'null');
+      const raw = JSON.parse(localStorage.getItem(scopedKey(JADWAL_STORE_KEY)) || 'null');
       if (Array.isArray(raw)) return raw;
     } catch { /* seed ulang */ }
     const seed = [
@@ -1126,12 +1207,12 @@
       { id: 'j8', date: '2026-09-25', time: '10:00', title: 'Kumpul keluarga', category: 'Pribadi', kind: 'event' },
       { id: 'j9', date: '2026-09-27', time: '09:00', title: 'Bayar pajak', category: 'Keuangan', kind: 'event' },
     ];
-    try { localStorage.setItem(JADWAL_STORE_KEY, JSON.stringify(seed)); } catch { /* ignore */ }
+    try { localStorage.setItem(scopedKey(JADWAL_STORE_KEY), JSON.stringify(seed)); } catch { /* ignore */ }
     return seed;
   }
 
   function saveJadwalEvents(list) {
-    try { localStorage.setItem(JADWAL_STORE_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+    try { localStorage.setItem(scopedKey(JADWAL_STORE_KEY), JSON.stringify(list)); } catch { /* ignore */ }
   }
 
   function jadwalItems(iso) {
@@ -2181,7 +2262,7 @@
 
   function loadGoals() {
     try {
-      const raw = JSON.parse(localStorage.getItem(GOALS_STORE_KEY) || 'null');
+      const raw = JSON.parse(localStorage.getItem(scopedKey(GOALS_STORE_KEY)) || 'null');
       if (Array.isArray(raw) && raw.length) return raw;
     } catch { /* seed ulang */ }
     const today = taskTodayIso();
@@ -2234,12 +2315,12 @@
         ],
       },
     ];
-    try { localStorage.setItem(GOALS_STORE_KEY, JSON.stringify(seed)); } catch { /* ignore */ }
+    try { localStorage.setItem(scopedKey(GOALS_STORE_KEY), JSON.stringify(seed)); } catch { /* ignore */ }
     return seed;
   }
 
   function saveGoals(list) {
-    try { localStorage.setItem(GOALS_STORE_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+    try { localStorage.setItem(scopedKey(GOALS_STORE_KEY), JSON.stringify(list)); } catch { /* ignore */ }
   }
 
   function goalProgress(g) {
@@ -2549,16 +2630,16 @@
 
   function loadProjects() {
     try {
-      const raw = JSON.parse(localStorage.getItem(PROJ_STORE_KEY) || 'null');
+      const raw = JSON.parse(localStorage.getItem(scopedKey(PROJ_STORE_KEY)) || 'null');
       if (Array.isArray(raw) && raw.length) return raw;
     } catch { /* seed ulang */ }
     const seed = projSeed();
-    try { localStorage.setItem(PROJ_STORE_KEY, JSON.stringify(seed)); } catch { /* ignore */ }
+    try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(seed)); } catch { /* ignore */ }
     return seed;
   }
 
   function saveProjects(list) {
-    try { localStorage.setItem(PROJ_STORE_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+    try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(list)); } catch { /* ignore */ }
     if (typeof queueRemoteSave === 'function') queueRemoteSave();
   }
 
@@ -2956,7 +3037,7 @@
 
   function loadNotes() {
     try {
-      const raw = localStorage.getItem(NOTES_STORE_KEY);
+      const raw = localStorage.getItem(scopedKey(NOTES_STORE_KEY));
       if (!raw) { const seeded = noteSeedList(); saveNotes(seeded); return seeded; }
       const list = JSON.parse(raw);
       return Array.isArray(list) ? list : [];
@@ -2964,7 +3045,7 @@
   }
 
   function saveNotes(list) {
-    try { localStorage.setItem(NOTES_STORE_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+    try { localStorage.setItem(scopedKey(NOTES_STORE_KEY), JSON.stringify(list)); } catch { /* ignore */ }
     if (typeof queueRemoteSave === 'function') queueRemoteSave();
   }
 
@@ -4415,8 +4496,9 @@
       console.warn(error);
     }
 
+    const leavingUid = authSession?.user?.id || '';
     clearAuthSession();
-    localStorage.removeItem(STORAGE_KEY);
+    removeUserDataFor(leavingUid);
     state = createFreshState();
     activeYear = runtimeYear;
     activeView = 'dashboard';
@@ -4524,14 +4606,15 @@
       console.warn(error);
     }
 
+    const leavingUid = authSession?.user?.id || '';
     clearAuthSession();
-    localStorage.removeItem(STORAGE_KEY);
+    removeUserDataFor(leavingUid);
     state = createFreshState();
     activeYear = runtimeYear;
     activeView = 'dashboard';
     activeMonth = new Date().getMonth();
     ensureYear(activeYear);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(scopedKey(STORAGE_KEY), JSON.stringify(state));
     authIsBusy = false;
     renderShell();
     showToast('Data tracker akun dihapus dari aplikasi.');
