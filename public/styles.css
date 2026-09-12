@@ -3612,3 +3612,213 @@ svg {
 }
 :root[data-theme="dark"] .jadwal-add-grid input[type="date"], :root[data-theme="dark"] .jadwal-add-grid input[type="time"] { color-scheme: dark; }
 .jadwal-add-save { width: 100%; }
+
+/* ===== Modul Goals ===== */
+.goals-page { display: flex; flex-direction: column; gap: 12px; }
+.goal-summary {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px 12px;
+}
+.goal-summary-label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); }
+.goal-summary-pct { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-top: 2px; }
+.goal-bar {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 16%, transparent);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.goal-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #3f9d63, #58b57a); transition: width 0.35s ease; }
+.goal-bar.big { height: 10px; }
+.goal-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.goal-chip {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+.goal-chip.on { background: #7d685c; border-color: #7d685c; color: #fff9f2; }
+:root[data-theme="dark"] .goal-chip.on { background: #8a7263; border-color: #8a7263; }
+.goal-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+  cursor: pointer;
+  transition: transform 0.14s;
+}
+.goal-card:active { transform: scale(0.985); }
+.goal-ico {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  flex: none;
+  background: color-mix(in srgb, var(--gc, #7d685c) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gc, #7d685c) 28%, transparent);
+}
+.goal-ico.big { width: 48px; height: 48px; font-size: 22px; border-radius: 16px; }
+.goal-card-main { flex: 1; min-width: 0; }
+.goal-card-title { display: block; font-size: 14.5px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.goal-card-meta { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+.goal-card-sub { display: block; font-size: 11.5px; font-weight: 700; color: var(--text); margin-top: 6px; }
+.goal-chev { color: var(--muted); font-size: 17px; flex: none; }
+.goal-add-btn {
+  min-height: 52px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #6a564a, #57443a);
+  color: #f7f1e8;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(87, 68, 58, 0.28);
+}
+:root[data-theme="dark"] .goal-add-btn { background: linear-gradient(135deg, #8a7263, #6f5a4d); color: #fff9f2; }
+.goal-cal-link {
+  min-height: 48px;
+  border: 1.5px solid var(--line);
+  background: transparent;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+.goal-back-btn {
+  align-self: flex-start;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+.goal-detail-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+.goal-detail-head { display: flex; align-items: center; gap: 12px; }
+.goal-detail-titlewrap { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.goal-detail-title { font-size: 16.5px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.goal-chip-status { flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; border-radius: 999px; padding: 4px 10px; }
+.goal-chip-status.act { color: #2e7d4f; background: color-mix(in srgb, #3f9d63 16%, transparent); }
+:root[data-theme="dark"] .goal-chip-status.act { color: #6fd494; background: color-mix(in srgb, #3f9d63 22%, transparent); }
+.goal-chip-status.fin { color: #2c6e63; background: color-mix(in srgb, #0f766e 14%, transparent); }
+:root[data-theme="dark"] .goal-chip-status.fin { color: #2dd4bf; background: color-mix(in srgb, #0f766e 24%, transparent); }
+.goal-detail-meta { font-size: 12.5px; font-weight: 600; color: var(--muted); margin: 10px 0 2px; }
+.goal-detail-meta strong { color: var(--text); font-weight: 800; }
+.goal-detail-sub { font-size: 12px; font-weight: 700; color: var(--text); margin-top: 6px; }
+.goal-detail-sec { font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-top: 16px; }
+.goal-detail-desc { font-size: 13.5px; font-weight: 600; line-height: 1.55; color: var(--text); margin: 6px 0 0; }
+.goal-proj-chip {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5b4b8a;
+  background: color-mix(in srgb, #8b5cf6 14%, transparent);
+  border: 1px solid color-mix(in srgb, #8b5cf6 28%, transparent);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+:root[data-theme="dark"] .goal-proj-chip { color: #c4b5fd; background: color-mix(in srgb, #8b5cf6 20%, transparent); }
+.goal-ms-list { display: flex; flex-direction: column; margin-top: 6px; }
+.goal-ms { display: flex; align-items: center; gap: 10px; min-height: 48px; cursor: pointer; }
+.goal-ms + .goal-ms { border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent); }
+.goal-ms-text { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 700; color: var(--text); }
+.goal-ms.done .goal-ms-text { text-decoration: line-through; color: var(--muted); }
+.goal-ms-date { flex: none; font-size: 11px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.goal-ms-add {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6a564a, #57443a);
+  color: #f7f1e8;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+:root[data-theme="dark"] .goal-ms-add { background: linear-gradient(135deg, #8a7263, #6f5a4d); color: #fff9f2; }
+.goal-add-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.goal-field > span {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.goal-field input, .goal-field textarea {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 14px;
+}
+.goal-field textarea { resize: vertical; min-height: 76px; }
+:root[data-theme="dark"] .goal-field input[type="date"] { color-scheme: dark; }
+.goal-cat-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.goal-cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1.5px solid var(--line);
+  background: var(--panel-soft);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+.goal-cat-chip.on { border-color: #7d685c; background: color-mix(in srgb, #7d685c 12%, transparent); }
+:root[data-theme="dark"] .goal-cat-chip.on { border-color: #8a7263; background: color-mix(in srgb, #8a7263 18%, transparent); }
+.goal-cat-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.goal-save { width: 100%; min-height: 52px; border: 0; border-radius: 18px; background: linear-gradient(135deg, #6a564a, #57443a); color: #f7f1e8; font: inherit; font-size: 14.5px; font-weight: 800; cursor: pointer; }
+:root[data-theme="dark"] .goal-save { background: linear-gradient(135deg, #8a7263, #6f5a4d); color: #fff9f2; }
+.goal-save2 { width: 100%; min-height: 48px; border: 0; border-radius: 16px; background: transparent; color: var(--muted); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }

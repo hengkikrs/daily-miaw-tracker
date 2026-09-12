@@ -1222,6 +1222,13 @@
       return;
     }
 
+    if (activeView === 'goals') {
+      dom.pageTitle.textContent = 'Goals';
+      dom.pageSubtitle.textContent = 'Target jangka pendek & panjang';
+      dom.content.innerHTML = renderGoalsView();
+      return;
+    }
+
     if (PLACEHOLDER_VIEWS[activeView]) {
       dom.pageTitle.textContent = PLACEHOLDER_VIEWS[activeView].title;
       dom.pageSubtitle.textContent = PLACEHOLDER_VIEWS[activeView].subtitle;
@@ -2018,14 +2025,290 @@
   }
 
 
-  function renderPlaceholderView(viewKey) {
-    const meta = PLACEHOLDER_VIEWS[viewKey];
+  /* ============ MODUL GOALS (target & milestone) ============ */
+  const GOALS_STORE_KEY = 'miaw-tracker.goals.v1';
+  const GOAL_CATS = {
+    Karier: '#3b82f6', Keuangan: '#ea8a2f', Kesehatan: '#3f9d63',
+    Pendidikan: '#8b5cf6', Personal: '#ec6aa0', Lainnya: '#6b7280',
+  };
+  const GOAL_ICONS = { Karier: '💼', Keuangan: '💰', Kesehatan: '💚', Pendidikan: '🎓', Personal: '🌸', Lainnya: '📌' };
+  let goalsFilter = 'all';        // all | aktif | selesai
+  let goalsPage = 'list';         // list | detail | add | calendar
+  let goalsDetailId = null;
+  let goalsMonthOffset = 0;
+  let goalsAddCat = 'Karier';
+  let goalsCalSel = null;
+
+  function loadGoals() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(GOALS_STORE_KEY) || 'null');
+      if (Array.isArray(raw) && raw.length) return raw;
+    } catch { /* seed ulang */ }
+    const today = taskTodayIso();
+    const y = today.slice(0, 4);
+    const m = today.slice(5, 7);
+    const day = (n) => `${y}-${m}-${String(n).padStart(2, '0')}`;
+    const seed = [
+      {
+        id: 'g1', title: 'Bangun bisnis online', category: 'Karier', project: 'Marketing Batu Bata',
+        deadline: day(30), description: 'Luncurkan toko online dan raih 100 pelanggan pertama.',
+        status: 'aktif', createdAt: today,
+        milestones: [
+          { id: 'm1', text: 'Riset pasar & kompetitor', target: day(12), done: true },
+          { id: 'm2', text: 'Buat website toko', target: day(15), done: true },
+          { id: 'm3', text: 'Siapkan katalog produk', target: day(18), done: true },
+          { id: 'm4', text: 'Mulai iklan berbayar', target: day(24), done: false },
+          { id: 'm5', text: 'Evaluasi & optimasi', target: day(28), done: false },
+        ],
+      },
+      {
+        id: 'g2', title: 'Meningkatkan skill digital', category: 'Pendidikan', project: 'Pengembangan Diri',
+        deadline: day(27), description: 'Selesaikan kelas desain & analitik data bulan ini.',
+        status: 'aktif', createdAt: today,
+        milestones: [
+          { id: 'm6', text: 'Pilih kursus online', target: day(8), done: true },
+          { id: 'm7', text: 'Selesaikan modul 1-3', target: day(16), done: false },
+          { id: 'm8', text: 'Buat portofolio kecil', target: day(22), done: false },
+          { id: 'm9', text: 'Ikuti webinar industri', target: day(25), done: false },
+        ],
+      },
+      {
+        id: 'g3', title: 'Menjaga kesehatan', category: 'Kesehatan', project: 'Rutinitas Harian',
+        deadline: day(28), description: 'Konsisten olahraga & pola makan sehat 4 minggu.',
+        status: 'aktif', createdAt: today,
+        milestones: [
+          { id: 'm10', text: 'Jogging 3x seminggu', target: day(14), done: false },
+          { id: 'm11', text: 'Cek kesehatan rutin', target: day(20), done: false },
+          { id: 'm12', text: 'Kurangi gula & gorengan', target: day(24), done: false },
+          { id: 'm13', text: 'Tidur sebelum jam 23:00', target: day(26), done: false },
+        ],
+      },
+      {
+        id: 'g4', title: 'Dana darurat 3 bulan', category: 'Keuangan', project: 'Keuangan Pribadi',
+        deadline: `${y}-12-20`, description: 'Sisihkan 10% penghasilan tiap bulan sampai tercapai.',
+        status: 'selesai', createdAt: today,
+        milestones: [
+          { id: 'm14', text: 'Buka rekening khusus', target: day(5), done: true },
+          { id: 'm15', text: 'Autodebet bulanan', target: day(6), done: true },
+          { id: 'm16', text: 'Capai target 3 bulan', target: day(10), done: true },
+        ],
+      },
+    ];
+    try { localStorage.setItem(GOALS_STORE_KEY, JSON.stringify(seed)); } catch { /* ignore */ }
+    return seed;
+  }
+
+  function saveGoals(list) {
+    try { localStorage.setItem(GOALS_STORE_KEY, JSON.stringify(list)); } catch { /* ignore */ }
+  }
+
+  function goalProgress(g) {
+    const ms = g.milestones || [];
+    const done = ms.filter((x) => x.done).length;
+    return { done, total: ms.length, pct: ms.length ? Math.round((done / ms.length) * 100) : 0 };
+  }
+
+  function goalCatColor(c) { return GOAL_CATS[c] || GOAL_CATS.Lainnya; }
+  function goalCatIcon(c) { return GOAL_ICONS[c] || GOAL_ICONS.Lainnya; }
+
+  function goalCardHtml(g) {
+    const p = goalProgress(g);
+    return `<button type="button" class="goal-card" data-goal-open="${g.id}">
+        <span class="goal-ico" style="--gc:${goalCatColor(g.category)}">${goalCatIcon(g.category)}</span>
+        <span class="goal-card-main">
+          <span class="goal-card-title">${escapeHtml(g.title)}</span>
+          <span class="goal-card-meta">Deadline ${escapeHtml(taskDateRead(g.deadline || ''))} · ${escapeHtml(g.category)}</span>
+          <span class="goal-bar"><span style="width:${p.pct}%"></span></span>
+          <span class="goal-card-sub">${p.done}/${p.total} milestone${p.pct ? ` · ${p.pct}%` : ''}</span>
+        </span>
+        <span class="goal-chev">›</span>
+      </button>`;
+  }
+
+  function renderGoalsView() {
+    if (goalsPage === 'add') return renderGoalAddPage();
+    if (goalsPage === 'detail' && goalsDetailId) return renderGoalDetailPage();
+    if (goalsPage === 'calendar') return renderGoalCalendarPage();
+    const all = loadGoals();
+    const filtered = all.filter((g) => (goalsFilter === 'all' ? true : g.status === goalsFilter));
+    const totalMs = all.reduce((s, g) => s + goalProgress(g).total, 0);
+    const doneMs = all.reduce((s, g) => s + goalProgress(g).done, 0);
+    const pctAll = totalMs ? Math.round((doneMs / totalMs) * 100) : 0;
+    const summary = `<div class="goal-summary">
+        <span class="goal-summary-label">${doneMs}/${totalMs} milestone selesai</span>
+        <span class="goal-summary-pct">${pctAll}%</span>
+      </div>
+      <div class="goal-bar big"><span style="width:${pctAll}%"></span></div>`;
+    const chips = ['all', 'aktif', 'selesai'].map((f) => `<button type="button" class="goal-chip${goalsFilter === f ? ' on' : ''}" data-goal-filter="${f}">${f === 'all' ? 'Semua' : f === 'aktif' ? 'Aktif' : 'Selesai'}</button>`).join('');
+    const cards = filtered.map(goalCardHtml).join('') || '<p class="task-empty">Tidak ada goal pada filter ini.</p>';
+    return `<div class="goals-page">
+        ${summary}
+        <div class="goal-chips">${chips}</div>
+        ${cards}
+        <button class="goal-add-btn" type="button" data-goal-add>+ Tambah Goal</button>
+        <button class="goal-cal-link" type="button" data-goal-cal-page>📅 Kalender Goal</button>
+      </div>`;
+  }
+
+  function renderGoalDetailPage() {
+    const g = loadGoals().find((x) => x.id === goalsDetailId);
+    if (!g) { goalsPage = 'list'; return renderGoalsView(); }
+    const p = goalProgress(g);
+    const rows = (g.milestones || []).map((mi) => `
+        <label class="goal-ms${mi.done ? ' done' : ''}">
+          <input type="checkbox" class="task-check" data-goal-ms="${g.id}:${mi.id}" ${mi.done ? 'checked' : ''} />
+          <span class="goal-ms-text">${escapeHtml(mi.text)}</span>
+          <span class="goal-ms-date">${escapeHtml(taskDateRead(mi.target || ''))}</span>
+        </label>`).join('');
+    return `<div class="goals-page">
+        <button class="goal-back-btn" type="button" data-goal-back>← Kembali</button>
+        <div class="goal-detail-card">
+          <div class="goal-detail-head">
+            <span class="goal-ico big" style="--gc:${goalCatColor(g.category)}">${goalCatIcon(g.category)}</span>
+            <span class="goal-detail-titlewrap">
+              <span class="goal-detail-title">${escapeHtml(g.title)}</span>
+              <span class="goal-chip-status ${g.status === 'selesai' ? 'fin' : 'act'}">${g.status === 'selesai' ? 'Selesai' : 'Aktif'}</span>
+            </span>
+          </div>
+          <div class="goal-detail-meta">Deadline <strong>${escapeHtml(taskDateRead(g.deadline || ''))}</strong> · ${escapeHtml(g.category)}</div>
+          <div class="goal-bar big"><span style="width:${p.pct}%"></span></div>
+          <div class="goal-detail-sub">${p.done}/${p.total} sub goal · ${p.pct}%</div>
+          <div class="goal-detail-sec">Deskripsi</div>
+          <p class="goal-detail-desc">${escapeHtml(g.description || '—')}</p>
+          <div class="goal-detail-sec">Project terkait</div>
+          <span class="goal-proj-chip">${escapeHtml(g.project || '—')}</span>
+          <div class="goal-detail-sec">Sub Goal / Milestone</div>
+          <div class="goal-ms-list">${rows || '<p class="task-empty">Belum ada sub goal.</p>'}</div>
+          <button class="goal-ms-add" type="button" data-goal-ms-add>+ Tambah Sub Goal</button>
+        </div>
+      </div>`;
+  }
+
+  /* GOALS-PART2 */
+  function renderGoalAddPage() {
+    const cats = Object.keys(GOAL_CATS);
+    const chips = cats.map((c) => `<button type="button" class="goal-cat-chip${goalsAddCat === c ? ' on' : ''}" data-goal-cat="${c}"><span class="goal-cat-dot" style="background:${GOAL_CATS[c]}"></span>${c}</button>`).join('');
+    return `<div class="goals-page">
+        <form class="goal-add-card" id="goalAddForm">
+          <label class="goal-field"><span>Judul</span><input name="title" type="text" maxlength="90" placeholder="Raih tujuan besar…" required /></label>
+          <label class="goal-field"><span>Deskripsi</span><textarea name="description" rows="3" maxlength="240" placeholder="Ceritakan goal ini…"></textarea></label>
+          <label class="goal-field"><span>Deadline</span><input name="deadline" type="date" value="${escapeHtml(taskTodayIso())}" /></label>
+          <label class="goal-field"><span>Project terkait</span><input name="project" type="text" maxlength="40" placeholder="Marketing Batu Bata" list="goalProjects" /></label>
+          <datalist id="goalProjects"><option value="Marketing Batu Bata"></option><option value="Pengembangan Diri"></option><option value="Rutinitas Harian"></option><option value="Keuangan Pribadi"></option></datalist>
+          <div class="goal-field"><span>Kategori</span><div class="goal-cat-row">${chips}</div></div>
+          <button class="primary-button goal-save" type="submit">Simpan</button>
+          <button class="secondary-button goal-save2" type="button" data-goal-add-again>Simpan &amp; Tambah Lagi</button>
+        </form>
+      </div>`;
+  }
+
+  function renderGoalCalendarPage() {
+    const now = new Date();
+    const view = new Date(now.getFullYear(), now.getMonth() + goalsMonthOffset, 1);
+    const y = view.getFullYear();
+    const m = view.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    const firstDow = (new Date(y, m, 1).getDay() + 6) % 7;
+    const cells = [];
+    for (let i = 0; i < firstDow; i += 1) cells.push(null);
+    for (let d = 1; d <= days; d += 1) cells.push(`${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    const all = loadGoals();
+    const itemsOn = (iso) => {
+      const out = [];
+      all.forEach((g) => {
+        if (g.deadline === iso) out.push({ color: goalCatColor(g.category), text: `Deadline: ${g.title}`, kind: '1deadline' });
+        (g.milestones || []).forEach((mi) => { if (mi.target === iso) out.push({ color: goalCatColor(g.category), text: `${mi.done ? '✓' : '•'} ${mi.text} (${g.title})`, kind: '2ms' }); });
+      });
+      return out.sort((a, b) => a.kind.localeCompare(b.kind));
+    };
+    const selIso = goalsCalSel || taskTodayIso();
+    const dayItems = itemsOn(selIso);
+    const grid = cells.map((iso) => {
+      if (!iso) return '<span class="jadwal-cell empty"></span>';
+      const dots = itemsOn(iso).slice(0, 3).map((x) => `<span class="jadwal-mdot" style="background:${x.color}"></span>`).join('');
+      return `<button type="button" class="jadwal-cell${iso === selIso ? ' sel' : iso === taskTodayIso() ? ' today' : ''}" data-goal-cal-day="${iso}"><span>${Number(iso.slice(8))}</span><span class="jadwal-mdots">${dots}</span></button>`;
+    }).join('');
+    return `<div class="goals-page">
+        <div class="jadwal-card">
+          <div class="jadwal-month-head">
+            <span class="jadwal-month-label">${MONTHS[m]} ${y}</span>
+            <span class="jadwal-month-nav">
+              <button type="button" class="jadwal-navbtn" data-goal-cal-prev aria-label="Bulan sebelumnya">‹</button>
+              <button type="button" class="jadwal-navbtn" data-goal-cal-next aria-label="Bulan berikutnya">›</button>
+            </span>
+          </div>
+          <div class="jadwal-week">${['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((w) => `<span>${w}</span>`).join('')}</div>
+          <div class="jadwal-grid">${grid}</div>
+        </div>
+        <h3 class="jadwal-day-title">${jadwalDayTitle(selIso)}</h3>
+        <div class="jadwal-card jadwal-list">
+          ${dayItems.length ? dayItems.map((x) => `<div class="jadwal-row"><span class="jadwal-dot" style="background:${x.color}"></span><span class="jadwal-info"><span class="jadwal-title">${escapeHtml(x.text)}</span><span class="jadwal-sub">${x.kind === '1deadline' ? 'Deadline goal' : 'Target milestone'}</span></span></div>`).join('') : '<p class="task-empty">Tidak ada deadline/milestone pada tanggal ini.</p>'}
+        </div>
+        <button class="goal-back-btn" type="button" data-goal-back>← Kembali ke daftar goal</button>
+      </div>`;
+  }
+
+  function handleGoalAction(btn) {
+    if (btn.matches('[data-goal-add]')) {
+      goalsPage = 'add';
+      goalsAddCat = 'Karier';
+      renderShell();
+      setTimeout(() => document.querySelector('#goalAddForm [name=title]')?.focus(), 30);
+      return true;
+    }
+    if (btn.matches('[data-goal-back]')) { goalsPage = 'list'; renderShell(); return true; }
+    if (btn.matches('[data-goal-cal-page]')) { goalsPage = 'calendar'; goalsCalSel = null; goalsMonthOffset = 0; renderShell(); return true; }
+    if (btn.matches('[data-goal-filter]')) { goalsFilter = btn.dataset.goalFilter; renderShell(); return true; }
+    if (btn.matches('[data-goal-open]')) { goalsDetailId = btn.dataset.goalOpen; goalsPage = 'detail'; renderShell(); return true; }
+    if (btn.matches('[data-goal-cat]')) { goalsAddCat = btn.dataset.goalCat; renderShell(); return true; }
+    if (btn.matches('[data-goal-add-again]')) { submitGoalForm(document.querySelector('#goalAddForm'), true); return true; }
+    if (btn.matches('[data-goal-ms-add]')) {
+      const g = loadGoals().find((x) => x.id === goalsDetailId);
+      if (g) {
+        const text = prompt('Sub goal baru:');
+        if (text && text.trim()) {
+          g.milestones.push({ id: `m${Date.now()}`, text: text.trim(), target: g.deadline, done: false });
+          saveGoals(loadGoals());
+          renderShell();
+        }
+      }
+      return true;
+    }
+    if (btn.matches('[data-goal-cal-prev]')) { goalsMonthOffset -= 1; renderShell(); return true; }
+    if (btn.matches('[data-goal-cal-next]')) { goalsMonthOffset += 1; renderShell(); return true; }
+    if (btn.matches('[data-goal-cal-day]')) { goalsCalSel = btn.dataset.goalCalDay; renderShell(); return true; }
+    return false;
+  }
+
+  function submitGoalForm(form, again) {
+    if (!form) return;
+    const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
+    const title = val('title');
+    if (!title) return;
+    const item = {
+      id: `g${Date.now()}`, title, description: val('description'), deadline: val('deadline') || taskTodayIso(),
+      project: val('project'), category: goalsAddCat, status: 'aktif', createdAt: taskTodayIso(), milestones: [],
+    };
+    const items = loadGoals();
+    items.push(item);
+    saveGoals(items);
+    if (again) {
+      renderShell();
+      setTimeout(() => document.querySelector('#goalAddForm [name=title]')?.focus(), 30);
+    } else {
+      goalsPage = 'list';
+      renderShell();
+    }
+  }
+
+  function renderPlaceholderView(viewName) {
+    const info = PLACEHOLDER_VIEWS[viewName];
     return `
       <section class="panel placeholder-panel">
         <div class="placeholder-stage">
-          <div class="placeholder-emoji" aria-hidden="true">${meta.emoji}</div>
-          <h3 class="placeholder-title">${escapeHtml(meta.title)}</h3>
-          <p class="placeholder-hint">${escapeHtml(meta.hint)}</p>
+          <div class="placeholder-emoji" aria-hidden="true">${info.emoji}</div>
+          <h3 class="placeholder-title">${escapeHtml(info.title)}</h3>
+          <p class="placeholder-hint">${escapeHtml(info.hint)}</p>
           <span class="placeholder-chip">Segera hadir</span>
         </div>
       </section>
@@ -3182,6 +3465,9 @@
       const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel]');
       if (jadwalBtn && handleJadwalAction(jadwalBtn)) return;
 
+    const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-add-again],[data-goal-ms-add],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page]');
+    if (goalBtn && handleGoalAction(goalBtn)) return;
+
       const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus],[data-task-focus-pause],[data-task-add-close],[data-task-options],[data-task-add-again],[data-task-sub-add],[data-task-sub-del],[data-task-att-add],[data-task-att-del]');
       if (taskBtn && event.target.tagName !== 'INPUT' && event.target.tagName !== 'SELECT' && event.target.tagName !== 'TEXTAREA' && handleTaskAction(taskBtn)) return;
 
@@ -3253,6 +3539,22 @@
     dom.content.addEventListener('change', (event) => {
       const taskCheck = event.target.closest('[data-task-toggle],[data-task-sub]');
       if (taskCheck) handleTaskAction(taskCheck);
+      const goalMs = event.target.closest('[data-goal-ms]');
+      if (goalMs) {
+        const [gid, mid] = goalMs.dataset.goalMs.split(':');
+        const items = loadGoals();
+        const g = items.find((x) => x.id === gid);
+        if (g) {
+          const mi = (g.milestones || []).find((x) => x.id === mid);
+          if (mi) {
+            mi.done = goalMs.checked;
+            if (g.status !== 'selesai' && (g.milestones || []).length && g.milestones.every((x) => x.done)) g.status = 'selesai';
+            if (g.status === 'selesai' && !g.milestones.every((x) => x.done)) g.status = 'aktif';
+            saveGoals(items);
+            renderShell();
+          }
+        }
+      }
     });
 
     dom.content.addEventListener('submit', (event) => {
@@ -3277,6 +3579,11 @@
           logActivityLastTask('Task dibuat');
           renderShell();
         }
+        return;
+      }
+      if (event.target.id === 'goalAddForm') {
+        event.preventDefault();
+        submitGoalForm(event.target, false);
         return;
       }
       if (event.target.id === 'jadwalAddForm') {
