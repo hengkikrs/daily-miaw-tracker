@@ -465,6 +465,56 @@
     return Math.max(0, Math.ceil((authOtpResendAt - Date.now()) / 1000));
   }
 
+  /* --- OAuth Google (implicit flow, tanpa OTP) --- */
+  function startGoogleLogin() {
+    if (!remoteEnabled) {
+      showToast('Konfigurasi Supabase belum tersedia.');
+      return;
+    }
+    authIsBusy = true;
+    renderAuthScreen();
+    const redirectTo = `${location.origin}${location.pathname}`;
+    const url = `${supabaseConfig.url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+    setTimeout(() => { location.assign(url); }, 50);
+  }
+
+  function consumeOAuthHash() {
+    const hash = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
+    if (!hash) return false;
+    const params = new URLSearchParams(hash);
+    if (params.get('error')) {
+      clearAuthHash();
+      authIsBusy = false;
+      showToast(`Login Google dibatalkan: ${params.get('error_description') || params.get('error')}`);
+      return false;
+    }
+    const accessToken = params.get('access_token');
+    if (!accessToken) return false;
+    clearAuthHash();
+    let user = null;
+    try { user = JSON.parse(params.get('user') || 'null'); } catch { user = null; }
+    const session = {
+      access_token: accessToken,
+      token_type: params.get('token_type') || 'bearer',
+      expires_in: Number(params.get('expires_in') || 3600),
+      refresh_token: params.get('refresh_token') || '',
+      user: user || undefined,
+    };
+    if (params.get('provider_token')) session.provider_token = params.get('provider_token');
+    try {
+      completeLogin(session);
+      return true;
+    } catch (error) {
+      console.warn(error);
+      authIsBusy = false;
+      return false;
+    }
+  }
+
+  function clearAuthHash() {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
   function startOtpCountdown(seconds = OTP_RESEND_SECONDS) {
     authOtpResendAt = Date.now() + seconds * 1000;
     clearInterval(authCooldownTimer);
@@ -939,6 +989,14 @@
           <button class="auth-switch" type="button" data-auth-action="switch-mode">
             ${isSignup ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}
           </button>
+          ${!isSignup && remoteEnabled ? `
+            <div class="auth-divider"><span>atau</span></div>
+            <button class="auth-google" type="button" data-auth-action="google" ${authIsBusy ? 'disabled' : ''}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.44a5.5 5.5 0 0 1-2.4 3.62v3h3.87c2.27-2.09 3.59-5.17 3.59-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3.01c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.29v3.1A11.99 11.99 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.27a7.2 7.2 0 0 1 0-4.54v-3.1H1.29a12 12 0 0 0 0 10.74l3.98-3.1z"/><path fill="#EA4335" d="M12 4.73c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.97 11.97 0 0 0 1.29 6.63l3.98 3.1C6.22 6.84 8.87 4.73 12 4.73z"/></svg>
+              Lanjut dengan Google
+            </button>
+            <p class="auth-hint center">Masuk cepat pakai akun Google — tanpa OTP.</p>
+          ` : ''}
         `}
       </div>
     `;
@@ -4559,6 +4617,7 @@
       }
 
       if (button.dataset.authAction === 'resend-signup') resendSignupOtp();
+      if (button.dataset.authAction === 'google') startGoogleLogin();
     });
 
     dom.authPanel.addEventListener('click', (event) => {
@@ -4822,6 +4881,7 @@
 
   async function init() {
     initTheme();
+    consumeOAuthHash();
     if (authSession) await getAccessToken();
     ensureYear(activeYear);
     saveState();
