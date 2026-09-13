@@ -456,6 +456,46 @@
     queueRemoteSave();
   }
 
+  // ===== Sinkron penuh: gabungkan store terpisah (jadwal/goals/projects/notes/daily) ke snapshot =====
+  function readStoreJson(key, fallback) {
+    try {
+      const raw = localStorage.getItem(scopedKey(key));
+      if (raw == null) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed === null ? fallback : parsed;
+    } catch { return fallback; }
+  }
+
+  function buildStoresPayload() {
+    const daily = loadDailyTasks();
+    const dailyRows = Array.isArray(daily) ? daily.filter((x) => x && x.id) : [];
+    return {
+      jadwal: readStoreJson(JADWAL_STORE_KEY, []),
+      goals: readStoreJson(GOALS_STORE_KEY, []),
+      projects: readStoreJson(PROJ_STORE_KEY, []),
+      notes: readStoreJson(NOTES_STORE_KEY, []),
+      dailyTasks: dailyRows,
+      dailyLog: (daily && daily.__dailyLog) || {},
+      savedAt: Date.now(),
+    };
+  }
+
+  function applyStoresPayload(stores) {
+    if (!stores || typeof stores !== 'object') return false;
+    const write = (key, val) => {
+      try { localStorage.setItem(scopedKey(key), JSON.stringify(val)); } catch { /* ignore */ }
+    };
+    if (Array.isArray(stores.jadwal)) write(JADWAL_STORE_KEY, stores.jadwal);
+    if (Array.isArray(stores.goals)) write(GOALS_STORE_KEY, stores.goals);
+    if (Array.isArray(stores.projects)) write(PROJ_STORE_KEY, stores.projects);
+    if (Array.isArray(stores.notes)) write(NOTES_STORE_KEY, stores.notes);
+    if (Array.isArray(stores.dailyTasks)) {
+      write(DAILY_TASK_STORE_KEY, stores.dailyTasks);
+      write(`${DAILY_TASK_STORE_KEY}.log`, stores.dailyLog && typeof stores.dailyLog === 'object' ? stores.dailyLog : {});
+    }
+    return true;
+  }
+
   function cloneStateSnapshot() {
     if (typeof structuredClone === 'function') return structuredClone(state);
     return JSON.parse(JSON.stringify(state));
@@ -544,6 +584,8 @@
     remoteHydrated = false;
     // Pindahkan lingkup storage ke data milik akun ini (terisolasi per user)
     applyUserScope();
+    // Muat ulang data akun dari Supabase supaya perangkat lain selalu sinkron
+    if (canSyncRemote()) hydrateRemoteState();
   }
 
   function otpRemainingSeconds() {
@@ -769,8 +811,10 @@
     try {
       const rows = await supabaseFetch(path, { method: 'GET' });
       const remoteState = rows?.[0]?.state;
-      if (isValidRemoteState(remoteState) && (hasYearData(remoteState) || !hasYearData(state))) {
+      if (isValidRemoteState(remoteState)) {
         isApplyingRemoteState = true;
+        applyStoresPayload(remoteState.__stores);
+        delete remoteState.__stores;
         state = remoteState;
         if (state.selectedView === 'kalender') { state.selectedView = 'jadwal'; }
         activeYear = Number(state.selectedYear) || runtimeYear;
@@ -789,8 +833,9 @@
       showToast('Data lokal disinkronkan ke Supabase.');
     } catch (error) {
       isApplyingRemoteState = false;
+      remoteHydrated = false; // biar bisa dicoba lagi saat berikutnya
       console.warn(error);
-      showToast('Mode lokal aktif. Sinkron Supabase belum tersedia.');
+      showToast('Sinkron Supabase gagal — data masih tersimpan di perangkat ini.');
     }
   }
 
@@ -827,10 +872,14 @@
   async function saveRemoteState(snapshot = state, options = {}) {
     if (!canSyncRemote()) return;
 
+    // snapshot = state inti; store terpisah disisipkan agar semua modul ikut tersinkron
+    const enriched = cloneStateSnapshot();
+    enriched.__stores = buildStoresPayload();
+
     const payload = {
       client_id: getRemoteClientId(),
       user_id: authSession.user.id,
-      state: snapshot,
+      state: enriched,
     };
 
     await supabaseFetch(`/rest/v1/${encodeURIComponent(supabaseConfig.table)}?on_conflict=client_id`, {
@@ -1318,6 +1367,7 @@
       localStorage.setItem(scopedKey(DAILY_TASK_STORE_KEY), JSON.stringify(plain));
       localStorage.setItem(scopedKey(`${DAILY_TASK_STORE_KEY}.log`), JSON.stringify(log));
     } catch { /* ignore */ }
+    if (typeof queueRemoteSave === 'function') queueRemoteSave();
   }
 
   function dailyRoutineDoneKey(r, iso) { return `${iso}:${r.id}`; }
@@ -1635,6 +1685,7 @@
 
   function saveJadwalEvents(list) {
     try { localStorage.setItem(scopedKey(JADWAL_STORE_KEY), JSON.stringify(list)); } catch { /* ignore */ }
+    if (typeof queueRemoteSave === 'function') queueRemoteSave();
   }
 
   function jadwalItems(iso) {
@@ -2870,6 +2921,7 @@
 
   function saveGoals(list) {
     try { localStorage.setItem(scopedKey(GOALS_STORE_KEY), JSON.stringify(list)); } catch { /* ignore */ }
+    if (typeof queueRemoteSave === 'function') queueRemoteSave();
   }
 
   function goalProgress(g) {
