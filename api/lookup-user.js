@@ -35,7 +35,8 @@ export default async function handler(req, res) {
         signal: AbortSignal.timeout(8000),
       });
       if (!r.ok) return json(res, 502, { error: 'upstream' });
-      const users = await r.json().catch(() => []);
+      const body = await r.json().catch(() => []);
+      const users = Array.isArray(body) ? body : (body.users || []);
       if (!Array.isArray(users) || users.length === 0) break;
       const hit = users.find((usr) =>
         String((usr.user_metadata && usr.user_metadata.username) || '').toLowerCase() === username);
