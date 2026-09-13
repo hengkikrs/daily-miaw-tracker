@@ -9,10 +9,10 @@ public/index.html
   ├── <script src="js/core/07-theme.js">      (FASE A — applyTheme/initTheme)
   └── <script src="app.js">                   (IIFE sisa: 377 fn + 169 var = 546 simbol)
 ```
-- IIFE: `(() => { 'use strict'; ... })();`
-- Setelah FASE A: 264 baris (45 simbol) pindah ke `public/js/core/`; `public/app.js` 8.774 → 8475 baris.
-- Yang dipisah jadi **global** (classic script): `function` menjadi properti `window`, `const` menjadi *global lexical* (tidak jadi properti `window`) — keduanya tetap terbaca dari dalam IIFE.
-- Verifikasi: 17 route dibandingkan teks+struktur sebelum vs sesudah FASE A → 16/17 identik, 1 (`transaksi`) hanya beda label menit pada jam (dinamis).
+- Refactor selesai: IIFE dibuka; setiap file = classic script dengan `'use strict';` sendiri.
+- 8142 baris kode terbukti utuh: 0 baris hilang, 0 duplikat (uji cakupan multiset, lihat `docs/decisions/refactor-log.md`).
+- `function` top-level menjadi properti `window`; `const/let` top-level menjadi *global lexical* (bukan properti `window`) — keduanya terbaca & dapat di-assign dari file lain.
+- Validasi: 17 route + 23 interaksi identik antar versi (kecuali label jam dinamis), 0 error listener, tulis+persistensi habit identik.
 - Hanya **2 pemanggilan top-level**: `migrateLegacyStores();` (L225) dan `init();` (L8773, terakhir).
 - 0 nama duplikat di antara 588 simbol top-level.
 - **0 tabrakan** antara 588 nama itu dan properti `window` (diuji runtime) → IIFE bisa dibuka tanpa menabrak global browser.
@@ -64,7 +64,7 @@ Classic script berurutan + **buka pembungkus IIFE**; potong berdasarkan section 
 - `'use strict';` di setiap file (sama seperti sekarang);
 - `scripts/build-vercel-static.js` menyalin `public/` rekursif → `public/js/**` otomatis ikut deploy, dan `server.js` menyajikan subfolder.
 
-## Peta target file (33 file, LOC terukur)
+## Peta file (33 file — SUDAH diterapkan)
 | File | LOC | Asal (section app.js) |
 |---|---|---|
 | `js/core/01-config.js` | 140 | core-bootstrap (konstanta) + `DATA_STORE_KEYS`, `NAV_GROUP_OF`, `PW_RULE_*`, `OAUTH_VERIFIER_KEY` |

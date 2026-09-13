@@ -246,3 +246,17 @@ Baseline tersimpan: `/home/ubuntu/tracker-daily-refactor-audit/audit-baseline.js
 - **Mulai dari FASE 0** (docs + AGENTS.md + harness) — nol perubahan perilaku.
 - Setelah itu FASE A (ekstrak murni: config/utils/toast/theme).
 - FASE B menunggu keputusan eksplisit soal pembukaan IIFE.
+
+---
+
+## Koreksi pasca-audit (2026-09-14)
+Dua klaim di dokumen ini dikoreksi setelah kode dibaca ulang saat membuat `docs/navigation.md`
+(dan sekarang terdokumentasi di `docs/decisions/refactor-log.md`):
+
+1. Peta view Laporan **tertukar** di §3/§4: `data-view="laporan-keuangan"` → `renderReportView()` (modul finance-reports-legacy),
+   sedangkan `data-view="reports"` → `renderLaporanView()` (modul laporan-export, ekspor PDF/DOC).
+2. `data-view="task"` (menu "Daily Task") → `renderDailyTaskView()`; `renderTaskDetail()` adalah jalur legacy
+   yang hanya aktif bila `taskDetailId` terisi.
+
+Temuan tambahan yang didokumentasikan dan **tidak** diperbaiki (di luar lingkup refactor):
+`miaw-tracker.daily-tasks.v1` tidak termasuk `DATA_STORE_KEYS` → tidak ikut `migrateLegacyStores()`/`removeUserDataFor()`.

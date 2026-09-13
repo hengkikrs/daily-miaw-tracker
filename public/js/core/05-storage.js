@@ -148,3 +148,28 @@ function getAllHabits(monthData, includeInactive = false) {
       .map((habit) => ({ ...habit, categoryKey }))
   ));
 }
+
+// --- ditambahkan dari app.js (STAGE 2): createHabit, createMonth ---
+
+
+function createHabit(name, categoryKey, year, monthIndex, points = null) {
+  return {
+    id: uid(categoryKey.slice(0, 2)),
+    name,
+    category: categoryKey,
+    active: true,
+    points: normalizeHabitPoints(points) || suggestHabitPoints(name, categoryKey),
+    slots: Array(slotCountFor(categoryKey, year, monthIndex)).fill(false),
+    createdAt: Date.now(),
+  };
+}
+
+function createMonth(year, monthIndex) {
+  const categories = {};
+  CATEGORY_ORDER.forEach((categoryKey) => {
+    categories[categoryKey] = DEFAULT_HABITS[categoryKey].map((name) => (
+      createHabit(name, categoryKey, year, monthIndex)
+    ));
+  });
+  return { categories };
+}

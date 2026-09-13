@@ -4,9 +4,9 @@
 Kartu lintas modul: ring statistik, tren habit, kasflow, donut kategori, agenda, dan navigasi cepat `data-dash-go`.
 
 ## Main files
-- Sekarang: `public/app.js` baris 5899-6194 (296 baris, 10 fungsi, 0 var)
-- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
-- Target refactor: `public/js/modules/dashboard.js`
+- Asal (sebelum refactor): `public/app.js` baris 5899-6194 (296 baris, 10 fungsi, 0 var)
+- Nomor baris per file: `docs/symbol-index.md` (generated).
+- File modul: `public/js/modules/dashboard.js`
 
 ## Entry points
 - `renderPlaceholderView`

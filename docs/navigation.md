@@ -18,7 +18,7 @@ index.html
 
 ## Router: `renderShell()` — L1861–2048
 
-| `data-view` (index.html) | Cabang baris | Fungsi render | Target file |
+| `data-view` (index.html) | Cabang baris | Fungsi render | File |
 |---|---|---|---|
 | `account` | L1910 | `renderAccountTab()` | `js/auth/14-auth-ui.js` |
 | `task` | L1917 | `renderDailyTaskView()` — bila `dailyDetailId` → `renderDailyDetail()`; bila `taskDetailId` (legacy) → `renderTaskDetail()` | `js/modules/daily-tasks.js` (+ legacy di `js/modules/tasks.js`) |
@@ -62,7 +62,7 @@ Listener yang dipasang:
 
 Handler aksi yang dipanggil dari dispatch (20 handler, 23 section):
 
-| Handler | Target file |
+| Handler | File |
 |---|---|
 | `handleDailyAction` | `js/modules/daily-tasks.js` |
 | `handleTaskAction` | `js/modules/tasks.js` |

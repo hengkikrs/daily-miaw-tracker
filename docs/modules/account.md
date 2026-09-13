@@ -4,9 +4,9 @@
 Tab Akun: profil, ganti password, halaman password, dan hapus akun (grace 24 jam).
 
 ## Main files
-- Sekarang: `public/app.js` baris 6597-6740 (144 baris, 4 fungsi, 0 var)
-- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
-- Target refactor: `public/js/auth/14-auth-ui.js`
+- Asal (sebelum refactor): `public/app.js` baris 6597-6740 (144 baris, 4 fungsi, 0 var)
+- Nomor baris per file: `docs/symbol-index.md` (generated).
+- File modul: `public/js/auth/14-auth-ui.js`
 
 ## Entry points
 - `renderAccountPasswordPage`

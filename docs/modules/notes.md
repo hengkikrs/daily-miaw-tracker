@@ -4,9 +4,9 @@
 Catatan kaya-teks dengan tab/kategori, tag, pencarian, sort, template, editor, dan sanitasi HTML allowlist.
 
 ## Main files
-- Sekarang: `public/app.js` baris 3697-4115 (419 baris, 30 fungsi, 14 var)
-- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
-- Target refactor: `public/js/modules/notes.js`
+- Asal (sebelum refactor): `public/app.js` baris 3697-4115 (419 baris, 30 fungsi, 14 var)
+- Nomor baris per file: `docs/symbol-index.md` (generated).
+- File modul: `public/js/modules/notes.js`
 
 ## Entry points
 - `renderNotesView`

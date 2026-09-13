@@ -4,9 +4,9 @@
 Mengelola rutinitas non-project: daftar "Hari Ini", jadwal rutin per-hari (DAILY_ROUTINES), streak, tab Rutinitas/Selesai, dan detail item.
 
 ## Main files
-- Sekarang: `public/app.js` baris 1308-1651 (344 baris, 15 fungsi, 7 var)
-- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
-- Target refactor: `public/js/modules/daily-tasks.js`
+- Asal (sebelum refactor): `public/app.js` baris 1308-1651 (344 baris, 15 fungsi, 7 var)
+- Nomor baris per file: `docs/symbol-index.md` (generated).
+- File modul: `public/js/modules/daily-tasks.js`
 
 ## Entry points
 - `renderDailyTaskView`

@@ -8,13 +8,13 @@ Aturan: setiap fase = **1 commit + 1 validasi**. Jangan lompat fase. Jangan gabu
 | TAHAP 0 | Audit + baseline | ✅ selesai (`docs/refactor-audit.md`, tag `pre-refactor-baseline`) |
 | FASE 0 | Dokumentasi + AGENTS.md + validator + indeks simbol | ✅ selesai (tanpa perubahan perilaku) |
 | FASE A | Ekstrak murni: `core/01-config.js`, `core/04-utils.js`, `core/07-theme.js` | ✅ selesai |
-| FASE B | `02-runtime-dom`, `05-storage`, `03-state` + **buka pembungkus IIFE** (butuh approval terpisah) | ⏳ belum |
-| FASE C | `modules/notes`, `modules/daily-tasks`, `modules/schedule` | ⏳ belum |
-| FASE D | `modules/tasks`, `modules/goals`, `modules/projects` | ⏳ belum |
-| FASE E | `modules/finance-*` | ⏳ belum |
-| FASE F | `modules/progress`, `dashboard`, `habit-analytics`, `laporan-export` | ⏳ belum |
-| FASE G | `auth/*`, `core/09-router`, `events/20-bind-events`, `bootstrap/30-init` | ⏳ belum |
-| FASE H | `modules/habit-legacy` (status pemakaian harus dipastikan dulu) | ⏳ belum |
+| FASE B | `02-runtime-dom`, `05-storage`, `03-state` + **buka pembungkus IIFE** | ✅ selesai (commit `a21cdb9`) |
+| FASE C | `modules/notes`, `modules/daily-tasks`, `modules/schedule` | ✅ selesai |
+| FASE D | `modules/tasks`, `modules/goals`, `modules/projects` | ✅ selesai |
+| FASE E | `modules/finance-*` | ✅ selesai |
+| FASE F | `modules/progress`, `dashboard`, `habit-analytics`, `laporan-export` | ✅ selesai |
+| FASE G | `auth/*`, `core/09-router`, `events/20-bind-events`, `bootstrap/30-init` | ✅ selesai |
+| FASE H | `modules/habit-legacy` (dipindah apa adanya; status pemakaian belum diputuskan) | ✅ dipindah, ⚠️ belum diputuskan |
 
 ## Keputusan
 1. **Opsi B dipilih** (classic script berurutan + buka IIFE), bukan ES module.
@@ -60,3 +60,27 @@ Hal yang **belum pernah** diuji (jangan diklaim lulus): login Supabase asli, OTP
 - **Catatan mekanisme:** di versi SESUDAH, `window.escapeHtml`/`window.uid` berisi `function` (hasil pemisahan) sedangkan `window.MONTHS` tetap `undefined` karena `const` top-level hidup di *global lexical environment* — persis perilaku yang diharapkan.
 - **Risiko terbuka:** `openNavGroups = new Set(... NAV_GROUP_OF ...)` di app.js memakai konstanta yang kini dimuat dari file lain → **urutan `<script>` menjadi kontrak**; jangan menaruh `01-config.js` setelah `app.js`.
 - **Belum diuji:** aksi tulis per modul, login Supabase asli, remote sync.
+
+## FASE B — laporan
+- **Tujuan:** membuka pembungkus IIFE + memindahkan fondasi (runtime/DOM, state, storage, toast, nav, router) dan auth.
+- **File dibuat:** `js/core/02-runtime-dom.js`, `03-state.js`, `05-storage.js`, `06-toast.js`, `08-nav.js`, `09-router.js`, `js/auth/11-session.js`, `12-oauth.js`, `13-remote-sync.js`, `14-auth-ui.js` (10 file, 1.598 baris).
+- **File diubah:** `public/app.js` (sisa modul, sudah unwrapped), `public/index.html` (urutan `<script>` hasil topological sort).
+- **Urutan load (dihitung otomatis):** 01-config → 04-utils → 07-theme → 02-runtime-dom → 05-storage → 11-session → **03-state** → 13-remote-sync → 12-oauth → 06-toast → 08-nav → 14-auth-ui → 09-router.
+  Alasan urutan: `let state = loadState()` dan `let authSession = loadAuthSession()` dieksekusi saat load → storage & session harus dimuat lebih dulu.
+- **Storage key:** tidak ada yang berubah; hanya `scopedKey`/`DATA_STORE_KEYS` yang pindah file.
+- **Risiko ditemukan:** `openNavGroups = new Set(... NAV_GROUP_OF ...)` dieksekusi saat load → urutan `<script>` jadi kontrak.
+- **Validasi:** `node --check` 15/15 OK · `check-syntax` LULUS (0 duplikat) · uji cakupan 7881 baris masuk = 7881 keluar (0 hilang, 0 duplikat) · uji diferensial 17 view + 23 interaksi: identik kecuali `transaksi` (label jam dinamis) · **0 error listener** · 7 kunci localStorage ber-scope tetap.
+
+## FASE C–H — laporan
+- **Tujuan:** memindahkan seluruh modul, delegasi event, dan bootstrap; `app.js` menjadi shim.
+- **File dibuat:** 19 file (17 `modules/*`, `events/20-bind-events.js`, `bootstrap/30-init.js`); 1 simbol di-append ke `js/core/05-storage.js` (`createHabit`, `createMonth`).
+- **Hasil akhir:** 33 classic script, total 8.900 baris (termasuk header 4-5 baris/file); `public/app.js` = shim 3 baris.
+- **Urutan load terdeteksi otomatis dari dependency saat-load:** `modules/projects` → `modules/tasks` (`taskAddDefaults()` memakai `firstProjName()`), `modules/tasks` → `modules/schedule` (`let jadwalSelIso = taskTodayIso()`), `bootstrap/30-init` paling akhir (`init();` di-detach ke file itu).
+- **Metode:** peta `nama simbol → section` diambil dari **app.js asli** (bukan nomor baris), sehingga tahan pergeseran baris antar-fase; ada guard yang menolak bila ada simbol yang mau ditulis ulang ke file lama (fatal, bukan silent).
+- **Validasi:** uji cakupan end-to-end **8142 baris masuk = 8142 keluar (0 hilang, 0 duplikat)** · `check-syntax`: 34 file, **0 duplikat deklarasi, 0 syntax error** · `npm run build` + `vercel:prebuild`: seluruh `js/**` ikut ke `.vercel/output/static/js` · uji diferensial (versi FASE B di :3998 vs versi akhir di :3999): 16/17 view identik + 23 langkah interaksi identik (beda hanya label menit pada `transaksi`), **0 error** di kedua versi · uji tulis: klik checkbox habit (150 checkbox) mengubah state dan **bertahan setelah reload** di kedua versi · 7 kunci localStorage ber-scope.
+- **Kontrol negatif:** dua seed segar pada origin yang sama menghasilkan hash state berbeda (panjang sama) → seed memakai id acak (`Math.random`), sehingga perbandingan hash state mentah antar versi **tidak bermakna**; yang dibandingkan adalah panjang/struktur + render + perilaku.
+- **Catatan / risiko terbuka:**
+  1. `modules/habit-legacy.js` (376 baris) dipindah apa adanya; belum diputuskan masih dipakai atau tidak (dipakai sebagai fallback view default `renderMonth`).
+  2. Potensi bug `miaw-tracker.daily-tasks.v1` tidak ada di `DATA_STORE_KEYS` — masih **tidak diperbaiki** (di luar lingkup refactor).
+  3. Belum diuji: login Supabase asli, OTP, Google OAuth, remote sync nyata (butuh kredensial/jaringan).
+  4. `js/` belum diuji di deployment Vercel nyata (hanya build output lokal yang diverifikasi berisi semua file).

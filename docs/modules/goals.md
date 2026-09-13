@@ -4,9 +4,9 @@
 Target jangka pendek/menengah/panjang, milestone, kalender goal, dan halaman detail/tambah.
 
 ## Main files
-- Sekarang: `public/app.js` baris 2832-3139 (308 baris, 14 fungsi, 12 var)
-- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
-- Target refactor: `public/js/modules/goals.js`
+- Asal (sebelum refactor): `public/app.js` baris 2832-3139 (308 baris, 14 fungsi, 12 var)
+- Nomor baris per file: `docs/symbol-index.md` (generated).
+- File modul: `public/js/modules/goals.js`
 
 ## Entry points
 - `renderGoalsView`

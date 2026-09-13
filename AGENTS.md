@@ -7,9 +7,11 @@ Instruksi kerja untuk agen/AI (dan manusia) yang mengubah repo ini. Baca ini **s
 Lokasi: `/opt/tracker-daily` · Branch utama: `main` · Remote: `github.com/hengkikrs/tracker-daily`
 
 ## Stack aktual (jangan diasumsikan lain)
-- **Vanilla JavaScript**. Satu IIFE besar di `public/app.js` (8.774 baris, 400 fungsi, 188 var, 588 simbol top-level). **Bukan** React/Next/Vue/Svelte/TypeScript.
+- **Vanilla JavaScript**, 33 classic script di `public/js/**` (8906 baris total). **Bukan** React/Next/Vue/Svelte/TypeScript.
+- **Urutan `<script>` di `index.html` adalah KONTRAK** (hasil topological sort dependency saat-load). Menambah/memindah file wajib memperbarui urutannya.
+- `public/app.js` = shim 3 baris; jangan menambah kode di sana.
 - **Tidak ada bundler, lint, test, atau typecheck.** Tidak ada dependency runtime.
-- HTML statis `public/index.html`; 2 `<script>` **classic** di akhir `<body>` (bukan `type="module"`); tidak ada inline handler.
+- HTML statis `public/index.html`; 33 `<script>` **classic** di akhir `<body>` (bukan `type="module"`); tidak ada inline handler.
 - CSS: `public/styles.css` + `public/theme.css`.
 - Server lokal: `server.js` (HTTP native). Serverless: `api/lookup-user.js`, `api/miawai-chat.js`, `api/schedule-deletion.js`.
 - Supabase (Auth + tabel `tracker_daily_states`) — opsional; bila `remoteEnabled=false` aplikasi jalan penuh offline.
@@ -27,11 +29,11 @@ docs/        overview, architecture, navigation, storage, auth, symbol-index, mo
 Struktur `public/js/**` yang direncanakan + pemetaan LOC: `docs/architecture.md`.
 
 ## Entry point & arsitektur
-- `renderShell()` (app.js L1861–2048) = **router**: 18 cabang `activeView`, mengganti `#content`.
-- `bindEvents()` (L7479–7948) = **satu delegasi event global** → 20 handler `handle*Action` dari 23 section.
-- `showToast()` (L1070) = notifikasi global.
-- `init()` (L7949) = bootstrap, **dipanggil sekali di baris terakhir** (L8773).
-- Hanya 2 pemanggilan top-level: `migrateLegacyStores()` (L225) dan `init()` (L8773).
+- `renderShell()` (`js/core/09-router.js`) = **router**: cabang `activeView` mengganti `#content`.
+- `bindEvents()` (`js/events/20-bind-events.js`) = **satu delegasi event global** → 20 handler `handle*Action`.
+- `showToast()` (`js/core/06-toast.js`) = notifikasi global.
+- `init()` (`js/bootstrap/30-init.js`) = bootstrap, **dipanggil sekali di baris terakhir file itu**.
+- Hanya 2 pemanggilan top-level: `migrateLegacyStores()` (`js/core/03-state.js`) dan `init();` (`js/bootstrap/30-init.js`).
 - Peta lengkap: `docs/navigation.md`. Dependency lapisan: `docs/architecture.md`.
 
 ## Storage & sinkronisasi
@@ -47,9 +49,9 @@ Supabase Auth: PKCE + Google OAuth, OTP, password login, refresh token, logout, 
 `docs/overview.md` · `docs/architecture.md` · `docs/navigation.md` · `docs/storage.md` · `docs/auth.md` · `docs/symbol-index.md` · `docs/modules/*.md` · `docs/decisions/refactor-log.md` · `docs/refactor-audit.md`
 
 ## ATURAN HEMAT TOKEN (wajib)
-1. **Do not read the entire `public/app.js` by default.**
+1. **Do not read every module by default.** Baca hanya file modul yang relevan + `docs/navigation.md`.
 2. **Search for the relevant symbol, action, selector, or storage key before reading source code.**
-3. **Read only the relevant file or code range** (`read_file` dengan `offset`/`limit`, memakai nomor baris dari `docs/symbol-index.md`).
+3. **Read only the relevant file or code range** (`read_file` dengan `offset`/`limit`; nomor baris ada di `docs/symbol-index.md`).
 4. **Use `docs/` as a navigation map, but verify source code before modifying behavior.**
 5. Jangan membaca ulang file yang sudah dipahami; gunakan ringkasan dokumen.
 6. Jangan membuka semua hasil pencarian sekaligus; perluas pembacaan bertahap.
@@ -70,7 +72,8 @@ Supabase Auth: PKCE + Google OAuth, OTP, password login, refresh token, logout, 
 
 ## Perintah validasi
 ```bash
-node scripts/dev/check-syntax.js      # kompilasi + duplikat deklarasi top-level (exit 1 bila gagal)
+node scripts/dev/check-syntax.js      # kompilasi 34 file + duplikat deklarasi top-level (exit 1 bila gagal)
+python3 scripts/dev/coverage_check.py # bukti tidak ada baris kode hilang/duplikat antar file
 node scripts/dev/gen-symbol-index.js  # regenerasi docs/symbol-index.md setelah memindah kode
 node --check public/app.js            # cek sintaks satu file
 PORT=3999 node server.js              # jalankan lokal (http://localhost:3999)

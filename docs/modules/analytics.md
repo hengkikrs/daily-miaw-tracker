@@ -4,9 +4,9 @@
 Analitik habit: strip persen harian, kalender poin, metrik, tren, tab habit, breakdown kategori, dan leaderboard.
 
 ## Main files
-- Sekarang: `public/app.js` baris 6195-6406 (212 baris, 7 fungsi, 8 var)
-- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
-- Target refactor: `public/js/modules/habit-analytics.js`
+- Asal (sebelum refactor): `public/app.js` baris 6195-6406 (212 baris, 7 fungsi, 8 var)
+- Nomor baris per file: `docs/symbol-index.md` (generated).
+- File modul: `public/js/modules/habit-analytics.js`
 
 ## Entry points
 - `renderDailyPercentStrip`

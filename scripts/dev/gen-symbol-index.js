@@ -40,7 +40,7 @@ lines.push('> Hasil `node scripts/dev/gen-symbol-index.js`. **Jangan edit manual
 lines.push('> Gunakan file ini untuk menemukan nomor baris, lalu baca hanya rentang tersebut dengan `read_file(offset, limit)`.');
 lines.push('');
 
-let total = 0;
+let total = 0, topLevelCount = 0;
 for (const file of listJs(PUBLIC_DIR)) {
   const rel = path.relative(ROOT, file);
   const src = fs.readFileSync(file, 'utf8');
@@ -54,7 +54,8 @@ for (const file of listJs(PUBLIC_DIR)) {
   if (!rows.length) continue;
   total += rows.length;
   const deep = rows.filter((r) => r.ind === 2).length;
-  lines.push(`## ${rel} (${src.split('\n').length} baris, ${rows.length} simbol${deep ? ` — ${deep} di dalam IIFE` : ''})`);
+  topLevelCount += rows.length - deep;
+  lines.push(`## ${rel} (${src.split('\n').length} baris, ${rows.length - deep} deklarasi top-level${deep ? `, ${deep} deklarasi bersarang` : ''})`);
   lines.push('');
   lines.push(rows.map((r) => `\`${r.n}\`@${r.l}`).join(' · '));
   lines.push('');
@@ -62,6 +63,6 @@ for (const file of listJs(PUBLIC_DIR)) {
 
 lines.push('---');
 lines.push('');
-lines.push(`Total simbol terindeks: ${total}.`);
+lines.push(`Total: ${topLevelCount} deklarasi top-level + ${total - topLevelCount} deklarasi bersarang = ${total} entri terindeks.`);
 fs.writeFileSync(OUT, `${lines.join('\n')}\n`);
-console.log(`docs/symbol-index.md diperbarui: ${total} simbol.`);
+console.log(`docs/symbol-index.md diperbarui: ${topLevelCount} top-level + ${total - topLevelCount} bersarang.`);

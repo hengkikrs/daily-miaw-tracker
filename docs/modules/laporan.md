@@ -4,9 +4,9 @@
 Menu Laporan: mode periode (bulan/3 bulan/tahun), section Activity/Goals/Organization/Finance, ringkasan AI, ekspor PDF & DOC mandiri.
 
 ## Main files
-- Sekarang: `public/app.js` baris 7976-8774 (1024 baris, 24 fungsi, 2 var)
-- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
-- Target refactor: `public/js/modules/laporan-export.js`
+- Asal (sebelum refactor): `public/app.js` baris 7976-8774 (1024 baris, 24 fungsi, 2 var)
+- Nomor baris per file: `docs/symbol-index.md` (generated).
+- File modul: `public/js/modules/laporan-export.js`
 
 ## Entry points
 - `renderLaporanView`

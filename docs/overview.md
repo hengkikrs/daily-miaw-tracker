@@ -4,9 +4,8 @@ Aplikasi tracker personal satu halaman (SPA) **tanpa framework dan tanpa depende
 Nama produk: **Miaw Tracker** (`🐴 Miaw Tracker - Analitik Kebiasaan`).
 
 ## Stack aktual
-- Vanilla JavaScript (IIFE di `public/app.js`, kini 8475 baris setelah FASE A; sebelum refactor 8.774 baris) — **bukan** Next.js/React/Vue/TS.
-- Sebagian kode sudah dipisah ke `public/js/core/*.js` (classic script, dimuat sebelum `app.js`) — mulai FASE A: `01-config.js`, `04-utils.js`, `07-theme.js`.
-- HTML statis `public/index.html` (5 `<script>` classic di akhir `<body>`, tanpa inline handler).
+- Vanilla JavaScript, **33 classic script** di `public/js/**` (total 8906 baris) — **bukan** Next.js/React/Vue/TS.
+- HTML statis `public/index.html` (33 `<script>` classic di akhir `<body>`, tanpa inline handler; urutan = kontrak load).
 - CSS: `public/styles.css` (4.857 baris) + `public/theme.css` (456 baris, tema terang/gelap).
 - Server lokal: `server.js` (HTTP statis native, tanpa dependency).
 - Serverless: `api/lookup-user.js`, `api/miawai-chat.js`, `api/schedule-deletion.js` (kunci rahasia hanya di server).
@@ -32,7 +31,7 @@ node --check public/app.js    # satu-satunya gerbang sintaks yang tersedia
 - Detail lengkap: `docs/storage.md`.
 
 ## Titik masuk kode
-- Router/view: `renderShell()` — `public/app.js` L1861–2048 (target: `public/js/core/09-router.js`).
-- Delegasi event: `bindEvents()` — L7479–7948 (target: `public/js/events/20-bind-events.js`).
-- Notifikasi: `showToast()` — L1070–1076.
-- Bootstrap: `init()` — L7949–7975, **dipanggil sekali di baris terakhir file** (L8773).
+- Router/view: `renderShell()` — `public/js/core/09-router.js`.
+- Delegasi event: `bindEvents()` — `public/js/events/20-bind-events.js`.
+- Notifikasi: `showToast()` — `public/js/core/06-toast.js`.
+- Bootstrap: `init()` — `public/js/bootstrap/30-init.js`, dipanggil sekali di baris terakhir file itu.
