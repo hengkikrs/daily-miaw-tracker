@@ -5,6 +5,7 @@ Kalender bulanan + daftar event/jadwal, penanda task pada tanggal, mode kalender
 
 ## Main files
 - Sekarang: `public/app.js` baris 1652-1860 (209 baris, 9 fungsi, 6 var)
+- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
 - Target refactor: `public/js/modules/schedule.js`
 
 ## Entry points

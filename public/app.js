@@ -1,126 +1,6 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'miaw-tracker.state.v1';
-  const THEME_KEY = 'miaw-tracker.theme';
-  const CLIENT_ID_KEY = 'miaw-tracker.client-id';
-  const AUTH_SESSION_KEY = 'miaw-tracker.auth-session.v1';
-  const SCHEMA_VERSION = 1;
-  const REMOTE_SYNC_DEBOUNCE_MS = 150;
-  const OTP_RESEND_SECONDS = 60;
-
-  const MONTHS = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-  ];
-
-  const CATEGORY_ORDER = ['daily', 'weekly', 'specificWeekly', 'monthly'];
-
-  const CATEGORY_CONFIG = {
-    daily: {
-      label: 'Kebiasaan Harian',
-      shortLabel: 'Harian',
-      slotUnit: 'hari',
-      color: 'teal',
-      description: 'Dilacak untuk setiap hari kalender dalam bulan ini.',
-    },
-    weekly: {
-      label: 'Kebiasaan Mingguan',
-      shortLabel: 'Mingguan',
-      slotUnit: 'minggu',
-      color: 'blue',
-      description: 'Dilacak berdasarkan jumlah minggu pada bulan ini.',
-    },
-    specificWeekly: {
-      label: 'Kebiasaan Mingguan Khusus',
-      shortLabel: 'Mingguan Khusus',
-      slotUnit: 'minggu',
-      color: 'amber',
-      description: 'Rutinitas mingguan khusus dengan logika progres mingguan yang sama.',
-    },
-    monthly: {
-      label: 'Kebiasaan Bulanan',
-      shortLabel: 'Bulanan',
-      slotUnit: 'bulan',
-      color: 'rose',
-      description: 'Target besar yang dicentang satu kali per bulan.',
-    },
-  };
-
-  const DEFAULT_HABITS = {
-    daily: [
-      'Minum air minimal 1.5 L',
-      'Workout 45 Menit',
-      'Baca Al-Quran 2 lembar',
-      'Evaluasi hari ini',
-      'Tidur jam 22.00 maksimal 23.00',
-    ],
-    weekly: [],
-    specificWeekly: [],
-    monthly: [],
-  };
-
-  const CATEGORY_DEFAULT_POINTS = {
-    daily: 50,
-    weekly: 65,
-    specificWeekly: 70,
-    monthly: 85,
-  };
-
-  const DEFAULT_HABIT_POINTS = {
-    'Minum air minimal 1.5 L': 35,
-    'Workout 45 Menit': 85,
-    'Baca Al-Quran 2 lembar': 55,
-    'Evaluasi hari ini': 30,
-    'Tidur jam 22.00 maksimal 23.00': 75,
-    'Bangun jam 4': 80,
-    'Shalat Tahajud': 85,
-    'Baca Al-Waqiah & Al-Mulk': 60,
-    'Shalat Wajib & Rawatib & Doa': 75,
-    'Shalat Dhuha': 55,
-    'Minum Creatine & Susu Protein (Pagi & Sore)': 45,
-    'Makan minimal 3x sehari (300 gr nasi)': 60,
-    'Mandi 2x sehari pagi & sore': 35,
-    'Sikat gigi setiap malam': 25,
-    'Domestik 30 menit': 50,
-    'Game (Sudoku 2x Easy, Geografi 100, ML 1x)': 35,
-    'Belajar editing video & AI max 2 jam': 70,
-    'Belajar bahasa inggris max 2 jam': 70,
-    'Sadaqah subuh': 30,
-    'Baca Buku 50 Halaman': 75,
-    'Bangun jam 4, cuci muka dan shalat tahajud': 90,
-    'Shalat wajib, rawatib dan dhuha': 80,
-    'Baca Al-Quran minimal 1 halaman, Al Waqiah (subuh) dan Al Mulk (malam)': 75,
-    'Pekerjaan domestik 30 menit': 50,
-    'Mandi pagi dan sore, sikat gigi malam, dan bersihin muka sebelum tidur': 45,
-    'Makan 3x (8, 12, 17) dan minum air 1.5 L': 65,
-    'Belajar English 30 menit aja': 45,
-    'Catat Pengeluaran hari ini': 35,
-  };
-
-  const HABIT_NAME_TRANSLATIONS = {
-    'Drink enough water': 'Minum air yang cukup',
-    'Move for 20 minutes': 'Bergerak selama 20 menit',
-    'Read 10 pages': 'Membaca 10 halaman',
-    'Sleep before target time': 'Tidur sebelum target waktu',
-    'Journal check-in': 'Menulis jurnal singkat',
-    'Mindful breathing': 'Latihan napas sadar',
-    'Plan tomorrow': 'Merencanakan hari esok',
-    'Tidy one space': 'Merapikan satu area',
-    'Weekly review': 'Evaluasi mingguan',
-    'Meal prep': 'Persiapan makanan',
-    'Budget check': 'Cek anggaran',
-    'Workspace reset': 'Rapikan ruang kerja',
-    'Sunday reset routine': 'Rutinitas reset hari Minggu',
-    'Long walk session': 'Sesi jalan kaki panjang',
-    'Deep clean zone': 'Bersih-bersih area khusus',
-    'Call family or friend': 'Menghubungi keluarga atau teman',
-    'Pay bills': 'Membayar tagihan',
-    'Health checkpoint': 'Pemeriksaan kesehatan',
-    'Learning milestone': 'Target belajar bulanan',
-    'Digital backup': 'Cadangan data digital',
-  };
-
   const $ = (selector) => document.querySelector(selector);
 
   const dom = {
@@ -154,8 +34,6 @@
   function scopedKey(key) {
     return authSession?.user?.id ? `${key}:${authSession.user.id}` : key;
   }
-
-  const DATA_STORE_KEYS = ['miaw-tracker.state.v1', 'miaw-tracker.jadwal.v1', 'miaw-tracker.tasks.v1', 'miaw-tracker.goals.v1', 'proj-tracker.projects.v1', 'miaw-tracker.notes.v1'];
 
   // Ganti lingkup storage ke user yang baru login: reload data milik akun ini (dummy baru otomatis di-seed)
   function applyUserScope() {
@@ -228,12 +106,6 @@
   let activeYear = Number(state.selectedYear) || runtimeYear;
   let activeView = state.selectedView || 'dashboard';
   if (activeView === 'kalender') { activeView = 'jadwal'; state.selectedView = 'jadwal'; }
-  const NAV_GROUP_OF = {
-    task: 'activity', jadwal: 'activity',
-    habits: 'goals', goals: 'goals', progress: 'goals', project: 'goals', 'project-task': 'goals',
-    catatan: 'organization', dokumen: 'organization',
-    transaksi: 'keuangan', budget: 'keuangan', tabungan: 'keuangan', 'laporan-keuangan': 'keuangan',
-  };
   let openNavGroups = new Set(state.openNavGroups || (NAV_GROUP_OF[activeView] ? [NAV_GROUP_OF[activeView]] : []));
 
   function syncNavGroups() {
@@ -266,11 +138,6 @@
   let authIsBusy = false;
   let authPwVisible = false;
   let authPwChecks = { len: false, upper: false, other: false };
-  const PW_RULE_OK = 'Password memenuhi semua kriteria.';
-
-  function uid(prefix = 'h') {
-    return `${prefix}_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
-  }
 
   function createFreshState() {
     return {
@@ -300,116 +167,6 @@
 
   function isLoggedIn() {
     return Boolean(authSession?.access_token && authSession?.user?.id);
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;',
-    }[char]));
-  }
-
-  function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
-  }
-
-  function normalizeHabitPoints(value) {
-    if (value === null || value === undefined || String(value).trim() === '') return null;
-    const points = Number(value);
-    if (!Number.isFinite(points)) return null;
-    return Math.round(clamp(points, 1, 100));
-  }
-
-  function suggestHabitPoints(name, categoryKey) {
-    if (DEFAULT_HABIT_POINTS[name]) return DEFAULT_HABIT_POINTS[name];
-
-    const normalized = String(name || '').toLowerCase();
-    const base = CATEGORY_DEFAULT_POINTS[categoryKey] || 50;
-    const rules = [
-      { score: 90, words: ['deep work', 'proyek besar', 'marathon', 'ujian'] },
-      { score: 85, words: ['workout', 'gym', 'olahraga', 'lari', 'cardio', 'training'] },
-      { score: 85, words: ['tahajud'] },
-      { score: 80, words: ['bangun jam 4', 'shalat wajib', 'rawatib', 'puasa', 'deadline', 'presentasi'] },
-      { score: 75, words: ['tidur', 'bangun pagi', 'no sugar', 'tanpa gula'] },
-      { score: 70, words: ['belajar', 'course', 'kelas', 'menulis', 'konten', 'editing', 'ai max'] },
-      { score: 60, words: ['baca buku', 'al-waqiah', 'al-mulk', 'quran', 'al-quran', 'meeting', 'review mingguan'] },
-      { score: 55, words: ['dhuha'] },
-      { score: 45, words: ['protein', 'creatine', 'makan', 'budget', 'bersih', 'rapikan', 'backup', 'meal prep'] },
-      { score: 35, words: ['minum', 'air', 'vitamin', 'jalan'] },
-      { score: 30, words: ['sadaqah', 'sedekah', 'evaluasi', 'jurnal', 'journal', 'plan', 'rencana', 'napas'] },
-    ];
-
-    const matched = rules.find((rule) => rule.words.some((word) => normalized.includes(word)));
-    return matched ? matched.score : base;
-  }
-
-  function habitPoints(habit, categoryKey) {
-    return normalizeHabitPoints(habit.points) || suggestHabitPoints(habit.name, categoryKey);
-  }
-
-  function roundPercent(value) {
-    return Number.isFinite(value) ? value.toFixed(2) : '0.00';
-  }
-
-  function compactPercent(value) {
-    return `${Math.round(Number.isFinite(value) ? value : 0)}%`;
-  }
-
-  function pointScore(value) {
-    return String(Math.round(clamp(Number.isFinite(value) ? value : 0, 0, 100)));
-  }
-
-  function daysInMonth(year, monthIndex) {
-    return new Date(year, monthIndex + 1, 0).getDate();
-  }
-
-  function focusedDayIndex(year, monthIndex) {
-    const today = new Date();
-    if (today.getFullYear() === year && today.getMonth() === monthIndex) {
-      return today.getDate() - 1;
-    }
-    return 0;
-  }
-
-  function currentTrackingDate() {
-    const today = new Date();
-    return {
-      year: today.getFullYear(),
-      monthIndex: today.getMonth(),
-    };
-  }
-
-  function weeksInMonth(year, monthIndex) {
-    return Math.ceil(daysInMonth(year, monthIndex) / 7);
-  }
-
-  function slotCountFor(categoryKey, year, monthIndex) {
-    if (categoryKey === 'daily') return daysInMonth(year, monthIndex);
-    if (categoryKey === 'weekly' || categoryKey === 'specificWeekly') return weeksInMonth(year, monthIndex);
-    return 1;
-  }
-
-  function slotLabel(categoryKey, index, year, monthIndex) {
-    if (categoryKey === 'daily') return String(index + 1);
-    if (categoryKey === 'weekly' || categoryKey === 'specificWeekly') {
-      const firstDay = index * 7 + 1;
-      const lastDay = Math.min(firstDay + 6, daysInMonth(year, monthIndex));
-      return `M${index + 1}`;
-    }
-    return 'Selesai';
-  }
-
-  function slotTitle(categoryKey, index, year, monthIndex) {
-    if (categoryKey === 'daily') return `${index + 1} ${MONTHS[monthIndex]} ${year}`;
-    if (categoryKey === 'weekly' || categoryKey === 'specificWeekly') {
-      const firstDay = index * 7 + 1;
-      const lastDay = Math.min(firstDay + 6, daysInMonth(year, monthIndex));
-      return `Minggu ${index + 1}: ${firstDay}-${lastDay} ${MONTHS[monthIndex]} ${year}`;
-    }
-    return `${MONTHS[monthIndex]} ${year}`;
   }
 
   function createHabit(name, categoryKey, year, monthIndex, points = null) {
@@ -593,13 +350,6 @@
   }
 
   /* --- OAuth Google (PKCE flow, tanpa OTP) --- */
-  const OAUTH_VERIFIER_KEY = 'miaw-tracker.oauth-verifier.v1';
-
-  function noteRandomB64url(len) {
-    const bytes = new Uint8Array(len);
-    crypto.getRandomValues(bytes);
-    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
 
   async function pkceChallenge(verifier) {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
@@ -668,7 +418,6 @@
       return false;
     }
   }
-
 
   function consumeOAuthHash() {
     const hash = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
@@ -1074,22 +823,6 @@
     toastTimer = setTimeout(() => dom.toast.classList.remove('show'), 2200);
   }
 
-  function applyTheme(theme) {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem(THEME_KEY, theme);
-  }
-
-  function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved) {
-      applyTheme(saved);
-      return;
-    }
-
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
-  }
-
   function buildYearOptions() {
     const knownYears = Object.keys(state.years).map(Number).filter(Number.isFinite);
     const years = new Set([
@@ -1123,33 +856,6 @@
       `;
     }).join('');
   }
-
-  function canonicalUsername(raw) {
-    return String(raw || '')
-      .toLowerCase()
-      .normalize('NFKD')
-      .replace(/[^a-z0-9._-]+/g, '')
-      .replace(/^[._-]+|[._-]+$/g, '')
-      .slice(0, 29);
-  }
-
-  function evaluatePassword(pw) {
-    return {
-      len: pw.length >= 8,
-      upper: /[A-Z]/.test(pw),
-      other: /[0-9!@#$%^&*()_+\-=\[\]{};:'",.<>/?\\|`~]/.test(pw),
-    };
-  }
-
-  function allPwChecksPass(checks) {
-    return checks.len && checks.upper && checks.other;
-  }
-
-  const PW_RULE_LABELS = {
-    len: 'Minimal 8 karakter',
-    upper: 'Minimal 1 huruf besar (A-Z)',
-    other: 'Minimal 1 angka / karakter non-huruf',
-  };
 
   // Update checklist + tombol submit in-place tanpa re-render (fokus input tidak hilang).
   function refreshPwChecklistUi(pw) {
@@ -1645,7 +1351,6 @@
     if (btn.matches('[data-daily-back]')) { dailyDetailId = null; renderShell(); return true; }
     return false;
   }
-
 
   /* ============ MODUL JADWAL (kalender + agenda harian) ============ */
   const JADWAL_STORE_KEY = 'miaw-tracker.jadwal.v1';
@@ -2663,10 +2368,6 @@
     return true;
   }
 
-  function val2(form, name) {
-    return form.querySelector(`[name=${name}]`)?.value.trim() || '';
-  }
-
   function logActivityLastTask(text) {
     const tasks = loadTasks();
     const t = tasks[tasks.length - 1];
@@ -2826,7 +2527,6 @@
     }
     return false;
   }
-
 
   /* ============ MODUL GOALS (target & milestone) ============ */
   const GOALS_STORE_KEY = 'miaw-tracker.goals.v1';

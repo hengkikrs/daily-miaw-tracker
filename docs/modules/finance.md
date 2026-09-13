@@ -5,6 +5,7 @@ Lima sub-bagian: Tabungan (target & transaksi tabungan), Budget (periode + trans
 
 ## Main files
 - Sekarang: `public/app.js` baris 4327-5682 (1356 baris, 93 fungsi, 43 var)
+- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
 - Target refactor: `public/js/modules/finance-{savings,budget,transactions,documents,reports-legacy}.js`
 
 ## Entry points

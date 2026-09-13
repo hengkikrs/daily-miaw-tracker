@@ -4,8 +4,9 @@ Aplikasi tracker personal satu halaman (SPA) **tanpa framework dan tanpa depende
 Nama produk: **Miaw Tracker** (`🐴 Miaw Tracker - Analitik Kebiasaan`).
 
 ## Stack aktual
-- Vanilla JavaScript (satu IIFE besar di `public/app.js`, 8.774 baris) — **bukan** Next.js/React/Vue/TS.
-- HTML statis `public/index.html` (2 `<script>` classic di akhir `<body>`, tanpa inline handler).
+- Vanilla JavaScript (IIFE di `public/app.js`, kini 8475 baris setelah FASE A; sebelum refactor 8.774 baris) — **bukan** Next.js/React/Vue/TS.
+- Sebagian kode sudah dipisah ke `public/js/core/*.js` (classic script, dimuat sebelum `app.js`) — mulai FASE A: `01-config.js`, `04-utils.js`, `07-theme.js`.
+- HTML statis `public/index.html` (5 `<script>` classic di akhir `<body>`, tanpa inline handler).
 - CSS: `public/styles.css` (4.857 baris) + `public/theme.css` (456 baris, tema terang/gelap).
 - Server lokal: `server.js` (HTTP statis native, tanpa dependency).
 - Serverless: `api/lookup-user.js`, `api/miawai-chat.js`, `api/schedule-deletion.js` (kunci rahasia hanya di server).

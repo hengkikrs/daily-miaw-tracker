@@ -5,6 +5,7 @@ Daftar project, status/chip, progress dari task, deadline, form project, tab ove
 
 ## Main files
 - Sekarang: `public/app.js` baris 3140-3696 (557 baris, 25 fungsi, 20 var)
+- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
 - Target refactor: `public/js/modules/projects.js`
 
 ## Entry points

@@ -3,10 +3,16 @@
 ## Bentuk kode sekarang
 ```
 public/index.html
-  └── <script src="runtime-config.js">        (hasil build: window.MIAW_TRACKER_CONFIG)
-  └── <script src="app.js">                   (SATU IIFE: 400 fungsi + 188 var, 588 simbol top-level)
+  ├── <script src="runtime-config.js">        (hasil build: window.MIAW_TRACKER_CONFIG)
+  ├── <script src="js/core/01-config.js">     (FASE A — konstanta; top-level const, global lexical)
+  ├── <script src="js/core/04-utils.js">      (FASE A — 21 utility murni)
+  ├── <script src="js/core/07-theme.js">      (FASE A — applyTheme/initTheme)
+  └── <script src="app.js">                   (IIFE sisa: 377 fn + 169 var = 546 simbol)
 ```
 - IIFE: `(() => { 'use strict'; ... })();`
+- Setelah FASE A: 264 baris (45 simbol) pindah ke `public/js/core/`; `public/app.js` 8.774 → 8475 baris.
+- Yang dipisah jadi **global** (classic script): `function` menjadi properti `window`, `const` menjadi *global lexical* (tidak jadi properti `window`) — keduanya tetap terbaca dari dalam IIFE.
+- Verifikasi: 17 route dibandingkan teks+struktur sebelum vs sesudah FASE A → 16/17 identik, 1 (`transaksi`) hanya beda label menit pada jam (dinamis).
 - Hanya **2 pemanggilan top-level**: `migrateLegacyStores();` (L225) dan `init();` (L8773, terakhir).
 - 0 nama duplikat di antara 588 simbol top-level.
 - **0 tabrakan** antara 588 nama itu dan properti `window` (diuji runtime) → IIFE bisa dibuka tanpa menabrak global browser.

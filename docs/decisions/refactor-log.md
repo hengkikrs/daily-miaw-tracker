@@ -7,7 +7,7 @@ Aturan: setiap fase = **1 commit + 1 validasi**. Jangan lompat fase. Jangan gabu
 |---|---|---|
 | TAHAP 0 | Audit + baseline | ✅ selesai (`docs/refactor-audit.md`, tag `pre-refactor-baseline`) |
 | FASE 0 | Dokumentasi + AGENTS.md + validator + indeks simbol | ✅ selesai (tanpa perubahan perilaku) |
-| FASE A | Ekstrak murni: `core/01-config.js`, `core/04-utils.js`, `core/07-theme.js` | ⏳ belum |
+| FASE A | Ekstrak murni: `core/01-config.js`, `core/04-utils.js`, `core/07-theme.js` | ✅ selesai |
 | FASE B | `02-runtime-dom`, `05-storage`, `03-state` + **buka pembungkus IIFE** (butuh approval terpisah) | ⏳ belum |
 | FASE C | `modules/notes`, `modules/daily-tasks`, `modules/schedule` | ⏳ belum |
 | FASE D | `modules/tasks`, `modules/goals`, `modules/projects` | ⏳ belum |
@@ -48,3 +48,15 @@ bandingkan panjang HTML + jumlah node + checksum `#content` dengan `audit-baseli
 `Object.keys(localStorage)` tetap 7 kunci ber-scope `:<user-id>`.
 
 Hal yang **belum pernah** diuji (jangan diklaim lulus): login Supabase asli, OTP, Google OAuth, remote sync nyata, dan aksi tulis per modul.
+
+## FASE A — laporan
+- **Tujuan:** memindahkan kode murni (tanpa state/closure) keluar dari IIFE tanpa membuka pembungkus IIFE.
+- **File dibuat:** `public/js/core/01-config.js` (19 simbol, 133 baris), `public/js/core/04-utils.js` (21 simbol, 131 baris), `public/js/core/07-theme.js` (2 simbol, 21 baris).
+- **File diubah:** `public/app.js` (8.775 → 8475 baris; 264 baris dipindah), `public/index.html` (3 script baru + cache-bust `?v=20260913-faseA`).
+- **Simbol dipindah:** konstanta (`STORAGE_KEY`, `MONTHS`, `CATEGORY_CONFIG`, `DEFAULT_HABITS`, `DATA_STORE_KEYS`, `NAV_GROUP_OF`, `PW_RULE_*`, `OAUTH_VERIFIER_KEY`, …), utility murni (`uid`, `escapeHtml`, `clamp`, `normalizeHabitPoints`, `suggestHabitPoints`, `habitPoints`, `roundPercent`, `compactPercent`, `pointScore`, `daysInMonth`, `focusedDayIndex`, `currentTrackingDate`, `weeksInMonth`, `slotCountFor`, `slotLabel`, `slotTitle`, `noteRandomB64url`, `canonicalUsername`, `evaluatePassword`, `allPwChecksPass`, `val2`), dan `applyTheme`/`initTheme`.
+- **Bukan dipindah (ternyata tidak murni):** `showToast` (pakai `dom.toast` + `toastTimer`) dan `otpRemainingSeconds` (pakai `authOtpResendAt`) → tetap di app.js sampai FASE B/G.
+- **Storage key yang terlibat:** tidak ada yang berubah; `DATA_STORE_KEYS` hanya dipindah sebagai konstanta.
+- **Validasi:** `node --check` 4/4 file OK · `node scripts/dev/check-syntax.js` LULUS (0 duplikat) · `npm run build` + `npm run vercel:prebuild` → `.vercel/output/static/js/core/*.js` ada · differential test 17 route (teks+node) SEBELUM vs SESUDAH → 16/17 identik, 1 beda hanya pada label jam/menit yang dinamis · `localStorage` tetap 7 kunci ber-scope `:<user-id>`.
+- **Catatan mekanisme:** di versi SESUDAH, `window.escapeHtml`/`window.uid` berisi `function` (hasil pemisahan) sedangkan `window.MONTHS` tetap `undefined` karena `const` top-level hidup di *global lexical environment* — persis perilaku yang diharapkan.
+- **Risiko terbuka:** `openNavGroups = new Set(... NAV_GROUP_OF ...)` di app.js memakai konstanta yang kini dimuat dari file lain → **urutan `<script>` menjadi kontrak**; jangan menaruh `01-config.js` setelah `app.js`.
+- **Belum diuji:** aksi tulis per modul, login Supabase asli, remote sync.

@@ -5,6 +5,7 @@ Chat AI: kirim prompt ke `/api/miawai-chat`, unggah berkas (maks 60k karakter pe
 
 ## Main files
 - Sekarang: `public/app.js` baris 6407-6596 (190 baris, 7 fungsi, 4 var)
+- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
 - Target refactor: `public/js/modules/miawai.js`
 
 ## Entry points

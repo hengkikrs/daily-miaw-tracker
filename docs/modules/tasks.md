@@ -5,6 +5,7 @@ Task/subtask dengan deadline, filter, halaman tambah, timer fokus (start/pause/r
 
 ## Main files
 - Sekarang: `public/app.js` baris 2064-2831 (768 baris, 32 fungsi, 12 var)
+- Nomor baris `public/app.js` bergeser setiap kali kode dipindah — acuan otoritatif: `docs/symbol-index.md`.
 - Target refactor: `public/js/modules/tasks.js`
 
 ## Entry points
