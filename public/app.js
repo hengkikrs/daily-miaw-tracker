@@ -1578,6 +1578,13 @@
       return;
     }
 
+    if (activeView === 'miawai') {
+      dom.pageTitle.textContent = 'MiawAI';
+      dom.pageSubtitle.textContent = 'Asisten AI untuk website, Habit & Goals';
+      dom.content.innerHTML = renderMiawAIView();
+      return;
+    }
+
     if (PLACEHOLDER_VIEWS[activeView]) {
       dom.pageTitle.textContent = PLACEHOLDER_VIEWS[activeView].title;
       dom.pageSubtitle.textContent = PLACEHOLDER_VIEWS[activeView].subtitle;
@@ -2680,7 +2687,7 @@
   }
 
   /* ============ MODUL PROJECT (proyek mandiri: task, notes, files) ============ */
-  const PROJ_STORE_KEY = '***';
+  const PROJ_STORE_KEY = 'proj-' + 'tracker.projects.v1';
   const PROJ_STATUS = {
     planning: { label: 'Planning', color: '#8b7bb8' },
     active: { label: 'Active', color: '#3f9d63' },
@@ -5794,6 +5801,166 @@
     `;
   }
 
+  /* ============ MODUL MiawAI (asisten seputar website, Habit & Goals) ============ */
+  const MIAW_MODELS = [
+    { id: 'glm-5.3-flash', label: 'GLM 5.3 Flash' },
+    { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash' },
+  ];
+  const MIAW_FILE_MAX = 60000; // chars per file sent to model
+  let miawModel = 'glm-5.3-flash';
+  let miawMessages = [];   // {role, content, files?:[names]} — sesi ini saja; refresh = obrolan baru
+  let miawBusy = false;
+  let miawFiles = [];       // {name, text} terlampir ke pesan berikutnya
+  let miawDraft = '';
+  let miawContextSent = false;
+
+  function miawSiteContext() {
+    try {
+      const goals = loadGoals().slice(0, 12).map((g) => `${g.title} [${(GOAL_TERMS[g.term] || {}).label || g.term || '-'}] ${g.status || ''}`).join('; ');
+      const projs = loadProjects().slice(0, 12).map((p) => `${p.name || p.title} (${p.status || ''})`).join('; ');
+      const tasks = loadTasks().slice(0, 15).map((t) => `${t.title}${t.done ? ' ✓' : ''} @${t.project || '-'}`).join('; ');
+      const habitLines = [];
+      Object.values(state.years || {}).forEach((yr) => {
+        Object.values(yr.categories || {}).forEach((cat) => {
+          (cat.habits || []).slice(0, 40).forEach((h) => {
+            habitLines.push(`${cat.name || 'kategori'}/${h.name}${h.active === false ? ' (nonaktif)' : ''}`);
+          });
+        });
+      });
+      const habits = [...new Set(habitLines)].slice(0, 25).join('; ');
+      return [
+        'KONTEKS SINGKAT DATA USER (pakai hanya untuk menjawab seputar website/Habit/Goals):',
+        `Goals: ${goals || '(belum ada)'}`,
+        `Projects: ${projs || '(belum ada)'}`,
+        `Tasks: ${tasks || '(belum ada)'}`,
+        `Habits: ${habits || '(belum ada)'}`,
+      ].join('\n');
+    } catch (e) {
+      return 'Konteks data tidak tersedia.';
+    }
+  }
+
+  function miawBubble(msg) {
+    const who = msg.role === 'user' ? 'you' : 'ai';
+    const files = (msg.files && msg.files.length) ? `<span class="miaw-msg-files">📎 ${msg.files.map(escapeHtml).join(', ')}</span>` : '';
+    return `<div class="miaw-msg miaw-${who}"><div class="miaw-bubble">${files}<div class="miaw-text">${msg.role === 'user' ? escapeHtml(msg.content).replace(/\n/g, '<br/>') : miawSimpleMarkdown(msg.content)}</div></div></div>`;
+  }
+
+  function miawSimpleMarkdown(text) {
+    return escapeHtml(text || '')
+      .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+      .replace(/^\s*[-•] (.*)$/gm, '• $1')
+      .replace(/\n/g, '<br/>');
+  }
+
+  function renderMiawAIView() {
+    const modelOpts = MIAW_MODELS.map((m) => `<option value="${m.id}" ${m.id === miawModel ? 'selected' : ''}>${m.label}</option>`).join('');
+    const body = miawMessages.length
+      ? miawMessages.map(miawBubble).join('')
+      : `<div class="miaw-empty">
+           <div class="miaw-empty-emoji">🤖</div>
+           <b>MiawAI</b>
+           <p>Asisten khusus untuk <strong>website ini</strong>, <strong>Habit</strong>, dan <strong>Goals</strong>. Tanya cara pakai fitur, minta saran kebiasaan, atau breakdown target. Bisa lampirkan file (teks/CSV/markdown) untuk dianalisis.</p>
+           <div class="miaw-suggests">
+             <button type="button" class="miaw-suggest" data-miaw-q="Bagaimana cara membuat Goals dan Project di website ini?">Cara pakai Goals &amp; Project</button>
+             <button type="button" class="miaw-suggest" data-miaw-q="Bantu aku bikin rencana kebiasaan pagi yang konsisten">Saran Habit pagi</button>
+             <button type="button" class="miaw-suggest" data-miaw-q="Pecah goalsku jadi target jangka pendek yang realistis">Breakdown Goals</button>
+           </div>
+         </div>`;
+    const files = miawFiles.length
+      ? `<div class="miaw-files">${miawFiles.map((f, i) => `<span class="miaw-file">📄 ${escapeHtml(f.name)}<button type="button" data-miaw-rmfile="${i}" aria-label="Hapus lampiran">✕</button></span>`).join('')}</div>`
+      : '';
+    return `
+      <div class="miaw-layout">
+        <section class="panel miaw-panel">
+          <div class="miaw-topbar">
+            <label class="miaw-model-pick">
+              <span>Model</span>
+              <select id="miawModelSel">${modelOpts}</select>
+            </label>
+            <button class="ghost-button" type="button" data-action="miaw-new">＋ Obrolan Baru</button>
+          </div>
+          <div class="miaw-chat" id="miawChat">${body}${miawBusy && !miawMessages.length ? '' : ''}</div>
+          ${files}
+          <div class="miaw-composer">
+            <input type="file" id="miawFile" hidden multiple accept=".txt,.md,.csv,.tsv,.json,.log,.html,.js,.xml,.yml,.yaml,text/plain,text/markdown,text/csv,application/json" />
+            <button class="miaw-attach" type="button" data-action="miaw-attach" title="Lampirkan file untuk dianalisis">📎</button>
+            <input id="miawInput" type="text" placeholder="Tanya seputar website, Habit, atau Goals…" value="${escapeHtml(miawDraft)}" autocomplete="off" />
+            <button class="primary-button miaw-send" type="button" data-action="miaw-send" ${miawBusy ? 'disabled' : ''}>${miawBusy ? 'Mengetik…' : 'Kirim'}</button>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  async function miawSend(text) {
+    const content = String(text || '').trim();
+    if (!content || miawBusy) return;
+    const files = miawFiles.slice();
+    miawFiles = [];
+    miawDraft = '';
+    let userContent = content;
+    if (files.length) {
+      userContent += '\n\n' + files.map((f) => `--- FILE: ${f.name} ---\n${f.text.slice(0, MIAW_FILE_MAX)}`).join('\n\n');
+    }
+    if (!miawContextSent) {
+      userContent = miawSiteContext() + '\n\nPERTANYAAN USER:\n' + userContent;
+      miawContextSent = true;
+    }
+    miawMessages.push({ role: 'user', content, files: files.map((f) => f.name) });
+    miawMessages.push({ role: 'assistant', content: '' });
+    miawBusy = true;
+    renderShell();
+    miawScrollBottom();
+    try {
+      const payload = miawMessages.slice(0, -1).filter((m) => m.content).map((m) => ({ role: m.role, content: m.content }));
+      payload[payload.length - 1] = { role: 'user', content: userContent };
+      const res = await fetch('/api/miawai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: miawModel, messages: payload }),
+        cache: 'no-store',
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || typeof data.reply !== 'string') {
+        miawMessages[miawMessages.length - 1].content = '⚠️ ' + ((data && data.error) || 'MiawAI sedang tidak tersedia. Coba lagi.');
+      } else {
+        miawMessages[miawMessages.length - 1].content = data.reply;
+      }
+    } catch (e) {
+      miawMessages[miawMessages.length - 1].content = '⚠️ Gagal terhubung ke MiawAI. Periksa koneksi lalu coba lagi.';
+    } finally {
+      miawBusy = false;
+      renderShell();
+      miawScrollBottom();
+    }
+  }
+
+  function miawScrollBottom() {
+    const el = dom.content.querySelector('#miawChat');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  async function handleMiawFiles(inputEl) {
+    const files = [...(inputEl.files || [])].slice(0, 5);
+    inputEl.value = '';
+    for (const f of files) {
+      const ext = (f.name.split('.').pop() || '').toLowerCase();
+      if (!['txt', 'md', 'csv', 'tsv', 'json', 'log', 'html', 'js', 'xml', 'yml', 'yaml'].includes(ext)) {
+        showToast(`File ${f.name}: format tidak didukung (teks saja).`);
+        continue;
+      }
+      try {
+        const text = await f.text();
+        miawFiles.push({ name: f.name, text: text.slice(0, 120000) });
+      } catch (e) {
+        showToast(`Gagal membaca ${f.name}.`);
+      }
+    }
+    renderShell();
+  }
+
   let accountPage = 'main';
   let acctNewPwVisible = false;
   let accountDeleteOpen = false;
@@ -6893,12 +7060,36 @@
         refreshAcctPwUi(acctPwDraft.pw);
         return;
       }
+      /* --- MiawAI --- */
+      const miawQ = event.target.closest('[data-miaw-q]');
+      if (miawQ) { miawSend(miawQ.dataset.miawQ); return; }
+      const miawRm = event.target.closest('[data-miaw-rmfile]');
+      if (miawRm) { miawFiles.splice(Number(miawRm.dataset.miawRmfile), 1); renderShell(); return; }
+      if (action === 'miaw-new') { miawMessages = []; miawFiles = []; miawDraft = ''; miawContextSent = false; renderShell(); return; }
+      if (action === 'miaw-attach') { dom.content.querySelector('#miawFile')?.click(); return; }
+      if (action === 'miaw-send') {
+        const inp = dom.content.querySelector('#miawInput');
+        miawSend(inp ? inp.value : miawDraft);
+        return;
+      }
+    });
+
+    dom.content.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && event.target && event.target.id === 'miawInput' && !miawBusy) {
+        event.preventDefault();
+        miawSend(event.target.value);
+      }
     });
 
     dom.content.addEventListener('change', (event) => {
+      const miawModelSel = event.target.closest('#miawModelSel');
+      if (miawModelSel) { miawModel = miawModelSel.value; renderShell(); return; }
+      const miawFileEl = event.target.closest('#miawFile');
+      if (miawFileEl) { handleMiawFiles(miawFileEl); return; }
       const taskCheck = event.target.closest('[data-task-toggle],[data-task-sub]');
       if (taskCheck) handleTaskAction(taskCheck);
       const projChk = event.target.closest('[data-proj-ms],[data-proj-task],[data-proj-search],[data-pt-move]');
+
       if (projChk && projChk.matches('[data-pt-move]')) {
         const tid = projChk.dataset.ptMove; const dest = projChk.value;
         if (dest) { const tasks = loadTasks(); const t = tasks.find((x) => x.id === tid); if (t) { t.project = dest; saveTasks(); } renderShell(); }
