@@ -1618,7 +1618,7 @@
   let taskEditing = false;
   let taskPageAdding = false;
   let taskAddOptions = false;
-  const taskAddDefaults = () => ({ title: '', date: taskTodayIso(), time: '19:00', priority: 'high', project: 'Marketing Batu Bata', category: 'Marketing', notes: '', memo: '', deadline: '', reminder: '', tag: '', recurring: '', estimate: '', checklist: [], attachments: [] });
+  const taskAddDefaults = () => ({ title: '', date: taskTodayIso(), time: '19:00', priority: 'high', project: firstProjName(), category: 'Marketing', notes: '', memo: '', deadline: '', reminder: '', tag: '', recurring: '', estimate: '', checklist: [], attachments: [] });
   let taskAddDraft = taskAddDefaults();
   let focusTaskId = null;
   let focusInterval = null;
@@ -1644,12 +1644,12 @@
           { text: 'Sesi fokus 45 mnt selesai', at: Date.now() - 55 * 60000 },
           { text: 'Task dibuat', at: Date.now() - 26 * 3600000 },
         ] },
-      { id: 't2', title: 'Follow up pelanggan', project: 'Sales', tag: '', time: '20:00', priority: 'high', date: today, done: false },
-      { id: 't3', title: 'Laporan keuangan', project: 'Keuangan', tag: '', time: '21:00', priority: 'med', date: today, done: false },
-      { id: 't4', title: 'Edit video promosi', project: 'Marketing', tag: '', time: '22:00', priority: 'low', date: today, done: false },
-      { id: 't5', title: 'Riset keyword', project: 'Marketing', tag: '', time: '10:30', priority: 'med', date: today, done: true },
-      { id: 't6', title: 'Cek stok bahan', project: 'Operasional', tag: '', time: '14:00', priority: 'low', date: today, done: true },
-      { id: 't7', title: 'Susun konten minggu depan', project: 'Marketing', tag: '', time: '', priority: 'med', date: later, done: false },
+      { id: 't2', title: 'Follow up pelanggan', project: 'Marketing Batu Bata', tag: '', time: '20:00', priority: 'high', date: today, done: false },
+      { id: 't3', title: 'Laporan keuangan', project: 'Otomasi Laporan Bulanan', tag: '', time: '21:00', priority: 'med', date: today, done: false },
+      { id: 't4', title: 'Edit video promosi', project: 'Marketing Batu Bata', tag: '', time: '22:00', priority: 'low', date: today, done: false },
+      { id: 't5', title: 'Riset keyword', project: 'Website Toko Online', tag: '', time: '10:30', priority: 'med', date: today, done: true },
+      { id: 't6', title: 'Cek stok bahan', project: 'Marketing Batu Bata', tag: '', time: '14:00', priority: 'low', date: today, done: true },
+      { id: 't7', title: 'Susun konten minggu depan', project: 'Marketing Batu Bata', tag: '', time: '', priority: 'med', date: later, done: false },
     ];
   }
 
@@ -1827,7 +1827,7 @@
       </div>
       <form class="task-card task-edit-form" id="taskEditForm">
         <label>Judul<input name="title" type="text" maxlength="120" required value="${escapeHtml(t.title)}" /></label>
-        <label>Project<input name="project" type="text" maxlength="40" value="${escapeHtml(t.project || '')}" /></label>
+        <label>Project<select name="project" required><option value="">— Pilih project —</option>${projNameOptions(t.project || '')}</select></label>
         <div class="task-edit-row">
           <label>Deadline<input name="date" type="date" value="${t.date || ''}" /></label>
           <label>Jam<input name="time" type="time" value="${t.time || ''}" /></label>
@@ -1990,7 +1990,7 @@
       <form class="task-composer" id="taskComposer">
         <input id="taskQuickInput" type="text" maxlength="120" placeholder="Nama task…" autocomplete="off" />
         <input id="taskQuickWhen" type="date" value="${todayIso}" />
-        <input id="taskQuickProj" type="text" maxlength="24" placeholder="Project (opsional)" autocomplete="off" />
+        <select id="taskQuickProj"><option value="">— Project —</option>${projNameOptions(taskAddDraft.project)}</select>
         <div class="task-composer-actions">
           <button type="button" class="ghost-button" data-task-cancel>Batal</button>
           <button type="submit" class="primary-button">Simpan</button>
@@ -2130,9 +2130,8 @@
           ${row(cal, 'Tanggal', `<span class="task-add-native-wrap"><span class="task-add-read">${taskDateRead(d.date)}</span><input name="date" type="date" value="${escapeHtml(d.date)}" data-add-sync="date" /></span>`)}
           ${row(clock, 'Jam', `<span class="task-add-native-wrap"><span class="task-add-read">${taskTimeRead(d.time)}</span><input name="time" type="time" value="${d.time}" data-add-sync="time" /></span>`)}
           ${row(`<span class="task-add-ico prio">${prioIco}</span>`, 'Prioritas', `<span class="task-dot dot-red"></span><select name="priority"><option value="high" ${d.priority === 'high' ? 'selected' : ''}>High</option><option value="med" ${d.priority === 'med' ? 'selected' : ''}>Medium</option><option value="low" ${d.priority === 'low' ? 'selected' : ''}>Low</option></select>`)}
-          ${row(board, 'Project', `<span class="task-dot dot-red"></span><input name="project" type="text" maxlength="40" value="${escapeHtml(d.project)}" list="taskAddProjects" />`)}
+          ${row(board, 'Project', `<span class="task-dot dot-red"></span><select name="project" required><option value="">— Pilih project —</option>${projNameOptions(d.project)}</select>`)}
           ${row(grid, 'Kategori', `<span class="task-dot dot-ring"></span><input name="category" type="text" maxlength="24" value="${escapeHtml(d.category)}" list="taskAddCats" />`)}
-          <datalist id="taskAddProjects"><option value="Marketing Batu Bata"></option><option value="Marketing"></option><option value="Sales"></option><option value="Operasional"></option><option value="Keuangan"></option></datalist>
           <datalist id="taskAddCats"><option value="Marketing"></option><option value="Operasional"></option><option value="Keuangan"></option><option value="Konten"></option></datalist>
           <button class="task-add-row task-add-more" type="button" data-task-options>
             <span class="task-add-label" style="font-weight:800; color:var(--text)">Opsi Lainnya</span>
@@ -2189,6 +2188,7 @@
       el.focus();
       return false;
     }
+    if (!data.project) { showToast('Pilih project terlebih dahulu — semua task harus berdasarkan project.', true); return false; }
     const checklist = taskAddDraft.checklist.map((c, i) => ({ id: `s${Date.now()}${i}`, text: c.text, done: false }));
     const attachments = taskAddDraft.attachments.map((a) => a.text);
     loadTasks().push({
@@ -2202,7 +2202,7 @@
       attachments: attachments.length ? attachments : undefined,
     });
     saveTasks();
-    const keep = { time: data.time || '19:00', priority: data.priority, project: data.project || 'Marketing Batu Bata', category: data.category || 'Marketing', date: data.date };
+    const keep = { time: data.time || '19:00', priority: data.priority, project: data.project || firstProjName(), category: data.category || 'Marketing', date: data.date };
     taskAddDraft = Object.assign(taskAddDefaults(), again ? keep : {});
     return true;
   }
@@ -2379,11 +2379,29 @@
     Pendidikan: '#8b5cf6', Personal: '#ec6aa0', Lainnya: '#6b7280',
   };
   const GOAL_ICONS = { Karier: '💼', Keuangan: '💰', Kesehatan: '💚', Pendidikan: '🎓', Personal: '🌸', Lainnya: '📌' };
+  const GOAL_TERMS = {
+    pendek: { label: 'Jangka Pendek', hint: '≤ 3 bulan', color: '#3f9d63' },
+    menengah: { label: 'Jangka Menengah', hint: '3–12 bulan', color: '#ea8a2f' },
+    panjang: { label: 'Jangka Panjang', hint: '> 12 bulan', color: '#2f8fbf' },
+  };
+  function goalTermOf(g) {
+    if (g.term && GOAL_TERMS[g.term]) return g.term;
+    const dl = g.deadline || '';
+    const days = dl ? Math.ceil((new Date(`${dl}T23:59:59`).getTime() - Date.now()) / 86400000) : 90;
+    return days <= 90 ? 'pendek' : days <= 365 ? 'menengah' : 'panjang';
+  }
   let goalsFilter = 'all';        // all | aktif | selesai
   let goalsPage = 'list';         // list | detail | add | calendar
   let goalsDetailId = null;
   let goalsMonthOffset = 0;
   let goalsAddCat = 'Karier';
+  let goalsAddTerm = 'pendek';
+  let goalsAddDraft = { title: '', description: '', deadline: '' };
+  function captureGoalAdd() {
+    const f = document.querySelector('#goalAddForm');
+    if (!f) return;
+    goalsAddDraft = { title: f.querySelector('[name=title]').value, description: f.querySelector('[name=description]').value, deadline: f.querySelector('[name=deadline]').value };
+  }
   let goalsCalSel = null;
 
   function loadGoals() {
@@ -2397,7 +2415,7 @@
     const day = (n) => `${y}-${m}-${String(n).padStart(2, '0')}`;
     const seed = [
       {
-        id: 'g1', title: 'Bangun bisnis online', category: 'Karier', project: 'Marketing Batu Bata',
+        id: 'g1', title: 'Bangun bisnis online', category: 'Karier', project: 'Marketing Batu Bata', term: 'menengah',
         deadline: day(30), description: 'Luncurkan toko online dan raih 100 pelanggan pertama.',
         status: 'aktif', createdAt: today,
         milestones: [
@@ -2409,7 +2427,7 @@
         ],
       },
       {
-        id: 'g2', title: 'Meningkatkan skill digital', category: 'Pendidikan', project: 'Pengembangan Diri',
+        id: 'g2', title: 'Meningkatkan skill digital', category: 'Pendidikan', project: 'Pengembangan Diri', term: 'pendek',
         deadline: day(27), description: 'Selesaikan kelas desain & analitik data bulan ini.',
         status: 'aktif', createdAt: today,
         milestones: [
@@ -2420,7 +2438,7 @@
         ],
       },
       {
-        id: 'g3', title: 'Menjaga kesehatan', category: 'Kesehatan', project: 'Rutinitas Harian',
+        id: 'g3', title: 'Menjaga kesehatan', category: 'Kesehatan', project: 'Rutinitas Harian', term: 'pendek',
         deadline: day(28), description: 'Konsisten olahraga & pola makan sehat 4 minggu.',
         status: 'aktif', createdAt: today,
         milestones: [
@@ -2431,7 +2449,7 @@
         ],
       },
       {
-        id: 'g4', title: 'Dana darurat 3 bulan', category: 'Keuangan', project: 'Keuangan Pribadi',
+        id: 'g4', title: 'Dana darurat 3 bulan', category: 'Keuangan', project: 'Keuangan Pribadi', term: 'panjang',
         deadline: `${y}-12-20`, description: 'Sisihkan 10% penghasilan tiap bulan sampai tercapai.',
         status: 'selesai', createdAt: today,
         milestones: [
@@ -2460,11 +2478,12 @@
 
   function goalCardHtml(g) {
     const p = goalProgress(g);
+    const term = goalTermOf(g);
     return `<button type="button" class="goal-card" data-goal-open="${g.id}">
         <span class="goal-ico" style="--gc:${goalCatColor(g.category)}">${goalCatIcon(g.category)}</span>
         <span class="goal-card-main">
           <span class="goal-card-title">${escapeHtml(g.title)}</span>
-          <span class="goal-card-meta">Deadline ${escapeHtml(taskDateRead(g.deadline || ''))} · ${escapeHtml(g.category)}</span>
+          <span class="goal-card-meta"><span class="goal-term-chip t-${term}" style="--tc:${GOAL_TERMS[term].color}">${GOAL_TERMS[term].label}</span> Deadline ${escapeHtml(taskDateRead(g.deadline || ''))} · ${escapeHtml(g.category)}</span>
           <span class="goal-bar"><span style="width:${p.pct}%"></span></span>
           <span class="goal-card-sub">${p.done}/${p.total} milestone${p.pct ? ` · ${p.pct}%` : ''}</span>
         </span>
@@ -2487,11 +2506,18 @@
       </div>
       <div class="goal-bar big"><span style="width:${pctAll}%"></span></div>`;
     const chips = ['all', 'aktif', 'selesai'].map((f) => `<button type="button" class="goal-chip${goalsFilter === f ? ' on' : ''}" data-goal-filter="${f}">${f === 'all' ? 'Semua' : f === 'aktif' ? 'Aktif' : 'Selesai'}</button>`).join('');
-    const cards = filtered.map(goalCardHtml).join('') || '<p class="task-empty">Tidak ada goal pada filter ini.</p>';
+    const shown = filtered;
+    const sec = (key) => {
+      const items = shown.filter((g) => goalTermOf(g) === key);
+      if (!items.length) return '';
+      return `<div class="goal-term-sec"><h3 class="goal-term-head" style="--tc:${GOAL_TERMS[key].color}">${GOAL_TERMS[key].label}<span class="goal-term-hint">${GOAL_TERMS[key].hint} · ${items.length} goal</span></h3>${items.map(goalCardHtml).join('')}</div>`;
+    };
+    const grouped = ['pendek', 'menengah', 'panjang'].map(sec).join('') || '<p class="task-empty">Tidak ada goal pada filter ini.</p>';
     return `<div class="goals-page">
+        <p class="goal-foundation-note">🎯 Goals adalah pondasi: hasil besar yang ingin diwujudkan. Project dan Task mengikuti goal di atasnya.</p>
         ${summary}
         <div class="goal-chips">${chips}</div>
-        ${cards}
+        ${grouped}
         <button class="goal-add-btn" type="button" data-goal-add>+ Tambah Goal</button>
         <button class="goal-cal-link" type="button" data-goal-cal-page>📅 Kalender Goal</button>
       </div>`;
@@ -2517,13 +2543,13 @@
               <span class="goal-chip-status ${g.status === 'selesai' ? 'fin' : 'act'}">${g.status === 'selesai' ? 'Selesai' : 'Aktif'}</span>
             </span>
           </div>
-          <div class="goal-detail-meta">Deadline <strong>${escapeHtml(taskDateRead(g.deadline || ''))}</strong> · ${escapeHtml(g.category)}</div>
+          <div class="goal-detail-meta"><span class="goal-term-chip t-${goalTermOf(g)}" style="--tc:${GOAL_TERMS[goalTermOf(g)].color}">${GOAL_TERMS[goalTermOf(g)].label}</span> Deadline <strong>${escapeHtml(taskDateRead(g.deadline || ''))}</strong> · ${escapeHtml(g.category)}</div>
           <div class="goal-bar big"><span style="width:${p.pct}%"></span></div>
           <div class="goal-detail-sub">${p.done}/${p.total} sub goal · ${p.pct}%</div>
           <div class="goal-detail-sec">Deskripsi</div>
           <p class="goal-detail-desc">${escapeHtml(g.description || '—')}</p>
-          <div class="goal-detail-sec">Project terkait</div>
-          <span class="goal-proj-chip">${escapeHtml(g.project || '—')}</span>
+          <div class="goal-detail-sec">Project di goal ini</div>
+          ${(() => { const linked = loadProjects().filter((p) => p.goalId === g.id); return linked.length ? linked.map((p) => `<button type="button" class="goal-proj-chip link" data-proj-open="${p.id}">${p.icon || '🧩'} ${escapeHtml(p.name)} ${projStatusChip(p.status)}</button>`).join(' ') : '<span class="goal-proj-chip">Belum ada project — buat lewat menu Project</span>'; })()}
           <div class="goal-detail-sec">Sub Goal / Milestone</div>
           <div class="goal-ms-list">${rows || '<p class="task-empty">Belum ada sub goal.</p>'}</div>
           <button class="goal-ms-add" type="button" data-goal-ms-add>+ Tambah Sub Goal</button>
@@ -2535,14 +2561,15 @@
   function renderGoalAddPage() {
     const cats = Object.keys(GOAL_CATS);
     const chips = cats.map((c) => `<button type="button" class="goal-cat-chip${goalsAddCat === c ? ' on' : ''}" data-goal-cat="${c}"><span class="goal-cat-dot" style="background:${GOAL_CATS[c]}"></span>${c}</button>`).join('');
+    const terms = Object.entries(GOAL_TERMS).map(([k, t]) => `<button type="button" class="goal-cat-chip${goalsAddTerm === k ? ' on' : ''}" data-goal-term="${k}"><span class="goal-cat-dot" style="background:${t.color}"></span>${t.label}<em class="goal-term-mini">${t.hint}</em></button>`).join('');
     return `<div class="goals-page">
         <form class="goal-add-card" id="goalAddForm">
-          <label class="goal-field"><span>Judul</span><input name="title" type="text" maxlength="90" placeholder="Raih tujuan besar…" required /></label>
-          <label class="goal-field"><span>Deskripsi</span><textarea name="description" rows="3" maxlength="240" placeholder="Ceritakan goal ini…"></textarea></label>
-          <label class="goal-field"><span>Deadline</span><input name="deadline" type="date" value="${escapeHtml(taskTodayIso())}" /></label>
-          <label class="goal-field"><span>Project terkait</span><input name="project" type="text" maxlength="40" placeholder="Marketing Batu Bata" list="goalProjects" /></label>
-          <datalist id="goalProjects"><option value="Marketing Batu Bata"></option><option value="Pengembangan Diri"></option><option value="Rutinitas Harian"></option><option value="Keuangan Pribadi"></option></datalist>
+          <label class="goal-field"><span>Judul</span><input name="title" type="text" maxlength="90" placeholder="Raih tujuan besar…" required value="${escapeHtml(goalsAddDraft.title)}" /></label>
+          <label class="goal-field"><span>Deskripsi</span><textarea name="description" rows="3" maxlength="240" placeholder="Ceritakan goal ini…">${escapeHtml(goalsAddDraft.description)}</textarea></label>
+          <div class="goal-field"><span>Jangka Waktu</span><div class="goal-cat-row">${terms}</div></div>
+          <label class="goal-field"><span>Deadline</span><input name="deadline" type="date" value="${escapeHtml(goalsAddDraft.deadline || taskTodayIso())}" /></label>
           <div class="goal-field"><span>Kategori</span><div class="goal-cat-row">${chips}</div></div>
+          <p class="goal-form-hint">💡 Project dibuat menyusul: di halaman Project, pilih goal ini sebagai induknya (Goals → Project → Task → Subtask).</p>
           <button class="primary-button goal-save" type="submit">Simpan</button>
           <button class="secondary-button goal-save2" type="button" data-goal-add-again>Simpan &amp; Tambah Lagi</button>
         </form>
@@ -2599,6 +2626,8 @@
     if (btn.matches('[data-goal-add]')) {
       goalsPage = 'add';
       goalsAddCat = 'Karier';
+      goalsAddTerm = 'pendek';
+      goalsAddDraft = { title: '', description: '', deadline: '' };
       renderShell();
       setTimeout(() => document.querySelector('#goalAddForm [name=title]')?.focus(), 30);
       return true;
@@ -2607,7 +2636,8 @@
     if (btn.matches('[data-goal-cal-page]')) { goalsPage = 'calendar'; goalsCalSel = null; goalsMonthOffset = 0; renderShell(); return true; }
     if (btn.matches('[data-goal-filter]')) { goalsFilter = btn.dataset.goalFilter; renderShell(); return true; }
     if (btn.matches('[data-goal-open]')) { goalsDetailId = btn.dataset.goalOpen; goalsPage = 'detail'; renderShell(); return true; }
-    if (btn.matches('[data-goal-cat]')) { goalsAddCat = btn.dataset.goalCat; renderShell(); return true; }
+    if (btn.matches('[data-goal-cat]')) { captureGoalAdd(); goalsAddCat = btn.dataset.goalCat; renderShell(); return true; }
+    if (btn.matches('[data-goal-term]')) { captureGoalAdd(); goalsAddTerm = btn.dataset.goalTerm; renderShell(); return true; }
     if (btn.matches('[data-goal-add-again]')) { submitGoalForm(document.querySelector('#goalAddForm'), true); return true; }
     if (btn.matches('[data-goal-ms-add]')) {
       const g = loadGoals().find((x) => x.id === goalsDetailId);
@@ -2624,6 +2654,7 @@
     if (btn.matches('[data-goal-cal-prev]')) { goalsMonthOffset -= 1; renderShell(); return true; }
     if (btn.matches('[data-goal-cal-next]')) { goalsMonthOffset += 1; renderShell(); return true; }
     if (btn.matches('[data-goal-cal-day]')) { goalsCalSel = btn.dataset.goalCalDay; renderShell(); return true; }
+    if (btn.matches('[data-goal-proj]')) { projDetailId = btn.dataset.goalProj; projPage = 'detail'; projTab = 'overview'; projMenuOpen = false; activeView = 'project'; state.selectedView = 'project'; saveState(); renderShell(); return true; }
     return false;
   }
 
@@ -2634,7 +2665,7 @@
     if (!title) return;
     const item = {
       id: `g${Date.now()}`, title, description: val('description'), deadline: val('deadline') || taskTodayIso(),
-      project: val('project'), category: goalsAddCat, status: 'aktif', createdAt: taskTodayIso(), milestones: [],
+      term: goalsAddTerm, project: '', category: goalsAddCat, status: 'aktif', createdAt: taskTodayIso(), milestones: [],
     };
     const items = loadGoals();
     items.push(item);
@@ -2680,7 +2711,7 @@
   let projMenuOpen = false;
   let projFormId = null;         // null = tambah baru, id = edit
   let projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' };
-  let projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', err: '' };
+  let projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' };
   let projTaskAdding = false;
   let projNoteAdding = false;
   let projFileAdding = false;
@@ -2692,7 +2723,7 @@
     const m = today.slice(5, 7);
     const day = (n) => `${y}-${m}-${String(n).padStart(2, '0')}`;
     return [
-      { id: 'p1', name: 'Marketing Batu Bata', icon: '📣', color: '#ea8a2f', category: 'Bisnis', status: 'active',
+      { id: 'p1', name: 'Marketing Batu Bata', icon: '📣', color: '#ea8a2f', category: 'Bisnis', status: 'active', goalId: 'g1',
         start: day(1), deadline: day(20), createdAt: day(1),
         description: 'Kampanye pemasaran digital untuk toko batu bata: landing page, iklan, dan follow-up pelanggan.',
         milestones: [
@@ -2710,7 +2741,7 @@
           { id: 'pf2', name: 'Desain banner (Figma)', url: 'https://figma.com/file/batu-bata-banner' },
         ],
         activity: [] },
-      { id: 'p2', name: 'Website Toko Online', icon: '💻', color: '#2f8fbf', category: 'Teknis', status: 'active',
+      { id: 'p2', name: 'Website Toko Online', icon: '💻', color: '#2f8fbf', category: 'Teknis', status: 'active', goalId: 'g1',
         start: day(5), deadline: day(28), createdAt: day(5),
         description: 'Bangun website toko online lengkap dengan katalog, keranjang, dan pembayaran.',
         milestones: [
@@ -2721,7 +2752,7 @@
         notes: [{ id: 'pn3', text: 'Pakai domain .co.id, hosting di VPS lama.', at: Date.now() - 86400000 }],
         files: [{ id: 'pf3', name: 'Arsitektur sistem.md', url: 'https://example.com/arsitektur.md' }],
         activity: [] },
-      { id: 'p3', name: 'Renovasi Dapur', icon: '🏠', color: '#6a564a', category: 'Rumah', status: 'onhold',
+      { id: 'p3', name: 'Renovasi Dapur', icon: '🏠', color: '#6a564a', category: 'Rumah', status: 'onhold', goalId: 'g3',
         start: day(2), deadline: `${y}-${m}-25`, createdAt: day(2),
         description: 'Perbaikan kabinet, keramik, dan sirkulasi udara dapur.',
         milestones: [
@@ -2729,7 +2760,7 @@
           { id: 'pm9', text: 'Bongkar kabinet lama', done: false },
         ],
         notes: [], files: [], activity: [] },
-      { id: 'p4', name: 'Skripsi Data Science', icon: '📚', color: '#8b7bb8', category: 'Pendidikan', status: 'planning',
+      { id: 'p4', name: 'Skripsi Data Science', icon: '📚', color: '#8b7bb8', category: 'Pendidikan', status: 'planning', goalId: 'g2',
         start: day(15), deadline: `${y}-12-15`, createdAt: today,
         description: 'Penelitian prediksi harga komoditas dengan machine learning.',
         milestones: [
@@ -2738,7 +2769,7 @@
         ],
         notes: [{ id: 'pn4', text: 'Konsultasi dosen pembimbing tiap Selasa.', at: Date.now() - 3 * 86400000 }],
         files: [], activity: [] },
-      { id: 'p5', name: 'Otomasi Laporan Bulanan', icon: '🤖', color: '#3f9d63', category: 'Produktivitas', status: 'completed',
+      { id: 'p5', name: 'Otomasi Laporan Bulanan', icon: '🤖', color: '#3f9d63', category: 'Produktivitas', status: 'completed', goalId: 'g2',
         start: day(1), deadline: day(8), createdAt: day(1),
         description: 'Script Python yang menyusun laporan penjualan otomatis tiap awal bulan.',
         milestones: [
@@ -2747,7 +2778,7 @@
           { id: 'pm14', text: 'Jadwal cron jalan', done: true },
         ],
         notes: [], files: [{ id: 'pf4', name: 'repo: laporan-bot', url: 'https://github.com/contoh/laporan-bot' }], activity: [] },
-      { id: 'p6', name: 'Event Workshop 2025', icon: '🎨', color: '#9a917f', category: 'Acara', status: 'archived',
+      { id: 'p6', name: 'Event Workshop 2025', icon: '🎨', color: '#9a917f', category: 'Acara', status: 'archived', goalId: 'g4',
         start: `${y}-06-01`, deadline: `${y}-07-30`, createdAt: today,
         description: 'Workshop desain untuk komunitas lokal (sudah selesai,arsip).',
         milestones: [], notes: [], files: [], activity: [] },
@@ -2757,12 +2788,25 @@
   function loadProjects() {
     try {
       const raw = JSON.parse(localStorage.getItem(scopedKey(PROJ_STORE_KEY)) || 'null');
-      if (Array.isArray(raw) && raw.length) return raw;
+      if (Array.isArray(raw) && raw.length) {
+        let changed = false;
+        const goals = loadGoals();
+        raw.forEach((p) => {
+          if (!p.goalId) {
+            const guess = goals.find((g) => (g.project || '').toLowerCase() === p.name.toLowerCase()) || goals.find((g) => g.status === 'aktif');
+            if (guess) { p.goalId = guess.id; changed = true; }
+          }
+        });
+        if (changed) { try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(raw)); } catch { /* ignore */ } }
+        return raw;
+      }
     } catch { /* seed ulang */ }
     const seed = projSeed();
     try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(seed)); } catch { /* ignore */ }
     return seed;
   }
+
+  function goalTitleOf(id) { const g = loadGoals().find((x) => x.id === id); return g ? g.title : ''; }
 
   function saveProjects(list) {
     try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(list)); } catch { /* ignore */ }
@@ -2820,13 +2864,23 @@
     return `<span class="proj-status" style="--pc:${s.color}">${s.label}</span>`;
   }
 
+  function projNameOptions(selected) {
+    const ps = loadProjects().filter((p) => p.status !== 'archived');
+    const names = ps.map((p) => p.name);
+    let opts = names.map((n) => `<option value="${escapeHtml(n)}" ${n === selected ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
+    if (selected && !names.includes(selected)) opts = `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)} (lama)</option>` + opts;
+    return opts;
+  }
+  function firstProjName() { const ps = loadProjects().filter((p) => p.status !== 'archived'); return ps.length ? ps[0].name : ''; }
+
   function projCardHtml(p) {
     const pr = projProgress(p);
+    const gt = goalTitleOf(p.goalId);
     return `<button type="button" class="proj-card" data-proj-open="${p.id}">
         <span class="proj-ico" style="--pc:${p.color}">${p.icon || '🧩'}</span>
         <span class="proj-card-main">
           <span class="proj-card-head"><span class="proj-card-title">${escapeHtml(p.name)}</span>${projStatusChip(p.status)}</span>
-          <span class="proj-card-desc">${escapeHtml(p.description || 'Tanpa deskripsi')}</span>
+          <span class="proj-card-desc">${gt ? `🎯 ${escapeHtml(gt)} · ` : ''}${escapeHtml(p.description || 'Tanpa deskripsi')}</span>
           <span class="goal-bar"><span style="width:${pr.pct}%;background:${p.color}"></span></span>
           <span class="proj-card-sub"><span>${pr.done}/${pr.total} ${pr.from === 'task' ? 'task' : 'milestone'} · ${pr.pct}%</span>${projDeadlineLabel(p)}</span>
         </span>
@@ -2928,6 +2982,7 @@
         </div>
         ${menu}
         <div class="proj-meta-row"><span>📅 Mulai ${escapeHtml(taskDateRead(p.start || p.createdAt || ''))}</span><span>⏳ ${p.deadline ? escapeHtml(taskDateRead(p.deadline)) : '—'}</span><span>✅ ${pr.done}/${pr.total}</span></div>
+        ${p.goalId ? `<div class="proj-goal-row">🎯 Goal: <button type="button" class="goal-proj-chip link" data-goal-from-proj="${p.goalId}">${escapeHtml(goalTitleOf(p.goalId) || 'Goal (terhapus)')}</button></div>` : '<div class="proj-goal-row">🎯 Belum terhubung ke goal — edit project untuk memilih goal.</div>'}
         <div class="goal-bar big"><span style="width:${pr.pct}%;background:${p.color}"></span></div>
         <div class="jadwal-seg proj-tabs">${tabs}</div>
         ${body}
@@ -2937,8 +2992,10 @@
   function renderProjectFormPage() {
     const editing = projFormId ? loadProjects().find((x) => x.id === projFormId) : null;
     if (editing) projFormSel = { status: editing.status, icon: editing.icon || '🧩', color: editing.color || '#6a564a' };
-    const d = editing ? { name: editing.name, description: editing.description || '', category: editing.category || '', start: editing.start || '', deadline: editing.deadline || '', err: '' } : projFormDraft;
+    const d = editing ? { name: editing.name, description: editing.description || '', category: editing.category || '', start: editing.start || '', deadline: editing.deadline || '', goalId: editing.goalId || '', err: '' } : projFormDraft;
     if (!editing) projFormDraft = d;
+    const goals = loadGoals();
+    const goalOptions = goals.map((g) => `<option value="${g.id}" ${d.goalId === g.id ? 'selected' : ''}>${escapeHtml(g.title)} · ${GOAL_TERMS[goalTermOf(g)].label}</option>`).join('');
     const icons = PROJ_ICONS.map((i) => `<button type="button" class="goal-cat-chip${projFormSel.icon === i ? ' on' : ''}" data-proj-icon="${i}" style="font-size:17px">${i}</button>`).join('');
     const colors = PROJ_COLORS.map((c) => `<button type="button" class="proj-color${projFormSel.color === c ? ' on' : ''}" data-proj-color="${c}" style="--cc:${c}" aria-label="warna ${c}"></button>`).join('');
     const statuses = Object.entries(PROJ_STATUS).map(([k, s]) => `<button type="button" class="goal-cat-chip${projFormSel.status === k ? ' on' : ''}" data-proj-status="${k}"><span class="goal-cat-dot" style="background:${s.color}"></span>${s.label}</button>`).join('');
@@ -2947,6 +3004,7 @@
         <h3>${editing ? 'Edit Project' : 'Tambah Project'}</h3>
         ${d.err ? `<p class="proj-err">${escapeHtml(d.err)}</p>` : ''}
         <form id="projForm" novalidate>
+          ${goals.length ? '<label class="goal-field"><span>Goals *</span><select name="goalId" required><option value="">— Pilih goal —</option>' + goalOptions + '</select></label>' : '<p class="proj-err">Belum ada Goals. Project tidak bisa dibuat tanpa goal — buat goal dulu di menu Goals.</p>'}
           <label class="goal-field"><span>Nama Project *</span><input name="name" required maxlength="70" value="${escapeHtml(d.name)}" placeholder="cth. Website Toko Online" /></label>
           <label class="goal-field"><span>Deskripsi</span><textarea name="description" rows="3" maxlength="400" placeholder="Ringkasan singkat project…">${escapeHtml(d.description)}</textarea></label>
           <div class="proj-form-grid"><label class="goal-field"><span>Tanggal Mulai</span><input name="start" type="date" value="${escapeHtml(d.start)}" /></label>
@@ -2955,7 +3013,7 @@
           <div class="goal-field"><span>Icon</span><div class="goal-cat-row">${icons}</div></div>
           <div class="goal-field"><span>Warna</span><div class="proj-colors">${colors}</div></div>
           <div class="goal-field"><span>Status</span><div class="goal-cat-row">${statuses}</div></div>
-          <button type="submit" class="primary-button goal-save">${editing ? 'Simpan Perubahan' : 'Simpan Project'}</button>
+          <button type="submit" class="primary-button goal-save" ${goals.length ? '' : 'disabled'}>${editing ? 'Simpan Perubahan' : 'Simpan Project'}</button>
         </form>
       </div></div>`;
   }
@@ -2985,24 +3043,34 @@
       </label>`;
     const cards = groups.map((g) => {
       const pct = g.ts.length ? Math.round((g.done / g.ts.length) * 100) : 0;
+      const gt = goalTitleOf(g.p.goalId);
       return `<section class="proj-blk goal-detail-card pt-group">
         <header class="pt-group-head">
           <span class="pt-group-icon" style="background:${escapeHtml(g.p.color || '#6a564a')}">${g.p.icon || '🧩'}</span>
           <div class="pt-group-title">
             <strong>${escapeHtml(g.p.name)}</strong>
-            <span class="pt-group-sub">${g.done}/${g.ts.length} selesai · ${pct}%</span>
+            <span class="pt-group-sub">${gt ? `🎯 ${escapeHtml(gt)} · ` : ''}${g.done}/${g.ts.length} selesai · ${pct}%</span>
           </div>
-          <button type="button" class="ghost-button" data-proj-open="${g.p.id}">Buka Project</button>
+          <span class="pt-group-actions">
+            <button type="button" class="ghost-button" data-pt-add-task="${g.p.id}">+ Task</button>
+            <button type="button" class="ghost-button" data-proj-open="${g.p.id}">Buka Project</button>
+          </span>
         </header>
         ${g.ts.length ? g.ts.map(row).join('') : '<p class="proj-hint">Belum ada task di project ini.</p>'}
       </section>`;
     }).join('');
-    const orphan = noProj.length ? `<section class="proj-blk goal-detail-card pt-group">
+    const orphan = noProj.length ? `<section class="proj-blk goal-detail-card pt-group pt-orphan">
         <header class="pt-group-head">
-          <span class="pt-group-icon" style="background:#9a8f86">📥</span>
-          <div class="pt-group-title"><strong>Tanpa Project</strong><span class="pt-group-sub">${noProj.filter((t) => !t.done).length} belum selesai</span></div>
+          <span class="pt-group-icon" style="background:#9a8f86">⚠️</span>
+          <div class="pt-group-title"><strong>Belum ada Project</strong><span class="pt-group-sub">Semua task harus berdasarkan project — pindahkan di bawah</span></div>
         </header>
-        ${noProj.map(row).join('')}
+        ${noProj.map((t) => `<div class="pt-orphan-row">
+          <label class="proj-task${t.done ? ' done' : ''}">
+            <input type="checkbox" data-task-toggle="${t.id}"${t.done ? ' checked' : ''} />
+            <span class="proj-task-main"><span class="proj-task-title">${escapeHtml(t.title)}</span></span>
+          </label>
+          <select data-pt-move="${t.id}"><option value="">Pindahkan ke…</option>${projNameOptions('')}</select>
+        </div>`).join('')}
       </section>` : '';
     const totalTasks = groups.reduce((a, g) => a + g.ts.length, 0);
     const totalDone = groups.reduce((a, g) => a + g.done, 0);
@@ -3022,17 +3090,19 @@
   }
 
   function projFormValues(form) {
-    return { name: form.querySelector('[name=name]').value.trim(), description: form.querySelector('[name=description]').value.trim(), category: form.querySelector('[name=category]').value.trim(), start: form.querySelector('[name=start]').value, deadline: form.querySelector('[name=deadline]').value };
+    return { name: form.querySelector('[name=name]').value.trim(), description: form.querySelector('[name=description]').value.trim(), category: form.querySelector('[name=category]').value.trim(), start: form.querySelector('[name=start]').value, deadline: form.querySelector('[name=deadline]').value, goalId: form.querySelector('[name=goalId]')?.value || '' };
   }
 
   function submitProjectForm(form) {
     const v = projFormValues(form);
+    if (!loadGoals().length) { projFormDraft = { ...v, err: 'Project tidak bisa dibuat tanpa Goals. Buat goal dulu di menu Goals.' }; renderShell(); return; }
+    if (!v.goalId) { projFormDraft = { ...v, err: 'Pilih Goals terlebih dahulu — project harus mengikuti goal.' }; renderShell(); return; }
     if (!v.name) { projFormDraft = { ...v, err: 'Nama project wajib diisi.' }; renderShell(); return; }
     if (v.start && v.deadline && v.deadline < v.start) { projFormDraft = { ...v, err: 'Deadline tidak boleh sebelum tanggal mulai.' }; renderShell(); return; }
     const items = loadProjects();
     if (projFormId) {
       const p = items.find((x) => x.id === projFormId);
-      if (p) { Object.assign(p, { name: v.name, description: v.description, category: v.category, start: v.start || p.start, deadline: v.deadline, status: projFormSel.status, icon: projFormSel.icon, color: projFormSel.color }); projLog(p, 'Detail project diperbarui'); }
+      if (p) { Object.assign(p, { name: v.name, description: v.description, category: v.category, start: v.start || p.start, deadline: v.deadline, goalId: v.goalId || p.goalId, status: projFormSel.status, icon: projFormSel.icon, color: projFormSel.color }); projLog(p, 'Detail project diperbarui'); }
       saveProjects(items);
       projFormId = null;
       projPage = 'detail';
@@ -3043,13 +3113,13 @@
     projLog(p, 'Project dibuat');
     items.push(p);
     saveProjects(items);
-    projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', err: '' };
+    projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' };
     projPage = 'list';
     renderShell();
   }
 
   function handleProjectAction(btn) {
-    if (btn.matches('[data-proj-add]')) { projFormId = null; projFormDraft = { name: '', description: '', category: '', start: taskTodayIso(), deadline: '', err: '' }; projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' }; projPage = 'form'; renderShell(); setTimeout(() => document.querySelector('#projForm [name=name]')?.focus(), 30); return true; }
+    if (btn.matches('[data-proj-add]')) { projFormId = null; projFormDraft = { name: '', description: '', category: '', start: taskTodayIso(), deadline: '', goalId: '', err: '' }; projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' }; projPage = 'form'; renderShell(); setTimeout(() => document.querySelector('#projForm [name=name]')?.focus(), 30); return true; }
     if (btn.matches('[data-proj-form-back]')) { projPage = projFormId ? 'detail' : 'list'; renderShell(); return true; }
     if (btn.matches('[data-proj-filter]')) { projFilter = btn.dataset.projFilter; renderShell(); return true; }
     if (btn.matches('[data-proj-open]')) { projDetailId = btn.dataset.projOpen; projPage = 'detail'; projTab = 'overview'; projMenuOpen = false; projTaskAdding = projNoteAdding = projFileAdding = false; activeView = 'project'; state.selectedView = 'project'; renderShell(); return true; }
@@ -3060,7 +3130,7 @@
     if (btn.matches('[data-proj-icon]')) { captureProjForm(); projFormSel.icon = btn.dataset.projIcon; renderShell(); return true; }
     if (btn.matches('[data-proj-color]')) { captureProjForm(); projFormSel.color = btn.dataset.projColor; renderShell(); return true; }
     if (btn.matches('[data-proj-status]')) { captureProjForm(); projFormSel.status = btn.dataset.projStatus; renderShell(); return true; }
-    if (btn.matches('[data-proj-edit]')) { projFormId = btn.dataset.projEdit; projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', err: '' }; projPage = 'form'; renderShell(); return true; }
+    if (btn.matches('[data-proj-edit]')) { projFormId = btn.dataset.projEdit; projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' }; projPage = 'form'; renderShell(); return true; }
     if (btn.matches('[data-proj-archive]')) {
       const items = loadProjects(); const p = items.find((x) => x.id === btn.dataset.projArchive);
       if (p) { p.status = p.status === 'archived' ? 'active' : 'archived'; projLog(p, p.status === 'archived' ? 'Project diarsipkan' : 'Project dipulihkan'); saveProjects(items); projMenuOpen = false; renderShell(); }
@@ -3087,6 +3157,8 @@
       if (p) { p.files = (p.files || []).filter((f) => f.id !== btn.dataset.projFileDel); projLog(p, 'File/link dihapus'); saveProjects(items); renderShell(); }
       return true;
     }
+    if (btn.matches('[data-goal-from-proj]')) { goalsDetailId = btn.dataset.goalFromProj; goalsPage = 'detail'; activeView = 'goals'; state.selectedView = 'goals'; saveState(); renderShell(); return true; }
+    if (btn.matches('[data-pt-add-task]')) { activeView = 'project'; state.selectedView = 'project'; projDetailId = btn.dataset.ptAddTask; projPage = 'detail'; projTab = 'tasks'; projTaskAdding = true; saveState(); renderShell(); setTimeout(() => document.querySelector('#projTaskForm [name=title]')?.focus(), 60); return true; }
     return false;
   }
 
@@ -6597,13 +6669,13 @@
       const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel]');
       if (jadwalBtn && handleJadwalAction(jadwalBtn)) return;
 
-    const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-add-again],[data-goal-ms-add],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page]');
+    const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-term],[data-goal-add-again],[data-goal-ms-add],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page],[data-goal-proj]');
     if (goalBtn && handleGoalAction(goalBtn)) return;
 
     const progBtn = event.target.closest('[data-progress-tab]');
     if (progBtn && handleProgressAction(progBtn)) return;
 
-    const projBtn = event.target.closest('[data-proj-add],[data-proj-form-back],[data-proj-filter],[data-proj-open],[data-proj-back],[data-proj-tab],[data-proj-tfilter],[data-proj-menu],[data-proj-icon],[data-proj-color],[data-proj-status],[data-proj-edit],[data-proj-archive],[data-proj-del],[data-proj-task-add],[data-proj-note-add],[data-proj-file-add],[data-proj-note-del],[data-proj-file-del]');
+    const projBtn = event.target.closest('[data-proj-add],[data-proj-form-back],[data-proj-filter],[data-proj-open],[data-proj-back],[data-proj-tab],[data-proj-tfilter],[data-proj-menu],[data-proj-icon],[data-proj-color],[data-proj-status],[data-proj-edit],[data-proj-archive],[data-proj-del],[data-proj-task-add],[data-proj-note-add],[data-proj-file-add],[data-proj-note-del],[data-proj-file-del],[data-goal-from-proj],[data-pt-add-task]');
     if (projBtn && handleProjectAction(projBtn)) return;
 
     const noteBtn = event.target.closest('[data-note-new],[data-note-tab],[data-note-tagfil],[data-note-tag],[data-note-open],[data-note-menu],[data-note-menu-close],[data-note-sheet-close],[data-note-dmenu],[data-note-back],[data-note-tpl],[data-note-edit],[data-note-edit2],[data-note-pin],[data-note-fav],[data-note-arch],[data-note-del],[data-note-epin],[data-note-efav],[data-note-cat],[data-note-cmd]');
@@ -6692,8 +6764,11 @@
     dom.content.addEventListener('change', (event) => {
       const taskCheck = event.target.closest('[data-task-toggle],[data-task-sub]');
       if (taskCheck) handleTaskAction(taskCheck);
-      const projChk = event.target.closest('[data-proj-ms],[data-proj-task],[data-proj-search]');
-      if (projChk) handleProjectChange(projChk);
+      const projChk = event.target.closest('[data-proj-ms],[data-proj-task],[data-proj-search],[data-pt-move]');
+      if (projChk && projChk.matches('[data-pt-move]')) {
+        const tid = projChk.dataset.ptMove; const dest = projChk.value;
+        if (dest) { const tasks = loadTasks(); const t = tasks.find((x) => x.id === tid); if (t) { t.project = dest; saveTasks(); } renderShell(); }
+      } else if (projChk) handleProjectChange(projChk);
       const noteSortEl = event.target.closest('[data-note-sort]');
       if (noteSortEl) { noteSort = noteSortEl.value; renderShell(); }
       const docTypeEl = event.target.closest('[data-doc-ftype]');
@@ -6780,7 +6855,8 @@
         const title = form.querySelector('#taskQuickInput').value.trim();
         if (!title) { taskAdding = false; renderShell(); return; }
         const date = form.querySelector('#taskQuickWhen').value || taskTodayIso();
-        const project = form.querySelector('#taskQuickProj').value.trim();
+        const project = form.querySelector('#taskQuickProj').value.trim() || firstProjName();
+        if (!project) { showToast('Buat project dulu — task harus berdasarkan project.', true); return; }
         loadTasks().push({ id: `t${Date.now()}`, title, project, tag: '', time: '', priority: 'low', date, done: false });
         taskAdding = false;
         if (date !== taskTodayIso()) taskFilter = 'all';
@@ -6824,6 +6900,7 @@
           const title = form.querySelector('[name=title]').value.trim();
           if (title && title !== t.title) { t.title = title; logTaskActivity(t, 'Judul diubah'); }
           const proj = form.querySelector('[name=project]').value.trim();
+          if (!proj) { showToast('Task harus berdasarkan project — pilih project.', true); return; }
           if (proj !== (t.project || '')) { t.project = proj; logTaskActivity(t, 'Project diubah'); }
           const date = form.querySelector('[name=date]').value;
           const time = form.querySelector('[name=time]').value;
