@@ -160,6 +160,7 @@
   // Ganti lingkup storage ke user yang baru login: reload data milik akun ini (dummy baru otomatis di-seed)
   function applyUserScope() {
     state = loadState();
+    if (state.selectedView === 'kalender') { state.selectedView = 'jadwal'; }
     activeYear = Number(state.selectedYear) || runtimeYear;
     activeView = state.selectedView || 'dashboard';
     activeMonth = Number.isInteger(state.selectedMonth) ? state.selectedMonth : new Date().getMonth();
@@ -226,10 +227,11 @@
   let state = loadState();
   let activeYear = Number(state.selectedYear) || runtimeYear;
   let activeView = state.selectedView || 'dashboard';
+  if (activeView === 'kalender') { activeView = 'jadwal'; state.selectedView = 'jadwal'; }
   const NAV_GROUP_OF = {
-    task: 'aktivitas', jadwal: 'aktivitas', kalender: 'aktivitas',
-    habits: 'diri', goals: 'diri', progress: 'diri',
-    project: 'organisasi', catatan: 'organisasi', dokumen: 'organisasi',
+    task: 'activity', jadwal: 'activity',
+    habits: 'goals', goals: 'goals', progress: 'goals', project: 'goals', 'project-task': 'goals',
+    catatan: 'organization', dokumen: 'organization',
     transaksi: 'keuangan', budget: 'keuangan', tabungan: 'keuangan', 'laporan-keuangan': 'keuangan',
   };
   let openNavGroups = new Set(state.openNavGroups || (NAV_GROUP_OF[activeView] ? [NAV_GROUP_OF[activeView]] : []));
@@ -770,6 +772,7 @@
       if (isValidRemoteState(remoteState) && (hasYearData(remoteState) || !hasYearData(state))) {
         isApplyingRemoteState = true;
         state = remoteState;
+        if (state.selectedView === 'kalender') { state.selectedView = 'jadwal'; }
         activeYear = Number(state.selectedYear) || runtimeYear;
         activeView = state.selectedView || 'dashboard';
         activeMonth = Number.isInteger(state.selectedMonth) ? state.selectedMonth : new Date().getMonth();
@@ -1454,7 +1457,7 @@
     if (taskSearch) taskSearch.hidden = activeView !== 'task';
 
     if (activeView === 'dashboard') {
-      dom.pageTitle.textContent = 'Dasbor';
+      dom.pageTitle.textContent = 'Dashboard';
       dom.pageSubtitle.textContent = `Ringkasan kebiasaan sepanjang ${activeYear}`;
       dom.content.innerHTML = renderDashboard(activeYear);
       return;
@@ -1479,7 +1482,7 @@
     }
 
     if (activeView === 'task') {
-      dom.pageTitle.textContent = 'Task';
+      dom.pageTitle.textContent = 'Daily Task';
       dom.pageSubtitle.textContent = 'Daftar tugas harian';
       dom.content.innerHTML = renderTaskView();
       if (taskAdding) {
@@ -1509,6 +1512,13 @@
       dom.pageTitle.textContent = 'Project';
       dom.pageSubtitle.textContent = 'Proyek & target besar';
       dom.content.innerHTML = renderProjectView();
+      return;
+    }
+
+    if (activeView === 'project-task') {
+      dom.pageTitle.textContent = 'Project Task';
+      dom.pageSubtitle.textContent = 'Task yang terhubung ke tiap project';
+      dom.content.innerHTML = renderProjectTaskView();
       return;
     }
 
@@ -1582,7 +1592,6 @@
 
   const PLACEHOLDER_VIEWS = {
     jadwal: { title: 'Jadwal', subtitle: 'Rencana waktu harian & mingguan', emoji: '🗓️', hint: 'Atur agenda dan rutinitas harianmu.' },
-    kalender: { title: 'Kalender', subtitle: 'Pandangan bulanan seluruh aktivitas', emoji: '📆', hint: 'Lihat task, jadwal, dan kebiasaan dalam satu kalender.' },
     goals: { title: 'Goals', subtitle: 'Target jangka pendek & panjang', emoji: '🎯', hint: 'Pasang target besar dan pecah jadi kebiasaan kecil.' },
     progress: { title: 'Progress', subtitle: 'Grafik perkembangan dirimu', emoji: '📈', hint: 'Pantau konsistensi dan pertumbuhan dari waktu ke waktu.' },
     project: { title: 'Project', subtitle: 'Proyek & target besar', emoji: '🧩', hint: 'Kelompokkan task dan catatan ke dalam proyek.' },
@@ -2957,6 +2966,61 @@
     return renderProjectListPage();
   }
 
+  function renderProjectTaskView() {
+    const projects = loadProjects().filter((p) => p.status !== 'archived');
+    const tasks = loadTasks();
+    const nameOf = (t) => (t.project || '').trim();
+    const groups = projects.map((p) => {
+      const ts = tasks.filter((t) => nameOf(t).toLowerCase() === p.name.trim().toLowerCase());
+      return { p, ts, done: ts.filter((t) => t.done).length };
+    });
+    const noProj = tasks.filter((t) => !nameOf(t) || !groups.some((g) => g.p.name.trim().toLowerCase() === nameOf(t).toLowerCase()));
+    const row = (t) => `
+      <label class="proj-task${t.done ? ' done' : ''}">
+        <input type="checkbox" data-task-toggle="${t.id}"${t.done ? ' checked' : ''} />
+        <span class="proj-task-main">
+          <span class="proj-task-title">${escapeHtml(t.title)}</span>
+          <span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${t.time ? ` · ⏱ ${escapeHtml(t.time)}` : ''}${t.priority === 'high' ? ' · ⚡ Tinggi' : ''}</span>
+        </span>
+      </label>`;
+    const cards = groups.map((g) => {
+      const pct = g.ts.length ? Math.round((g.done / g.ts.length) * 100) : 0;
+      return `<section class="proj-blk goal-detail-card pt-group">
+        <header class="pt-group-head">
+          <span class="pt-group-icon" style="background:${escapeHtml(g.p.color || '#6a564a')}">${g.p.icon || '🧩'}</span>
+          <div class="pt-group-title">
+            <strong>${escapeHtml(g.p.name)}</strong>
+            <span class="pt-group-sub">${g.done}/${g.ts.length} selesai · ${pct}%</span>
+          </div>
+          <button type="button" class="ghost-button" data-proj-open="${g.p.id}">Buka Project</button>
+        </header>
+        ${g.ts.length ? g.ts.map(row).join('') : '<p class="proj-hint">Belum ada task di project ini.</p>'}
+      </section>`;
+    }).join('');
+    const orphan = noProj.length ? `<section class="proj-blk goal-detail-card pt-group">
+        <header class="pt-group-head">
+          <span class="pt-group-icon" style="background:#9a8f86">📥</span>
+          <div class="pt-group-title"><strong>Tanpa Project</strong><span class="pt-group-sub">${noProj.filter((t) => !t.done).length} belum selesai</span></div>
+        </header>
+        ${noProj.map(row).join('')}
+      </section>` : '';
+    const totalTasks = groups.reduce((a, g) => a + g.ts.length, 0);
+    const totalDone = groups.reduce((a, g) => a + g.done, 0);
+    const empty = !projects.length
+      ? '<p class="task-empty">Belum ada project. Buat dulu lewat menu Goals and Habit → Project.</p>'
+      : (!totalTasks && !noProj.length ? '<p class="task-empty">Belum ada task yang terhubung ke project.</p>' : '');
+    return `<section class="task-page pt-page">
+      <div class="task-card task-progress-card">
+        <div class="task-progress-head">
+          <strong>${totalDone} / ${totalTasks + noProj.length} task selesai</strong>
+          <span class="task-pct">${totalTasks + noProj.length ? Math.round((totalDone / (totalTasks + noProj.length)) * 100) : 0}%</span>
+        </div>
+        <div class="task-bar"><span style="width:${totalTasks + noProj.length ? Math.round((totalDone / (totalTasks + noProj.length)) * 100) : 0}%"></span></div>
+      </div>
+      ${empty}${cards}${orphan}
+    </section>`;
+  }
+
   function projFormValues(form) {
     return { name: form.querySelector('[name=name]').value.trim(), description: form.querySelector('[name=description]').value.trim(), category: form.querySelector('[name=category]').value.trim(), start: form.querySelector('[name=start]').value, deadline: form.querySelector('[name=deadline]').value };
   }
@@ -2988,7 +3052,7 @@
     if (btn.matches('[data-proj-add]')) { projFormId = null; projFormDraft = { name: '', description: '', category: '', start: taskTodayIso(), deadline: '', err: '' }; projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' }; projPage = 'form'; renderShell(); setTimeout(() => document.querySelector('#projForm [name=name]')?.focus(), 30); return true; }
     if (btn.matches('[data-proj-form-back]')) { projPage = projFormId ? 'detail' : 'list'; renderShell(); return true; }
     if (btn.matches('[data-proj-filter]')) { projFilter = btn.dataset.projFilter; renderShell(); return true; }
-    if (btn.matches('[data-proj-open]')) { projDetailId = btn.dataset.projOpen; projPage = 'detail'; projTab = 'overview'; projMenuOpen = false; projTaskAdding = projNoteAdding = projFileAdding = false; renderShell(); return true; }
+    if (btn.matches('[data-proj-open]')) { projDetailId = btn.dataset.projOpen; projPage = 'detail'; projTab = 'overview'; projMenuOpen = false; projTaskAdding = projNoteAdding = projFileAdding = false; activeView = 'project'; state.selectedView = 'project'; renderShell(); return true; }
     if (btn.matches('[data-proj-back]')) { projPage = 'list'; projMenuOpen = false; renderShell(); return true; }
     if (btn.matches('[data-proj-tab]')) { projTab = btn.dataset.projTab; projMenuOpen = false; renderShell(); return true; }
     if (btn.matches('[data-proj-tfilter]')) { projTaskFilter = btn.dataset.projTfilter; renderShell(); return true; }
@@ -5331,7 +5395,7 @@
 
     return `
       <div class="dashboard-layout">
-        <section class="dashboard-sheet" aria-label="Dasbor bergaya spreadsheet">
+        <section class="dashboard-sheet" aria-label="Dashboard bergaya spreadsheet">
           <aside class="sheet-sidebar">
             <div class="sheet-tile label-tile">
               <span>Tahun</span>
