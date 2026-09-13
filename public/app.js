@@ -255,11 +255,16 @@
   let remoteSaveRevision = 0;
   let authMode = 'login';
   let authOtpEmail = '';
+
   let authPendingName = '';
+  let authPendingUsername = '';
   let authPendingPassword = '';
   let authOtpResendAt = 0;
   let authCooldownTimer = null;
   let authIsBusy = false;
+  let authPwVisible = false;
+  let authPwChecks = { len: false, upper: false, other: false };
+  const PW_RULE_OK = 'Password memenuhi semua kriteria.';
 
   function uid(prefix = 'h') {
     return `${prefix}_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
@@ -529,6 +534,7 @@
     saveAuthSession(session);
     authOtpEmail = '';
     authPendingName = '';
+    authPendingUsername = '';
     authPendingPassword = '';
     authOtpResendAt = 0;
     clearInterval(authCooldownTimer);
@@ -1066,6 +1072,55 @@
     }).join('');
   }
 
+  function canonicalUsername(raw) {
+    return String(raw || '')
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[^a-z0-9._-]+/g, '')
+      .replace(/^[._-]+|[._-]+$/g, '')
+      .slice(0, 29);
+  }
+
+  function evaluatePassword(pw) {
+    return {
+      len: pw.length >= 8,
+      upper: /[A-Z]/.test(pw),
+      other: /[0-9!@#$%^&*()_+\-=\[\]{};:'",.<>/?\\|`~]/.test(pw),
+    };
+  }
+
+  function allPwChecksPass(checks) {
+    return checks.len && checks.upper && checks.other;
+  }
+
+  // Update checklist + tombol submit in-place tanpa re-render (fokus input tidak hilang).
+  function refreshPwChecklistUi(pw) {
+    authPwChecks = evaluatePassword(pw);
+    const screen = dom.authScreen;
+    if (!screen) return;
+    const list = screen.querySelector('#authPwRules');
+    if (list) {
+      ['len', 'upper', 'other'].forEach((rule) => {
+        const li = list.querySelector(`[data-rule="${rule}"]`);
+        if (!li) return;
+        const ok = authPwChecks[rule];
+        li.classList.toggle('pass', ok);
+        li.firstChild.textContent = ok ? '✓ ' : '○ ';
+      });
+      list.classList.toggle('all-pass', allPwChecksPass(authPwChecks));
+    }
+    const okLabel = screen.querySelector('#authPwOk');
+    if (okLabel) okLabel.hidden = !allPwChecksPass(authPwChecks);
+    const submit = screen.querySelector('#authSignupForm .auth-primary');
+    if (submit && !authIsBusy) submit.disabled = pw.length > 0 ? !allPwChecksPass(authPwChecks) : true;
+  }
+
+  function refreshUsernamePreview(name) {
+    authPendingUsername = canonicalUsername(name);
+    const el = dom.authScreen?.querySelector('#authUserPreview');
+    if (el) el.textContent = authPendingUsername ? `@${authPendingUsername}` : '—';
+  }
+
   function renderAuthScreen() {
     if (!dom.authScreen) return;
 
@@ -1116,15 +1171,30 @@
             ${isSignup ? `
               <label for="authName">Nama pengguna</label>
               <input id="authName" name="name" type="text" autocomplete="name" placeholder="Nama kamu" value="${escapeHtml(authPendingName)}" maxlength="40" required />
+              <p class="auth-hint">Nanti bisa dipakai untuk login: <strong id="authUserPreview">@${escapeHtml(authPendingUsername || canonicalUsername(authPendingName) || '—')}</strong></p>
             ` : ''}
 
-            <label for="authEmail">Email</label>
-            <input id="authEmail" name="email" type="email" autocomplete="email" placeholder="nama@email.com" value="${escapeHtml(authOtpEmail)}" required />
+            <label for="authEmail">${isSignup ? 'Email' : 'Email atau username'}</label>
+            <input id="authEmail" name="email" type="${isSignup ? 'email' : 'text'}" autocomplete="email" placeholder="${isSignup ? 'nama@email.com' : 'nama@email.com atau username'}" value="${escapeHtml(authOtpEmail)}" required />
 
             <label for="authPassword">Password</label>
-            <input id="authPassword" name="password" type="password" autocomplete="${isSignup ? 'new-password' : 'current-password'}" placeholder="Minimal 6 karakter" minlength="6" required />
+            <div class="auth-pw-wrap">
+              <input id="authPassword" name="password" type="${authPwVisible ? 'text' : 'password'}" autocomplete="${isSignup ? 'new-password' : 'current-password'}" placeholder="Minimal 8 karakter" minlength="8" required />
+              <button class="auth-eye" type="button" data-auth-action="toggle-pw" aria-label="${authPwVisible ? 'Sembunyikan password' : 'Tampilkan password'}" aria-pressed="${authPwVisible ? 'true' : 'false'}" tabindex="-1">
+                <svg class="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${authPwVisible ? ' style="display:none"' : ''}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${authPwVisible ? '' : ' style="display:none"'}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.13a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            ${isSignup ? `
+              <ul class="auth-pw-rules ${allPwChecksPass(authPwChecks) ? 'all-pass' : ''}" id="authPwRules" aria-label="Kriteria password">
+                <li data-rule="len" class="${authPwChecks.len ? 'pass' : ''}">${authPwChecks.len ? '✓' : '○'} Minimal 8 karakter</li>
+                <li data-rule="upper" class="${authPwChecks.upper ? 'pass' : ''}">${authPwChecks.upper ? '✓' : '○'} Minimal 1 huruf besar (A-Z)</li>
+                <li data-rule="other" class="${authPwChecks.other ? 'pass' : ''}">${authPwChecks.other ? '✓' : '○'} Minimal 1 angka / karakter non-huruf</li>
+              </ul>
+              <p class="auth-pw-ok" id="authPwOk" ${allPwChecksPass(authPwChecks) ? '' : 'hidden'}>✓ ${PW_RULE_OK}</p>
+            ` : ''}
 
-            <button class="auth-primary" type="submit" ${authIsBusy ? 'disabled' : ''}>
+            <button class="auth-primary" type="submit" ${authIsBusy || (isSignup && !allPwChecksPass(authPwChecks)) ? 'disabled' : ''}>
               ${authIsBusy ? 'Memproses...' : (isSignup ? 'Daftar dan kirim OTP' : 'Masuk')}
             </button>
           </form>
@@ -5940,16 +6010,36 @@
     showToast(input.checked ? 'Miaw-keren! Slot dicentang.' : 'Miaw-tenang. Slot batal dicentang.');
   }
 
+  async function resolveLoginEmail(identifier) {
+    if (identifier.includes('@')) return identifier;
+    // Username → email: cari di cookie lokal, lalu endpoint lookup server-side.
+    try {
+      const map = JSON.parse(localStorage.getItem('miaw-tracker.username-map.v1') || '{}');
+      if (map[identifier]) return map[identifier];
+    } catch { /* abaikan map rusak */ }
+    const res = await fetch(`/api/lookup-user?u=${encodeURIComponent(identifier)}`, { cache: 'no-store' });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error('lookup_failed');
+    const data = await res.json().catch(() => null);
+    return data?.email || null;
+  }
+
   async function loginWithPassword(form) {
     const data = new FormData(form);
-    const email = String(data.get('email') || '').trim().toLowerCase();
+    const identifier = String(data.get('email') || '').trim().toLowerCase();
     const password = String(data.get('password') || '');
-    if (!email || !password) return;
+    if (!identifier || !password) return;
 
     authIsBusy = true;
     renderAuthScreen();
 
     try {
+      const email = await resolveLoginEmail(identifier);
+      if (!email) {
+        showToast('Username tidak ditemukan. Coba login dengan email.');
+        return;
+      }
+
       const session = await authFetch('/auth/v1/token?grant_type=password', {
         method: 'POST',
         body: JSON.stringify({
@@ -5976,13 +6066,23 @@
     const name = String(data.get('name') || '').trim();
     const email = String(data.get('email') || '').trim().toLowerCase();
     const password = String(data.get('password') || '');
+    const username = canonicalUsername(name);
+    authPendingUsername = username;
     if (!name) {
       showToast('Nama pengguna wajib diisi.');
       return;
     }
-
-    if (!email || password.length < 6) {
-      showToast('Password minimal 6 karakter.');
+    if (!username) {
+      showToast('Nama pengguna minimal 2 huruf/angka (akan jadi username login).');
+      return;
+    }
+    if (!email || !email.includes('@')) {
+      showToast('Email tidak valid.');
+      return;
+    }
+    authPwChecks = evaluatePassword(password);
+    if (!allPwChecksPass(authPwChecks)) {
+      showToast('Password belum memenuhi kriteria: minimal 8 karakter, 1 huruf besar, 1 angka/karakter non-huruf.');
       return;
     }
 
@@ -5990,6 +6090,7 @@
     authPendingName = name.slice(0, 40);
     authOtpEmail = email;
     authPendingPassword = password;
+    authPwVisible = false;
     renderAuthScreen();
 
     try {
@@ -5999,7 +6100,7 @@
           email,
           create_user: true,
           data: {
-            username: authPendingName,
+            username,
             full_name: authPendingName,
             display_name: authPendingName,
           },
@@ -6070,12 +6171,21 @@
         body: JSON.stringify({
           password: authPendingPassword,
           data: {
-            username: authPendingName,
+            username: authPendingUsername || canonicalUsername(authPendingName),
             full_name: authPendingName,
             display_name: authPendingName,
           },
         }),
       }, session.access_token);
+
+      // Simpan pemetaan username→email lokal supaya login username instan tanpa lookup.
+      try {
+        const mapKey = 'miaw-tracker.username-map.v1';
+        const map = JSON.parse(localStorage.getItem(mapKey) || '{}');
+        const uname = authPendingUsername || canonicalUsername(authPendingName);
+        if (uname) map[uname] = authOtpEmail;
+        localStorage.setItem(mapKey, JSON.stringify(map));
+      } catch { /* penyimpanan lokal bersifat opsional */ }
 
       completeLogin(session);
       remoteHydrated = false;
@@ -6346,15 +6456,37 @@
       if (event.target.id === 'authOtpForm') verifyAuthOtp(event.target);
     });
 
+    dom.authScreen.addEventListener('input', (event) => {
+      const id = event.target.id;
+      if (id === 'authPassword' && authMode === 'signup') refreshPwChecklistUi(event.target.value);
+      if (id === 'authName') refreshUsernamePreview(event.target.value);
+    });
+
     dom.authScreen.addEventListener('click', (event) => {
       const button = event.target.closest('[data-auth-action]');
       if (!button) return;
+
+      if (button.dataset.authAction === 'toggle-pw') {
+        const input = dom.authScreen.querySelector('#authPassword');
+        if (!input) return;
+        authPwVisible = !authPwVisible;
+        input.type = authPwVisible ? 'text' : 'password';
+        button.setAttribute('aria-pressed', String(authPwVisible));
+        button.setAttribute('aria-label', authPwVisible ? 'Sembunyikan password' : 'Tampilkan password');
+        button.querySelector('.eye-open').style.display = authPwVisible ? 'none' : '';
+        button.querySelector('.eye-off').style.display = authPwVisible ? '' : 'none';
+        input.focus();
+        return;
+      }
 
       if (button.dataset.authAction === 'switch-mode') {
         authMode = authMode === 'login' ? 'signup' : 'login';
         authOtpEmail = '';
         authPendingPassword = '';
         authPendingName = '';
+        authPendingUsername = '';
+        authPwVisible = false;
+        authPwChecks = { len: false, upper: false, other: false };
         authOtpResendAt = 0;
         renderAuthScreen();
       }
@@ -6362,6 +6494,7 @@
       if (button.dataset.authAction === 'back-to-signup') {
         authOtpEmail = '';
         authPendingPassword = '';
+        authPwVisible = false;
         authOtpResendAt = 0;
         renderAuthScreen();
       }

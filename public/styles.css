@@ -4540,3 +4540,45 @@ svg {
   .rep-row-amt { order: 2; }
   .rep-donut-wrap { justify-content: center; }
 }
+
+/* --- Auth: eye toggle + password criteria (ui31) --- */
+.auth-pw-wrap { position: relative; }
+.auth-pw-wrap input { padding-right: 46px; }
+.auth-eye {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.auth-eye:hover { color: var(--teal-strong); background: color-mix(in srgb, var(--teal) 10%, transparent); }
+.auth-pw-rules {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.auth-pw-rules li.pass { color: #2e7d4f; }
+.auth-pw-rules.all-pass { border-color: color-mix(in srgb, #2e7d4f 45%, var(--line)); }
+.auth-pw-ok {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #2e7d4f;
+}
+.auth-pw-ok[hidden] { display: none; }
