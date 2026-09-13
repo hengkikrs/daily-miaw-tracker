@@ -1255,6 +1255,348 @@
     `;
   }
 
+  /* ============ DAILY TASK (kegiatan rutin non-project) ============ */
+  const DAILY_TASK_STORE_KEY = 'miaw-tracker.daily-tasks.v1';
+  const DAILY_ROUTINES = [
+    { id: 'r1', title: 'Olahraga 30 menit', time: '06:30', icon: '🏃', priority: 'med', days: 'everyday', note: '' },
+    { id: 'r2', title: 'Baca buku / artikel', time: '20:30', icon: '📚', priority: 'low', days: 'everyday', note: '' },
+    { id: 'r3', title: 'Cek & balas pesan pelanggan', time: '09:00', icon: '💬', priority: 'high', days: 'weekdays', note: '' },
+    { id: 'r4', title: 'Setoran & catat keuangan', time: '17:00', icon: '🧾', priority: 'med', days: 'weekdays', note: '' },
+    { id: 'r5', title: 'Planning mingguan', time: '07:00', icon: '🗓️', priority: 'med', days: 'monday', note: '' },
+    { id: 'r6', title: 'Bersih-bersih rumah', time: '08:00', icon: '🧹', priority: 'low', days: 'sunday', note: '' },
+  ];
+  let dailyTab = 'today';        // today | rutin | selesai
+  let dailyAdding = false;
+  let dailyDraft = null;
+  let dailyDetailId = null;
+
+  function dailyTodayIso() { return taskTodayIso(); }
+
+  function dailyDowOf(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1).getDay(); // 0=Min
+  }
+
+  function dailyRoutineApplies(r, iso) {
+    const dow = dailyDowOf(iso);
+    if (r.days === 'everyday') return true;
+    if (r.days === 'weekdays') return dow >= 1 && dow <= 5;
+    if (r.days === 'weekend') return dow === 0 || dow === 6;
+    if (r.days === 'monday') return dow === 1;
+    if (r.days === 'sunday') return dow === 0;
+    return true;
+  }
+
+  function loadDailyTasks() {
+    let list = null;
+    try {
+      const raw = JSON.parse(localStorage.getItem(scopedKey(DAILY_TASK_STORE_KEY)) || 'null');
+      if (Array.isArray(raw)) list = raw;
+    } catch { /* seed */ }
+    if (!Array.isArray(list)) {
+      list = [
+        { id: 'dt1', title: 'Minum 8 gelas air', icon: '💧', time: '', priority: 'low', date: dailyTodayIso(), done: false, routine: false, activity: [{ text: 'Rutinitas dibuat', at: Date.now() - 86400000 }] },
+        { id: 'dt2', title: 'Kirim invoice klien', icon: '📮', time: '13:00', priority: 'high', date: dailyTodayIso(), done: false, routine: false, activity: [] },
+        { id: 'dt3', title: 'Belanja sayur', icon: '🥬', time: '16:00', priority: 'med', date: taskDateOffset(1), done: false, routine: false, activity: [] },
+        { id: 'dt4', title: 'Rapat komunitas', icon: '👥', time: '19:30', priority: 'low', date: taskDateOffset(2), done: false, routine: false, activity: [] },
+      ];
+    }
+    // skor streak/riwayat rutinitas dibangun dari log harian
+    if (!list.__dailyLog) {
+      try {
+        const raw = JSON.parse(localStorage.getItem(scopedKey(`${DAILY_TASK_STORE_KEY}.log`)) || '{}');
+        list.__dailyLog = (raw && typeof raw === 'object') ? raw : {};
+      } catch { list.__dailyLog = {}; }
+    }
+    return list;
+  }
+
+  function saveDailyTasks(list) {
+    const plain = list.filter((x) => x && x.id);
+    const log = list.__dailyLog || {};
+    try {
+      localStorage.setItem(scopedKey(DAILY_TASK_STORE_KEY), JSON.stringify(plain));
+      localStorage.setItem(scopedKey(`${DAILY_TASK_STORE_KEY}.log`), JSON.stringify(log));
+    } catch { /* ignore */ }
+  }
+
+  function dailyRoutineDoneKey(r, iso) { return `${iso}:${r.id}`; }
+  function dailyIsRoutineDone(r, iso) {
+    const tasks = loadDailyTasks();
+    const log = tasks.__dailyLog || {};
+    return Boolean(log[dailyRoutineDoneKey(r, iso)]);
+  }
+  function dailySetRoutineDone(r, iso, done) {
+    const tasks = loadDailyTasks();
+    const log = tasks.__dailyLog || {};
+    if (done) log[dailyRoutineDoneKey(r, iso)] = true; else delete log[dailyRoutineDoneKey(r, iso)];
+    tasks.__dailyLog = log;
+    saveDailyTasks(tasks);
+  }
+
+  function dailyRoutineStats(r) {
+    // streak + 14 hari terakhir
+    const log = (loadDailyTasks().__dailyLog || {});
+    let streak = 0;
+    for (let i = 0; i < 90; i += 1) {
+      const iso = taskDateOffset(-i);
+      if (!dailyRoutineApplies(r, iso)) continue;
+      if (log[dailyRoutineDoneKey(r, iso)]) streak += 1;
+      else if (i > 0) break;
+    }
+    const hist = [];
+    for (let i = 13; i >= 0; i -= 1) {
+      const iso = taskDateOffset(-i);
+      hist.push({ iso, on: dailyRoutineApplies(r, iso) && Boolean(log[dailyRoutineDoneKey(r, iso)]), skip: !dailyRoutineApplies(r, iso) });
+    }
+    return { streak, hist };
+  }
+
+  function dailyDayList(iso) {
+    const items = loadJadwalEvents()
+      .filter((e) => e.date === iso)
+      .map((e) => ({ id: e.id, jadwal: true, time: e.time || '', title: e.title, sub: e.category || '', color: jadwalCatColor(e.category), kind: e.kind === 'task' ? 'task' : 'event', done: false }));
+    loadDailyTasks().forEach((t) => {
+      if (t.date === iso) items.push({ id: t.id, jadwal: false, time: t.time || '', title: t.title, sub: t.icon ? `${t.icon} rutinitas` : 'rutinitas', color: t.priority === 'high' ? '#d96a6a' : t.priority === 'med' ? '#e8a33d' : '#8a9a5b', kind: 'task', done: !!t.done });
+    });
+    items.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    return items;
+  }
+
+  function dailyAddDraftDefaults() {
+    return { title: '', icon: '📌', time: '', priority: 'med', date: dailyTodayIso() };
+  }
+
+  function renderDailyTaskView() {
+    const todayIso = dailyTodayIso();
+    const tasks = loadDailyTasks();
+    const log = tasks.__dailyLog || {};
+    const allTasks = tasks.filter((t) => t && t.id);
+    const doneToday = allTasks.filter((t) => t.date === todayIso && t.done).length;
+    const openToday = allTasks.filter((t) => t.date === todayIso && !t.done);
+    const todayAll = allTasks.filter((t) => t.date === todayIso);
+    const totalToday = todayAll.length + DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso)).length;
+    const doneTotal = doneToday + DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso) && dailyIsRoutineDone(r, todayIso)).length;
+    const pct = totalToday ? Math.round((doneTotal / totalToday) * 100) : 0;
+    const routinesToday = DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso));
+    const routinesDone = routinesToday.filter((r) => dailyIsRoutineDone(r, todayIso)).length;
+    const now = new Date();
+    const dateLabel = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const h = now.getHours();
+    const greet = h < 11 ? 'Selamat pagi' : h < 15 ? 'Selamat siang' : h < 19 ? 'Selamat sore' : 'Selamat malam';
+
+    const chip = (text, cls) => (text ? `<span class="task-chip ${cls || ''}">${escapeHtml(text)}</span>` : '');
+    const prioDot = (p) => `<span class="task-prio p-${p || 'low'}" aria-label="Prioritas"></span>`;
+
+    // tab rutin
+    let body = '';
+    if (dailyTab === 'rutin') {
+      const cards = DAILY_ROUTINES.map((r) => {
+        const st = dailyRoutineStats(r);
+        const daysLabel = { everyday: 'Setiap hari', weekdays: 'Senin–Jumat', weekend: 'Sabtu & Minggu', monday: 'Setiap Senin', sunday: 'Setiap Minggu' }[r.days] || 'Terjadwal';
+        const doneTodayR = dailyIsRoutineDone(r, todayIso);
+        return `
+          <section class="dt-card">
+            <div class="dt-card-head">
+              <span class="dt-ico">${r.icon}</span>
+              <span class="dt-title">
+                <strong>${escapeHtml(r.title)}</strong>
+                <small>${daysLabel}${r.time ? ` · ⏰ ${escapeHtml(r.time)}` : ''} · 🔥 streak ${st.streak} hari</small>
+              </span>
+              <label class="task-check-wrap" title="${doneTodayR ? 'Sudah dilakukan hari ini' : 'Tandai selesai hari ini'}">
+                <input class="task-check" type="checkbox" ${doneTodayR ? 'checked' : ''} data-daily-rt="${r.id}" data-iso="${todayIso}" />
+              </label>
+            </div>
+            <div class="dt-hist" aria-hidden="true">
+              ${st.hist.map((hh) => `<span class="dt-h ${hh.skip ? 'skip' : hh.on ? 'on' : ''}" title="${hh.iso}"></span>`).join('')}
+            </div>
+          </section>`;
+      }).join('');
+      body = `<div class="dt-cards">${cards}</div>`;
+    } else if (dailyTab === 'selesai') {
+      const doneRows = allTasks.filter((t) => t.done).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 30);
+      body = `<section class="task-card task-section">
+        <h3>Riwayat selesai</h3>
+        <div class="task-list">
+          ${doneRows.length ? doneRows.map((t) => `
+            <div class="task-row done" data-daily-id="${t.id}">
+              ${prioDot(t.priority)}
+              <label class="task-check-wrap"><input class="task-check" type="checkbox" checked data-daily-toggle="${t.id}" /></label>
+              <span class="task-main" data-daily-open="${t.id}" role="button" tabindex="0">
+                <span class="task-name">${t.icon ? `${t.icon} ` : ''}${escapeHtml(t.title)}</span>
+                <span class="task-meta">${chip(taskDateRead(t.date), 'tag')}${t.time ? `<span class="task-time">⏱ ${escapeHtml(t.time)}</span>` : ''}</span>
+              </span>
+              <button class="task-del icon-button" type="button" data-daily-delete="${t.id}" aria-label="Hapus">✕</button>
+            </div>`).join('') : '<p class="task-empty">Belum ada riwayat.</p>'}
+        </div>
+      </section>`;
+    } else {
+      // HARI INI: daftar terpadu jadwal + rutinitas + task rutin
+      const agenda = dailyDayList(todayIso);
+      const agendaRows = agenda.map((it) => {
+        const check = it.jadwal
+          ? ''
+          : `<label class="task-check-wrap"><input class="task-check" type="checkbox" ${it.done ? 'checked' : ''} data-daily-toggle="${it.id}" /></label>`;
+        const open = it.jadwal
+          ? `<span class="task-main" data-daily-jadwal="${it.id}" role="button" tabindex="0"><span class="task-name">${it.kind === 'task' ? '<span class="jadwal-dot ring" style="--jc:' + it.color + '"></span>' : '<span class="jadwal-dot" style="background:' + it.color + '"></span>'} ${escapeHtml(it.title)}</span><span class="task-meta">${chip(it.sub, 'tag')}</span></span>`
+          : `<span class="task-main" data-daily-open="${it.id}" role="button" tabindex="0"><span class="task-name">${escapeHtml(it.title)}</span><span class="task-meta">${chip(it.sub, 'tag')}${it.time ? `<span class="task-time">⏱ ${escapeHtml(it.time)}</span>` : ''}</span></span>`;
+        return `<div class="task-row ${it.done ? 'done' : ''}">
+            ${it.jadwal ? prioDot(it.kind === 'task' ? 'med' : 'low') : prioDot(loadDailyTasks().find((x) => x.id === it.id)?.priority)}
+            ${check}
+            ${open}
+          </div>`;
+      }).join('');
+      const later = allTasks.filter((t) => t.date > todayIso && !t.done).sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(0, 6);
+      body = `
+        <section class="task-card task-section">
+          <div class="task-sec-head"><h3>Agenda hari ini</h3><span class="task-sec-meta">${routinesDone}/${routinesToday.length} rutinitas</span></div>
+          <div class="task-list">${agenda.length ? agendaRows : '<p class="task-empty">Tidak ada agenda. Tenang sebentar.</p>'}</div>
+        </section>
+        ${later.length ? `
+        <section class="task-card task-section">
+          <h3>Mendatang</h3>
+          <div class="task-list">${later.map((t) => `
+            <div class="task-row" data-daily-id="${t.id}">
+              ${prioDot(t.priority)}
+              <label class="task-check-wrap"><input class="task-check" type="checkbox" data-daily-toggle="${t.id}" /></label>
+              <span class="task-main" data-daily-open="${t.id}" role="button" tabindex="0">
+                <span class="task-name">${t.icon ? `${t.icon} ` : ''}${escapeHtml(t.title)}</span>
+                <span class="task-meta">${chip(taskDateRead(t.date), 'tag')}${t.time ? `<span class="task-time">⏱ ${escapeHtml(t.time)}</span>` : ''}</span>
+              </span>
+            </div>`).join('')}</div>
+        </section>` : ''}`;
+    }
+
+    const tabs = `
+      <div class="dt-tabs" role="tablist">
+        <button type="button" class="dt-tab ${dailyTab === 'today' ? 'on' : ''}" data-daily-tab="today">Hari Ini</button>
+        <button type="button" class="dt-tab ${dailyTab === 'rutin' ? 'on' : ''}" data-daily-tab="rutin">Rutinitas</button>
+        <button type="button" class="dt-tab ${dailyTab === 'selesai' ? 'on' : ''}" data-daily-tab="selesai">Selesai</button>
+      </div>`;
+
+    const addForm = dailyAdding ? `
+      <form class="dt-add-card" id="dailyAddForm">
+        <div class="jadwal-add-head"><span>Tambah Kegiatan</span><button type="button" class="task-add-x" data-daily-cancel aria-label="Batal">×</button></div>
+        <input name="title" type="text" maxlength="90" placeholder="Nama kegiatan rutin…" autocomplete="off" required value="${escapeHtml((dailyDraft || {}).title || '')}" />
+        <div class="jadwal-add-grid">
+          <label><span>Ikun</span><select name="icon">${['📌','💧','🏃','📚','🧘','🛒','🐶','🎸','🧹','📮'].map((ic) => `<option value="${ic}" ${((dailyDraft || {}).icon) === ic ? 'selected' : ''}>${ic}</option>`).join('')}</select></label>
+          <label><span>Jam</span><input name="time" type="time" value="${escapeHtml((dailyDraft || {}).time || '')}" /></label>
+          <label><span>Prioritas</span><select name="priority">
+            <option value="low" ${((dailyDraft || {}).priority) === 'low' ? 'selected' : ''}>Rendah</option>
+            <option value="med" ${((dailyDraft || {}).priority) === 'med' ? 'selected' : ''}>Sedang</option>
+            <option value="high" ${((dailyDraft || {}).priority) === 'high' ? 'selected' : ''}>Tinggi</option>
+          </select></label>
+        </div>
+        <button class="primary-button jadwal-add-save" type="submit">Simpan</button>
+      </form>` : '';
+
+    return `
+    <section class="task-page dt-page">
+      <div class="task-date"><strong>${greet}</strong> · ${escapeHtml(dateLabel)}</div>
+      <div class="task-card task-progress-card">
+        <div class="task-progress-head">
+          <strong>${doneTotal} / ${totalToday} kegiatan hari ini</strong>
+          <span class="task-pct">${pct}%</span>
+        </div>
+        <div class="task-bar"><span style="width:${pct}%"></span></div>
+        <div class="dt-progress-sub">${openToday.length} kegiatan + ${routinesToday.length - routinesDone} rutinitas belum selesai</div>
+      </div>
+      ${tabs}
+      ${addForm}
+      ${body}
+      <button class="task-fab" type="button" data-daily-add aria-label="Tambah kegiatan rutin">+</button>
+    </section>`;
+  }
+
+  function dailyDetailOf(id) {
+    return loadDailyTasks().find((x) => x.id === id) || null;
+  }
+
+  function renderDailyDetail() {
+    const t = dailyDetailOf(dailyDetailId);
+    if (!t) return '';
+    const prio = { high: ['Prioritas Tinggi', 'high'], med: ['Prioritas Sedang', 'med'], low: ['Prioritas Rendah', 'low'] }[t.priority || 'low'];
+    const acts = Array.isArray(t.activity) ? [...t.activity].sort((a, b) => b.at - a.at) : [];
+    return `
+    <section class="task-page task-detail">
+      <div class="task-detail-top">
+        <button class="icon-button task-back" type="button" data-daily-back aria-label="Kembali">←</button>
+        <strong>Detail Kegiatan</strong>
+        <span></span>
+      </div>
+      <div class="task-card task-detail-head">
+        <div class="task-detail-chips">
+          <span class="task-chip prio ${prio[1]}">${prio[0]}</span>
+          <span class="task-chip status ${t.done ? 'done' : 'prog'}">${t.done ? 'Selesai' : 'In Progres'}</span>
+        </div>
+        <h2 class="task-detail-title">${t.icon ? `${t.icon} ` : ''}${escapeHtml(t.title)}</h2>
+      </div>
+      <div class="task-card task-detail-info">
+        <div class="task-info-grid">
+          <div class="task-info-cell"><span class="task-info-label">Tanggal</span><span class="task-info-value">${taskDateRead(t.date)}</span></div>
+          <div class="task-info-cell"><span class="task-info-label">Jam</span><span class="task-info-value">${t.time || '—'}</span></div>
+        </div>
+      </div>
+      <div class="task-detail-actions">
+        <button class="primary-button" type="button" data-daily-toggle="${t.id}">${t.done ? 'Tandai Belum Selesai' : 'Tandai Selesai'}</button>
+        <button class="secondary-button" type="button" data-daily-delete="${t.id}">Hapus</button>
+      </div>
+      <section class="task-card task-detail-sec">
+        <h3>Activity</h3>
+        <ul class="task-activity">
+          ${acts.length ? acts.map((a) => `<li><span>${escapeHtml(a.text)}</span><time>${taskRelTime(a.at)}</time></li>`).join('') : '<li class="task-empty">Belum ada aktivitas.</li>'}
+        </ul>
+      </section>
+    </section>`;
+  }
+
+  function handleDailyAction(btn) {
+    if (btn.matches('[data-daily-tab]')) { dailyTab = btn.dataset.dailyTab; renderShell(); return true; }
+    if (btn.matches('[data-daily-add]')) {
+      dailyAdding = true; dailyDraft = dailyDraft || dailyAddDraftDefaults();
+      renderShell(); setTimeout(() => document.querySelector('#dailyAddForm [name=title]')?.focus(), 30);
+      return true;
+    }
+    if (btn.matches('[data-daily-cancel]')) { dailyAdding = false; dailyDraft = null; renderShell(); return true; }
+    if (btn.matches('[data-daily-rt]')) {
+      // checkbox: toggle selesai-hari-ini rutinitas
+      const r = DAILY_ROUTINES.find((x) => x.id === btn.dataset.dailyRt);
+      if (r) { dailySetRoutineDone(r, btn.dataset.iso || dailyTodayIso(), btn.checked); renderShell(); }
+      return true;
+    }
+    if (btn.matches('[data-daily-toggle]')) {
+      const list = loadDailyTasks();
+      const t = list.find((x) => x.id === btn.dataset.dailyToggle);
+      if (t) {
+        t.done = !t.done;
+        t.activity = Array.isArray(t.activity) ? t.activity : [];
+        t.activity.push({ text: t.done ? 'Kegiatan ditandai selesai' : 'Kegiatan dibuka kembali', at: Date.now() });
+        saveDailyTasks(list);
+        renderShell();
+      }
+      return true;
+    }
+    if (btn.matches('[data-daily-open]')) { dailyDetailId = btn.dataset.dailyOpen; renderShell(); return true; }
+    if (btn.matches('[data-daily-jadwal]')) {
+      // dari agenda → menuju jadwal (hari terpilih = tanggal agenda ini)
+      const ev = loadJadwalEvents().find((x) => x.id === btn.dataset.dailyJadwal);
+      if (ev) { jadwalSelIso = ev.date; activeView = 'jadwal'; state.selectedView = 'jadwal'; saveState(); renderShell(); }
+      return true;
+    }
+    if (btn.matches('[data-daily-delete]')) {
+      const list = loadDailyTasks();
+      const plain = list.filter((x) => x && x.id !== btn.dataset.dailyDelete);
+      plain.__dailyLog = list.__dailyLog || {};
+      saveDailyTasks(plain);
+      if (dailyDetailId === btn.dataset.dailyDelete) dailyDetailId = null;
+      renderShell();
+      return true;
+    }
+    if (btn.matches('[data-daily-back]')) { dailyDetailId = null; renderShell(); return true; }
+    return false;
+  }
+
+
   /* ============ MODUL JADWAL (kalender + agenda harian) ============ */
   const JADWAL_STORE_KEY = 'miaw-tracker.jadwal.v1';
   const JADWAL_COLORS = {
@@ -1265,6 +1607,7 @@
   let jadwalSelIso = taskTodayIso();
   let jadwalMonthOffset = 0;             // offset bulan dari bulan ini
   let jadwalAdding = false;
+  let jadwalEditingId = null;
 
   function jadwalCatColor(cat) {
     return JADWAL_COLORS[String(cat || '').toLowerCase()] || '#a9885f';
@@ -1297,9 +1640,9 @@
   function jadwalItems(iso) {
     const items = loadJadwalEvents()
       .filter((e) => e.date === iso)
-      .map((e) => ({ time: e.time || '', title: e.title, sub: e.category || '', color: jadwalCatColor(e.category), kind: e.kind === 'task' ? 'task' : 'event', done: false }));
+      .map((e) => ({ srcId: e.id, jadwalEv: true, time: e.time || '', title: e.title, sub: e.category || '', color: jadwalCatColor(e.category), kind: e.kind === 'task' ? 'task' : 'event', done: !!e.done }));
     loadTasks().forEach((t) => {
-      if (t.date === iso) items.push({ time: t.time || '', title: t.title, sub: [t.project, t.tag].filter(Boolean).join(' · ') || 'Task', color: jadwalCatColor(t.tag || t.project), kind: 'task', done: !!t.done });
+      if (t.date === iso) items.push({ srcId: t.id, jadwalEv: false, time: t.time || '', title: t.title, sub: [t.project, t.tag].filter(Boolean).join(' · ') || 'Task', color: jadwalCatColor(t.tag || t.project), kind: 'task', done: !!t.done });
     });
     items.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
     return items;
@@ -1327,10 +1670,18 @@
     const dot = it.kind === 'task'
       ? `<span class="jadwal-dot ring" style="--jc:${it.color}"></span>`
       : `<span class="jadwal-dot" style="background:${it.color}"></span>`;
-    return `<div class="jadwal-row${it.done ? ' done' : ''}">
+    const isTask = it.kind === 'task';
+    const check = isTask
+      ? `<label class="task-check-wrap" title="Tandai selesai"><input class="task-check" type="checkbox" ${it.done ? 'checked' : ''} data-jadwal-check="${it.srcId}" data-src="${it.jadwalEv ? 'j' : 't'}" /></label>`
+      : '';
+    const open = it.jadwalEv
+      ? `data-jadwal-ev="${it.srcId}"`
+      : `data-jadwal-task="${it.srcId}"`;
+    return `<div class="jadwal-row${it.done ? ' done' : ''}" ${open} role="button" tabindex="0" aria-label="Buka ${escapeHtml(it.title)}">
         <span class="jadwal-time">${escapeHtml(it.time || '—')}</span>
         ${dot}
         <span class="jadwal-info"><span class="jadwal-title">${escapeHtml(it.title)}</span><span class="jadwal-sub">${escapeHtml(it.sub)}</span></span>
+        ${check}
         <span class="jadwal-chev">›</span>
       </div>`;
   }
@@ -1345,13 +1696,13 @@
 
     const addForm = jadwalAdding ? `
       <form class="jadwal-add-card" id="jadwalAddForm">
-        <div class="jadwal-add-head"><span>Tambah Jadwal</span><button type="button" class="task-add-x" data-jadwal-cancel aria-label="Batal">×</button></div>
-        <input name="title" type="text" maxlength="80" placeholder="Judul jadwal…" autocomplete="off" required />
+        <div class="jadwal-add-head"><span>${jadwalEditingId ? 'Edit Jadwal' : 'Tambah Jadwal'}</span><button type="button" class="task-add-x" data-jadwal-cancel aria-label="Batal">×</button></div>
+        <input name="title" type="text" maxlength="80" placeholder="Judul jadwal…" autocomplete="off" required value="${jadwalEditingId ? escapeHtml((loadJadwalEvents().find((x) => x.id === jadwalEditingId) || {}).title || '') : ''}" />
         <div class="jadwal-add-grid">
           <label><span>Tanggal</span><input name="date" type="date" value="${escapeHtml(jadwalSelIso)}" /></label>
-          <label><span>Jam</span><input name="time" type="time" value="09:00" /></label>
-          <label><span>Kategori</span><input name="category" type="text" maxlength="24" placeholder="Kantor" autocomplete="off" list="jadwalCats" /></label>
-          <label><span>Tipe</span><select name="kind"><option value="event">Event</option><option value="task">Task</option></select></label>
+          <label><span>Jam</span><input name="time" type="time" value="${jadwalEditingId ? escapeHtml((loadJadwalEvents().find((x) => x.id === jadwalEditingId) || {}).time || '09:00') : '09:00'}" /></label>
+          <label><span>Kategori</span><input name="category" type="text" maxlength="24" placeholder="Kantor" autocomplete="off" list="jadwalCats" value="${jadwalEditingId ? escapeHtml((loadJadwalEvents().find((x) => x.id === jadwalEditingId) || {}).category || '') : ''}" /></label>
+          <label><span>Tipe</span><select name="kind"><option value="event" ${jadwalEditingId && (loadJadwalEvents().find((x) => x.id === jadwalEditingId) || {}).kind !== 'task' ? 'selected' : ''}>Event</option><option value="task" ${jadwalEditingId && (loadJadwalEvents().find((x) => x.id === jadwalEditingId) || {}).kind === 'task' ? 'selected' : ''}>Task</option></select></label>
         </div>
         <datalist id="jadwalCats">${Object.keys(JADWAL_COLORS).map((c) => `<option value="${c}"></option>`).join('')}</datalist>
         <button class="primary-button jadwal-add-save" type="submit">Simpan</button>
@@ -1421,7 +1772,38 @@
       return true;
     }
     if (btn.matches('[data-jadwal-add]')) { jadwalAdding = true; renderShell(); setTimeout(() => document.querySelector('#jadwalAddForm [name=title]')?.focus(), 30); return true; }
-    if (btn.matches('[data-jadwal-cancel]')) { jadwalAdding = false; renderShell(); return true; }
+    if (btn.matches('[data-jadwal-cancel]')) { jadwalAdding = false; jadwalEditingId = null; renderShell(); return true; }
+    if (btn.matches('[data-jadwal-check]')) {
+      // checkbox di baris jadwal: tandai selesai (task rutin) / tandai event selesai (log jadwal)
+      const id = btn.dataset.jadwalCheck;
+      if (btn.dataset.src === 't') {
+        const t = loadTasks().find((x) => x.id === id);
+        if (t) { t.done = btn.checked; saveTasks(); }
+      } else {
+        const evs = loadJadwalEvents();
+        const ev = evs.find((x) => x.id === id);
+        if (ev) { ev.done = btn.checked; saveJadwalEvents(evs); }
+      }
+      renderShell();
+      return true;
+    }
+    if (btn.matches('[data-jadwal-ev]')) {
+      // event jadwal: buka form edit terisi (hapus+buat ulang sederhana via prompt-free edit form)
+      jadwalEditingId = btn.dataset.jadwalEv;
+      jadwalAdding = true;
+      renderShell();
+      setTimeout(() => document.querySelector('#jadwalAddForm [name=title]')?.focus(), 30);
+      return true;
+    }
+    if (btn.matches('[data-jadwal-task]')) {
+      // task project (dari modul task lama) → detail task
+      taskDetailId = btn.dataset.jadwalTask;
+      activeView = 'task';
+      state.selectedView = 'task';
+      saveState();
+      renderShell();
+      return true;
+    }
     return false;
   }
 
@@ -1483,14 +1865,18 @@
 
     if (activeView === 'task') {
       dom.pageTitle.textContent = 'Daily Task';
-      dom.pageSubtitle.textContent = 'Daftar tugas harian';
-      dom.content.innerHTML = renderTaskView();
-      if (taskAdding) {
-        const q = dom.content.querySelector('#taskQuickInput');
-        if (q) q.focus();
+      dom.pageSubtitle.textContent = 'Kegiatan rutin harian di luar project';
+      if (dailyDetailId) {
+        const dd = renderDailyDetail();
+        if (dd) { dom.content.innerHTML = dd; return; }
+        dailyDetailId = null;
       }
-      if (focusTaskId) setTimeout(tickFocusDisplay, 0);
-      mountTaskSearch();
+      if (taskDetailId) {
+        const legacy = renderTaskDetail();
+        if (legacy) { dom.content.innerHTML = legacy; if (focusTaskId) setTimeout(tickFocusDisplay, 0); return; }
+        taskDetailId = null;
+      }
+      dom.content.innerHTML = renderDailyTaskView();
       return;
     }
 
@@ -5472,147 +5858,286 @@
     `;
   }
 
+  /* ============ DASHBOARD BARU (statistik lintas modul: Activity, Goals & Habit, Organization, Finance) ============ */
+  function dashRp(n) { return `Rp ${Math.abs(Math.round(Number(n) || 0)).toLocaleString('id-ID')}`; }
+  function goalPctOf(g) {
+    const ms = g.milestones || [];
+    if (ms.length) return Math.round((ms.filter((x) => x.done).length / ms.length) * 100);
+    return g.status === 'selesai' ? 100 : 0;
+  }
+  function dashCompact(n) {
+    n = Math.round(Math.abs(Number(n) || 0));
+    if (n >= 1e9) return `${(n / 1e9).toFixed(1).replace('.', ',')} M`;
+    if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace('.', ',')} jt`;
+    if (n >= 1e3) return `${Math.round(n / 1e3)} rb`;
+    return String(n);
+  }
+  function dashSparkline(values, W, H, color) {
+    if (!values.length) return '';
+    const max = Math.max(1, ...values);
+    const pts = values.map((v, i) => [values.length === 1 ? W / 2 : (i / (values.length - 1)) * (W - 8) + 4, H - 4 - (v / max) * (H - 10)]);
+    const path = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+    const area = `${pts[0][0].toFixed(1)},${H - 2} ${path} ${pts[pts.length - 1][0].toFixed(1)},${H - 2}`;
+    return `<svg viewBox="0 0 ${W} ${H}" class="dash-spark" aria-hidden="true"><polygon points="${area}" fill="${color}" opacity="0.12"/><path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+
+  function dashCompute() {
+    const todayIso = taskTodayIso();
+    const monthKey = txMonthNow();
+    const y = activeYear;
+    // ACTIVITY
+    ensureYear(y);
+    const tasks = loadTasks();
+    const tasksToday = tasks.filter((t) => t.date === todayIso);
+    const doneToday = tasksToday.filter((t) => t.done).length;
+    const monthTasks = tasks.filter((t) => (t.date || '').slice(0, 7) === monthKey);
+    const doneMonth = monthTasks.filter((t) => t.done).length;
+    const schedToday = loadJadwalEvents().filter((e) => e.date === todayIso);
+    // DAILY rutinitas (modul baru)
+    const rt = DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso));
+    const rtDone = rt.filter((r) => dailyIsRoutineDone(r, todayIso)).length;
+    const activityPct = tasksToday.length + rt.length ? Math.round(((doneToday + rtDone) / (tasksToday.length + rt.length)) * 100) : 0;
+    // GOALS & HABIT
+    const goals = loadGoals();
+    const avgGoal = goals.length ? Math.round(goals.reduce((s, g) => s + goalPctOf(g), 0) / goals.length) : 0;
+    const projects = loadProjects();
+    const projActive = projects.filter((p) => p.status === 'active').length;
+    const monthStats = calculateMonthStats(y, activeMonth);
+    const habitAvg = Math.round(monthStats.average);
+    const habitMonths = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(y, activeMonth - (5 - i), 1);
+      return calculateMonthStats(d.getFullYear(), d.getMonth()).average;
+    });
+    // ORGANIZATION
+    ensureDocStore();
+    const notes = loadNotes().filter((n) => !n.archived);
+    const docs = docList();
+    const notesThis = notes.filter((n) => txIso(new Date(Number(n.updated) || 0)).slice(0, 7) === monthKey).length;
+    const docsThis = docs.filter((d) => txIso(new Date(Number(d.createdAt) || 0)).slice(0, 7) === monthKey).length;
+    // FINANCE
+    ensureTxStore();
+    ensureSaveStore();
+    const flows = repFlow(repMonths(6));
+    const fCur = flows[flows.length - 1];
+    const balance = repSum(txList().filter((t) => t.type === 'in')) - repSum(txList().filter((t) => t.type === 'out'));
+    const savedTotal = saveList().reduce((a, s) => a + (Number(s.balance) || 0), 0);
+    const svTargets = saveList().filter((s) => !s.archived);
+    const savingsPct = svTargets.length ? Math.round(svTargets.reduce((a, s) => a + Math.min(100, saveCalc(s).pctReal), 0) / svTargets.length) : 0;
+    const buds = budList().filter((b) => b.period === monthKey);
+    const budSum = buds.reduce((a, b) => a + (Number(b.amount) || 0), 0);
+    const budSpent = buds.reduce((a, b) => a + budCalc(b).spent, 0);
+    return { todayIso, monthKey, tasks, tasksToday, doneToday, monthTasks, doneMonth, schedToday, rt, rtDone, activityPct, goals, avgGoal, projects, projActive, monthStats, habitAvg, habitMonths, notes, docs, notesThis, docsThis, flows, fCur, balance, savedTotal, savingsPct, buds, budSum, budSpent };
+  }
+
+  function dashGoTo(view) {
+    activeView = view; state.selectedView = view; saveState(); renderShell(); closeSidebar();
+  }
+
+  function dashCard({ icon, title, pct, tone, stats, cta, view }) {
+    return `
+      <article class="dash-mod tone-${tone}">
+        <header class="dash-mod-head">
+          <span class="dash-mod-ico">${icon}</span>
+          <h3>${title}</h3>
+          <span class="dash-mod-pct">${pct}<small>%</small></span>
+        </header>
+        <div class="dash-mod-bar"><span style="width:${clamp(pct, 0, 100)}%"></span></div>
+        <div class="dash-mod-stats">${stats}</div>
+        <button type="button" class="dash-mod-cta" data-dash-go="${view}">${cta} →</button>
+      </article>`;
+  }
+
   function renderDashboard(year) {
-    const yearStats = calculateYearStats(year);
-    const bestMonth = yearStats.bestMonth;
-    const focusMonth = calculateMonthStats(year, activeMonth);
+    const d = dashCompute();
     const focusMonthData = ensureMonth(year, activeMonth);
     const focusDailyRates = calculateDailyRates(focusMonthData, year, activeMonth);
-    const categoryBreakdown = calculateCategoryBreakdown(focusMonthData, year, activeMonth);
+    const yearStats = calculateYearStats(year);
+    const bestMonth = yearStats.bestMonth;
     const todayPoints = dailyPointSummary(focusDailyRates, year, activeMonth);
-    const pointRate = yearStats.possiblePoints === 0
-      ? 0
-      : (yearStats.earnedPoints / yearStats.possiblePoints) * 100;
+
+    // ===== kartu modul (ringkas) =====
+    const activityCard = dashCard({
+      icon: '⚡', title: 'Activity', pct: d.activityPct, tone: 'teal', view: 'task', cta: 'Buka Daily Task',
+      stats: `
+        <div class="dash-stat"><span>Task hari ini</span><b>${d.doneToday}/${d.tasksToday.length}</b></div>
+        <div class="dash-stat"><span>Rutinitas</span><b>${d.rtDone}/${d.rt.length}</b></div>
+        <div class="dash-stat"><span>Selesai bulan ini</span><b>${d.doneMonth}/${d.monthTasks.length}</b></div>
+        <div class="dash-stat"><span>Agenda hari ini</span><b>${d.schedToday.length}</b></div>`,
+    });
+    const goalsCard = dashCard({
+      icon: '🎯', title: 'Goals & Habit', pct: Math.round((d.avgGoal + d.habitAvg) / 2), tone: 'rose', view: 'goals', cta: 'Buka Goals',
+      stats: `
+        <div class="dash-stat"><span>Goals (rata-rata)</span><b>${d.avgGoal}%</b></div>
+        <div class="dash-stat"><span>Habit ${MONTHS[activeMonth].slice(0, 3)}</span><b>${d.habitAvg}%</b></div>
+        <div class="dash-stat"><span>Goals aktif</span><b>${d.goals.filter((g) => g.status !== 'selesai').length}</b></div>
+        <div class="dash-stat"><span>Project aktif</span><b>${d.projActive}</b></div>`,
+    });
+    const orgCard = dashCard({
+      icon: '🗂️', title: 'Organization', pct: clamp(Math.round(((d.notes.length + d.docs.length) / 30) * 100), 0, 100), tone: 'violet', view: 'catatan', cta: 'Buka Catatan',
+      stats: `
+        <div class="dash-stat"><span>Catatan aktif</span><b>${d.notes.length}</b></div>
+        <div class="dash-stat"><span>Dokumen</span><b>${d.docs.length}</b></div>
+        <div class="dash-stat"><span>Catatan bulan ini</span><b>${d.notesThis}</b></div>
+        <div class="dash-stat"><span>Dokumen baru</span><b>${d.docsThis}</b></div>`,
+    });
+    const financePct = d.fCur.inc > 0 ? clamp(Math.round((d.fCur.net / d.fCur.inc) * 100), 0, 100) : 0;
+    const financeCard = dashCard({
+      icon: '💰', title: 'Finance', pct: financePct, tone: 'amber', view: 'laporan-keuangan', cta: 'Buka Laporan Keuangan',
+      stats: `
+        <div class="dash-stat"><span>Arus kas bersih</span><b class="${d.fCur.net >= 0 ? 'green' : 'coral'}">${dashCompact(d.fCur.net)}</b></div>
+        <div class="dash-stat"><span>Saldo kas</span><b>${dashCompact(d.balance)}</b></div>
+        <div class="dash-stat"><span>Tabungan</span><b>${d.savingsPct}%</b></div>
+        <div class="dash-stat"><span>Budget terpakai</span><b>${d.budSum ? Math.round((d.budSpent / d.budSum) * 100) : 0}%</b></div>`,
+    });
+
+    // ===== grafik =====
+    const trend = renderTrendChart(yearStats.months);
+    const financeChart = repBarChartSvg(d.flows, 640, 190);
+    const cats = repSpendByCat(d.monthKey);
+    const catTotal = repSum(cats.map((c) => ({ amount: c.amt })));
+    const catLegend = cats.slice(0, 5).map((it, i) => {
+      const COL = ['#d99a2b', '#7fb5a0', '#4a7fb5', '#b5567d', '#6a5acd'];
+      return `<div class="rep-lg"><i style="background:${COL[i % COL.length]}"></i><b>${escapeHtml(it.cat)}</b><small>${catTotal ? Math.round((it.amt / catTotal) * 100) : 0}%</small><span>${txRp(it.amt)}</span></div>`;
+    }).join('');
+
+    // habit per kategori bulan fokus
+    const catRows = calculateCategoryBreakdown(focusMonthData, year, activeMonth)
+      .filter((c) => c.totalHabits > 0)
+      .map((c) => `
+        <div class="dash-cat">
+          <span>${CATEGORY_CONFIG[c.categoryKey].shortLabel}</span>
+          <div class="dash-cat-bar"><span style="width:${clamp(c.average, 0, 100)}%"></span></div>
+          <b>${roundPercent(c.average)}%</b>
+        </div>`).join('');
+
+    // goals teratas
+    const topGoals = [...d.goals]
+      .sort((a, b) => (a.status === 'selesai' ? 1 : 0) - (b.status === 'selesai' ? 1 : 0))
+      .slice(0, 4)
+      .map((g) => {
+        const p = goalPctOf(g);
+        return `<div class="dash-goal" data-dash-go="goals" role="button" tabindex="0">
+            <span class="dash-goal-name">${escapeHtml(g.title)}</span>
+            <div class="dash-cat-bar"><span style="width:${p}%"></span></div>
+            <b>${p}%</b>
+          </div>`;
+      }).join('');
+
+    const agenda = dailyDayList(taskTodayIso()).slice(0, 5);
+    const agendaRows = agenda.map((it) => `
+      <div class="dash-agenda-row" data-dash-go="jadwal" role="button" tabindex="0">
+        <span class="jadwal-dot ${it.kind === 'task' ? 'ring' : ''}" style="--jc:${it.color}${it.kind === 'task' ? '' : ';background:' + it.color}"></span>
+        <b>${it.time || '—'}</b>
+        <span class="dash-agenda-title">${escapeHtml(it.title)}</span>
+        <small>${escapeHtml(it.sub)}</small>
+      </div>`).join('');
+
+    const upcoming = d.tasks.filter((t) => !t.done && t.date > d.todayIso).sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(0, 5);
 
     return `
-      <div class="dashboard-layout">
-        <section class="dashboard-sheet" aria-label="Dashboard bergaya spreadsheet">
-          <aside class="sheet-sidebar">
-            <div class="sheet-tile label-tile">
-              <span>Tahun</span>
-              <strong>${year}</strong>
+      <div class="dash-page">
+        <section class="dash-hero">
+          <div class="dash-hero-main">
+            <span class="kicker">Ringkasan ${MONTHS[activeMonth]} ${year}</span>
+            <h2>Pantau semuanya dari satu tempat</h2>
+            <div class="dash-hero-chips">
+              <span class="dash-chip">✅ ${d.doneToday}/${d.tasksToday.length} task hari ini</span>
+              <span class="dash-chip">🔥 ${d.rtDone}/${d.rt.length} rutinitas</span>
+              <span class="dash-chip">🎯 ${d.avgGoal}% goals</span>
+              <span class="dash-chip">💚 ${d.habitAvg}% habit</span>
+              <span class="dash-chip ${d.fCur.net >= 0 ? '' : 'bad'}">💰 ${d.fCur.net >= 0 ? '+' : '−'}${dashCompact(Math.abs(d.fCur.net))} kas</span>
             </div>
-            <div class="sheet-tile month-tile">
-              <span>Bulan Fokus</span>
-              <strong>${focusMonth.monthName}</strong>
-            </div>
-            <div class="sheet-tile habit-tile">
-              <span>Kebiasaan Saya</span>
-              <strong>${focusMonth.totalHabits}</strong>
-            </div>
-          </aside>
-
-          <div class="sheet-stage">
-            <div class="sheet-stage-head">
-              <div>
-                <span class="kicker">Garis pelacakan tahunan</span>
-                <h3>Peta Penyelesaian Kebiasaan ${year}</h3>
-                <p>Rata-rata bulanan dihitung dari poin berbobot semua kebiasaan aktif.</p>
-              </div>
-              <button class="small-button" type="button" data-action="jump-month" data-month="${activeMonth}">
-                Buka ${focusMonth.monthName}
-              </button>
-            </div>
-            ${renderTrendChart(yearStats.months)}
-            ${renderDailyPercentStrip(focusDailyRates, year, activeMonth)}
           </div>
-
-          <aside class="cat-card">
-            <div class="cat-badge" aria-hidden="true">
-              <img src="cat-logo.svg" alt="" />
-            </div>
-            <span>Selamat</span>
-            <strong>${compactPercent(focusMonth.average)}</strong>
-            <p>Rata-rata global ${focusMonth.monthName}. ${focusMonth.average >= 70 ? 'Konsistensi miaw-keren.' : 'Tetap miaw-langkah maju.'}</p>
+          <aside class="dash-hero-ring ${scoreClass((d.activityPct + d.habitAvg + Math.round((d.avgGoal + financePct) / 2)) / 3)}">
+            <svg viewBox="0 0 120 120" class="dash-ring">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--panel-soft)" stroke-width="12"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"
+                stroke-dasharray="${(((d.activityPct + d.habitAvg + Math.round((d.avgGoal + financePct) / 2)) / 3) / 100 * 314).toFixed(1)} 314"
+                transform="rotate(-90 60 60)"/>
+              <text x="60" y="58" text-anchor="middle" class="dash-ring-num">${Math.round((d.activityPct + d.habitAvg + Math.round((d.avgGoal + financePct) / 2)) / 3)}%</text>
+              <text x="60" y="74" text-anchor="middle" class="dash-ring-sub">skor gabungan</text>
+            </svg>
           </aside>
         </section>
 
-        <section class="dashboard-band">
-          ${renderMetric('Rata-rata Tahun', `${roundPercent(yearStats.yearAverage)}%`, 'Momentum miaw-keren berbasis poin', 'teal')}
-          ${renderMetric('Bulan Terbaik', bestMonth ? bestMonth.monthName : '-', bestMonth ? `${roundPercent(bestMonth.average)}% selesai` : 'Belum ada data', 'blue')}
-          ${renderMetric('Poin Tahun', pointScore(pointRate), `${yearStats.earnedPoints} dari ${yearStats.possiblePoints} poin`, 'amber')}
-          ${renderMetric('Bulan Fokus', pointScore(focusMonth.average), `${focusMonth.earnedPoints} dari ${focusMonth.possiblePoints} poin`, 'rose')}
-          ${renderMetric(todayPoints.label, pointScore(todayPoints.progress), `${todayPoints.dateText} - ${todayPoints.earnedPoints} dari ${todayPoints.possiblePoints} poin`, 'violet')}
-        </section>
+        <div class="dash-grid-4">
+          ${activityCard}
+          ${goalsCard}
+          ${orgCard}
+          ${financeCard}
+        </div>
 
-        <section class="category-board" aria-label="Rincian kategori bulan fokus">
-          ${categoryBreakdown.map((category) => `
-            <article class="category-card tone-${CATEGORY_CONFIG[category.categoryKey].color}">
-              <div>
-                <span>${CATEGORY_CONFIG[category.categoryKey].shortLabel}</span>
-                <strong>${roundPercent(category.average)}%</strong>
-              </div>
-              <div class="category-track" aria-hidden="true">
-                <span style="width:${clamp(category.average, 0, 100)}%"></span>
-              </div>
-              <p>${category.earnedPoints}/${category.possiblePoints} poin dari ${category.totalHabits} kebiasaan aktif</p>
-            </article>
-          `).join('')}
-        </section>
+        <div class="dash-two">
+          <section class="panel dash-chart-card">
+            <div class="rep-card-head"><h3>Tren Habit ${year}</h3><small>rata-rata poin per bulan</small></div>
+            ${trend}
+          </section>
+          <section class="panel dash-chart-card">
+            <div class="rep-card-head"><h3>Kasflow 6 Bulan</h3><span class="rep-legend"><i class="lg-in"></i>Masuk <i class="lg-out"></i>Keluar</span></div>
+            ${financeChart}
+            <div class="rep-flow-nums">${d.flows.map((f) => `<div><span>${repMonthLabel(f.m)}</span><b class="${f.net >= 0 ? 'green' : 'coral'}">${f.net >= 0 ? '+' : '−'}${dashCompact(Math.abs(f.net))}</b></div>`).join('')}</div>
+          </section>
+        </div>
 
-        ${renderPointCalendar(focusDailyRates, year, activeMonth, todayPoints.dayIndex)}
+        <div class="dash-two">
+          <section class="panel dash-chart-card">
+            <div class="rep-card-head"><h3>Habit per Kategori</h3><small>${MONTHS[activeMonth]} ${year}</small></div>
+            <div class="dash-cats">${catRows || '<p class="task-empty">Belum ada habit aktif.</p>'}</div>
+            <div class="dash-strip-wrap">${renderDailyPercentStrip(focusDailyRates, year, activeMonth)}</div>
+          </section>
+          <section class="panel dash-chart-card">
+            <div class="rep-card-head"><h3>Pengeluaran per Kategori</h3><small>${repMonthLabel(d.monthKey)}</small></div>
+            ${cats.length ? `<div class="rep-donut-wrap">${repDonutSvg(cats, catTotal)}<div class="rep-legend-list">${catLegend}</div></div>` : '<p class="task-empty">Belum ada pengeluaran bulan ini.</p>'}
+          </section>
+        </div>
 
-        <section class="panel month-board">
-          <div class="section-heading">
-            <div>
-              <h3>Tile Bulanan</h3>
-              <p>Navigasi visual cepat untuk setiap lembar bulan.</p>
+        <div class="dash-two">
+          <section class="panel dash-chart-card">
+            <div class="rep-card-head"><h3>Goals Teratas</h3><small>${d.goals.length} goals</small></div>
+            <div class="dash-goals">${topGoals || '<p class="task-empty">Belum ada goals.</p>'}</div>
+            <div class="dash-mini-kpis">
+              <div><span>Project aktif</span><b>${d.projActive}</b></div>
+              <div><span>Task bulan ini</span><b>${d.monthTasks.length}</b></div>
+              <div><span>Poin bulan</span><b>${pointScore(d.monthStats.average)}</b></div>
+              <div><span>Bulan terbaik</span><b>${bestMonth ? bestMonth.monthName.slice(0, 3) : '-'}</b></div>
             </div>
-          </div>
-          <div class="month-tile-grid">
-            ${yearStats.months.map((month) => `
-              <button class="month-score-card ${scoreClass(month.average)}" type="button" data-action="jump-month" data-month="${month.monthIndex}">
-                <span>${month.monthName.slice(0, 3)}</span>
-                <strong>${compactPercent(month.average)}</strong>
-                <em>Nilai ${pointScore(month.average)}</em>
-              </button>
-            `).join('')}
-          </div>
-        </section>
+          </section>
+          <section class="panel dash-chart-card">
+            <div class="rep-card-head"><h3>Agenda Hari Ini</h3><small>${agenda.length ? `${agenda.length} jadwal` : 'kosong'}</small></div>
+            <div class="dash-agenda">${agendaRows || '<p class="task-empty">Tidak ada jadwal hari ini.</p>'}</div>
+            <div class="rep-card-head" style="margin-top:10px"><h3>Tugas Mendatang</h3></div>
+            ${upcoming.length ? `<div class="dash-agenda">${upcoming.map((t) => `
+              <div class="dash-agenda-row" data-dash-go="task" role="button" tabindex="0">
+                <span class="task-prio p-${t.priority || 'low'}"></span>
+                <b>${taskDateRead(t.date)}</b>
+                <span class="dash-agenda-title">${escapeHtml(t.title)}</span>
+                <small>${escapeHtml(t.project || '')}</small>
+              </div>`).join('')}</div>` : '<p class="task-empty">Tidak ada task mendatang.</p>'}
+          </section>
+        </div>
 
-        <section class="panel">
-          <div class="section-heading">
-            <div>
-              <h3>Ringkasan Bulanan Utama</h3>
-              <p>Setiap baris mengambil data dari lembar bulan dan merata-ratakan progres semua kebiasaan aktif.</p>
-            </div>
+        <section class="panel dash-chart-card">
+          <div class="rep-card-head"><h3>Detail Bulan ${MONTHS[activeMonth]}</h3><small>ringkasan habit</small></div>
+          <div class="dash-mini-kpis">
+            <div><span>Habit aktif</span><b>${d.monthStats.totalHabits}</b></div>
+            <div><span>Slot terisi</span><b>${d.monthStats.checkedSlots}/${d.monthStats.totalSlots}</b></div>
+            <div><span>Poin didapat</span><b>${d.monthStats.earnedPoints}/${d.monthStats.possiblePoints}</b></div>
+            <div><span>Poin hari ini</span><b>${todayPoints.earnedPoints}/${todayPoints.possiblePoints}</b></div>
           </div>
-          <div class="table-wrap">
-            <table class="summary-table">
-              <thead>
-                <tr>
-                  <th>Bulan</th>
-                  <th>Kebiasaan</th>
-                  <th>% Selesai</th>
-                  <th>Poin</th>
-                  <th>Slot</th>
-                  <th>Buka</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${yearStats.months.map((month) => `
-                  <tr class="${month.monthIndex === activeMonth ? 'is-focus-month' : ''}">
-                    <td data-label="Bulan"><strong>${month.monthName}</strong></td>
-                    <td data-label="Kebiasaan">${month.totalHabits}</td>
-                    <td data-label="Selesai">
-                      <div class="inline-progress">
-                        <span class="mini-bar" aria-hidden="true"><span style="width:${clamp(month.average, 0, 100)}%"></span></span>
-                        <strong>${roundPercent(month.average)}%</strong>
-                      </div>
-                    </td>
-                    <td data-label="Poin">${pointScore(month.average)}</td>
-                    <td data-label="Slot">${month.checkedSlots} / ${month.totalSlots}</td>
-                    <td data-label="Buka">
-                      <button class="small-button" type="button" data-action="jump-month" data-month="${month.monthIndex}">Lihat</button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
+          <div class="dash-links">
+            <button type="button" class="dash-mod-cta" data-dash-go="habits">Buka Habit →</button>
+            <button type="button" class="dash-mod-cta" data-dash-go="project">Buka Project →</button>
+            <button type="button" class="dash-mod-cta" data-dash-go="transaksi">Buka Transaksi →</button>
+            <button type="button" class="dash-mod-cta" data-dash-go="reports">Buka Laporan →</button>
           </div>
         </section>
       </div>
     `;
+  }
+
+  function handleDashAction(btn) {
+    if (btn.matches('[data-dash-go]')) { dashGoTo(btn.dataset.dashGo); return true; }
+    return false;
   }
 
   function calculateCategoryBreakdown(monthData, year, monthIndex) {
@@ -7003,8 +7528,10 @@
         return;
       }
 
-      const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel]');
-      if (jadwalBtn && handleJadwalAction(jadwalBtn)) return;
+      const jadwalCheckEl = event.target.closest('[data-jadwal-check]');
+      if (jadwalCheckEl) { handleJadwalAction(jadwalCheckEl); return; }
+      const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel],[data-jadwal-ev],[data-jadwal-task]');
+      if (jadwalBtn && event.target.tagName !== 'INPUT' && handleJadwalAction(jadwalBtn)) return;
 
     const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-term],[data-goal-add-again],[data-goal-ms-add],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page],[data-goal-proj]');
     if (goalBtn && handleGoalAction(goalBtn)) return;
@@ -7032,6 +7559,11 @@
 
     const lapBtn = event.target.closest('[data-lap-mode],[data-lap-sec],[data-lap-all],[data-lap-ai],[data-lap-dl]');
     if (lapBtn && handleLaporanAction(lapBtn)) return;
+
+      const dailyBtn = event.target.closest('[data-daily-tab],[data-daily-add],[data-daily-cancel],[data-daily-toggle],[data-daily-open],[data-daily-jadwal],[data-daily-delete],[data-daily-back]');
+      if (dailyBtn && handleDailyAction(dailyBtn)) return;
+      const dashBtn = event.target.closest('[data-dash-go]');
+      if (dashBtn && handleDashAction(dashBtn)) return;
 
       const taskBtn = event.target.closest('[data-task-open],[data-task-back],[data-task-toggle],[data-task-filter],[data-task-delete],[data-task-add],[data-task-cancel],[data-task-menu],[data-task-edit],[data-task-cancel-edit],[data-task-focus],[data-task-focus-pause],[data-task-add-close],[data-task-options],[data-task-add-again],[data-task-sub-add],[data-task-sub-del],[data-task-att-add],[data-task-att-del]');
       if (taskBtn && event.target.tagName !== 'INPUT' && event.target.tagName !== 'SELECT' && event.target.tagName !== 'TEXTAREA' && handleTaskAction(taskBtn)) return;
@@ -7142,6 +7674,10 @@
       if (lapModelSel) { lapAiModel = lapModelSel.value; renderShell(); return; }
       const miawFileEl = event.target.closest('#miawFile');
       if (miawFileEl) { handleMiawFiles(miawFileEl); return; }
+      const dailyRt = event.target.closest('[data-daily-rt]');
+      if (dailyRt) { handleDailyAction(dailyRt); return; }
+      const dailyTgl = event.target.closest('[data-daily-toggle]');
+      if (dailyTgl && activeView === 'task') { handleDailyAction(dailyTgl); return; }
       const taskCheck = event.target.closest('[data-task-toggle],[data-task-sub]');
       if (taskCheck) handleTaskAction(taskCheck);
       const projChk = event.target.closest('[data-proj-ms],[data-proj-task],[data-proj-search],[data-pt-move]');
@@ -7266,6 +7802,21 @@
         submitGoalForm(event.target, false);
         return;
       }
+      if (event.target.id === 'dailyAddForm') {
+        event.preventDefault();
+        const form = event.target;
+        const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
+        const title = val('title');
+        if (!title) return;
+        const list = loadDailyTasks();
+        list.push({ id: `dt${Date.now()}`, title, icon: val('icon') || '📌', time: val('time'), priority: val('priority') || 'med', date: dailyTodayIso(), done: false, routine: true, activity: [{ text: 'Rutinitas dibuat', at: Date.now() }] });
+        list.__dailyLog = list.__dailyLog || {};
+        saveDailyTasks(list);
+        dailyAdding = false; dailyDraft = null;
+        showToast('Rutinitas ditambahkan.');
+        renderShell();
+        return;
+      }
       if (event.target.id === 'jadwalAddForm') {
         event.preventDefault();
         const form = event.target;
@@ -7274,7 +7825,13 @@
         if (!title) return;
         const items = loadJadwalEvents();
         const date = val('date') || taskTodayIso();
-        items.push({ id: `j${Date.now()}`, title, date, time: val('time') || '09:00', category: val('category') || 'Pribadi', kind: val('kind') === 'task' ? 'task' : 'event' });
+        if (jadwalEditingId) {
+          const ev = items.find((x) => x.id === jadwalEditingId);
+          if (ev) { ev.title = title; ev.date = date; ev.time = val('time') || '09:00'; ev.category = val('category') || 'Pribadi'; ev.kind = val('kind') === 'task' ? 'task' : 'event'; }
+          jadwalEditingId = null;
+        } else {
+          items.push({ id: `j${Date.now()}`, title, date, time: val('time') || '09:00', category: val('category') || 'Pribadi', kind: val('kind') === 'task' ? 'task' : 'event' });
+        }
         saveJadwalEvents(items);
         jadwalSelIso = date;
         jadwalAdding = false;
@@ -7449,17 +8006,12 @@
   function lapGoalsBlocks(p) {
     const goals = loadGoals();
     const active = goals.filter((g) => g.status !== 'selesai');
-    const goalPct = (g) => {
-      const ms = g.milestones || [];
-      if (!ms.length) return g.status === 'selesai' ? 100 : 0;
-      return Math.round((ms.filter((x) => x.done).length / ms.length) * 100);
-    };
-    const avgGoal = goals.length ? Math.round(goals.reduce((s, g) => s + goalPct(g), 0) / goals.length) : 0;
+    const avgGoal = goals.length ? Math.round(goals.reduce((s, g) => s + goalPctOf(g), 0) / goals.length) : 0;
     const goalRows = goals
       .slice()
       .sort((a, b) => (a.status === 'selesai' ? 1 : 0) - (b.status === 'selesai' ? 1 : 0) || String(a.deadline || '').localeCompare(String(b.deadline || '')))
       .slice(0, 10)
-      .map((g) => [g.title, g.category || '-', (GOAL_TERMS[goalTermOf(g)] || {}).label || '-', g.deadline || 'tanpa deadline', `${goalPct(g)}%`, g.status === 'selesai' ? 'Selesai' : 'Aktif']);
+      .map((g) => [g.title, g.category || '-', (GOAL_TERMS[goalTermOf(g)] || {}).label || '-', g.deadline || 'tanpa deadline', `${goalPctOf(g)}%`, g.status === 'selesai' ? 'Selesai' : 'Aktif']);
     const projects = loadProjects();
     const projRows = projects
       .slice()
