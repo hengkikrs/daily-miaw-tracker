@@ -7654,28 +7654,25 @@
   }
 
   function lapAiDigest(model) {
-    const lines = [
-      'Tugas: susun analisis laporan produktivitas & keuangan dari data tracker user di bawah ini.',
-      'Format balasan: 1 paragraf ringkasan (3-5 kalimat), lalu bagian "## Temuan" berisi 3-5 bullet, lalu bagian "## Rekomendasi" berisi 3-5 bullet aksi konkret yang bisa dikerjakan minggu ini.',
-      'Gunakan hanya angka yang ada di data. Bahasa Indonesia, ringkas, tanpa basa-basi.',
-      '',
-      `DATA LAPORAN — ${model.subtitle}`,
+    const p = model.period || {};
+    // Prompt harus RINGKAS: provider melambat drastis pada prompt panjang (>1,4k char sering timeout 60s).
+    const head = [
+      'Analisis laporan tracker ini. Balas: 1 paragraf ringkasan (maks 4 kalimat), baris "## Temuan" + 3 bullet, baris "## Rekomendasi" + 3 bullet aksi. Bahasa Indonesia, pakai angka dari data, tanpa basa-basi.',
+      `PERIODE: ${p.label || '-'}`,
+      `RINGKASAN: ${(model.kpis || []).map((k) => `${k.label}=${k.value}`).join('; ')}`,
     ];
-    model.kpis.forEach((k) => lines.push(`- ${k.label}: ${k.value} (${k.note})`));
+    const secs = [];
     model.sections.forEach((sec) => {
-      lines.push('', `### ${sec.title}`);
+      if (sec.key === 'ai') return;
+      const bits = [];
       sec.blocks.forEach((b) => {
-        if (b.type === 'kpi') lines.push(b.items.map((i) => `${i.label}=${i.value}`).join(' | '));
-        else if (b.type === 'table') {
-          lines.push(b.head.map((h) => h.t).join(' | '));
-          (b.rows || []).slice(0, 12).forEach((r) => lines.push(r.join(' | ')));
-        } else if (b.type === 'para') lines.push(b.text);
-        else if (b.type === 'h') lines.push(b.text);
-        else if (b.type === 'list') { if (b.title) lines.push(b.title + ':'); b.items.slice(0, 10).forEach((t) => lines.push('- ' + t)); }
+        if (b.type === 'kpi') bits.push(b.items.map((i) => `${i.label}=${i.value}`).join('; '));
+        else if (b.type === 'table' && b.rows && b.rows.length) bits.push(`${b.head[0].t}: ${b.rows.slice(0, 3).map((r) => r.join(' ')).join(' / ')}`);
+        else if (b.type === 'list' && b.items.length) bits.push(b.items.slice(0, 2).join(' / '));
       });
+      if (bits.length) secs.push(`${sec.title.toUpperCase()}: ${bits.join(' | ').slice(0, 110)}`);
     });
-    const out = lines.join('\n');
-    return out.length > 5800 ? `${out.slice(0, 5800)}\n...(data dipotong)` : out;
+    return head.concat(secs).join('\n');
   }
 
   async function lapRunAi() {
@@ -7693,7 +7690,13 @@
       const data = await res.json().catch(() => null);
       if (!res.ok || !data || !data.reply) {
         lapAiText = '';
-        lapNotice = `⚠️ ${(data && data.error) || 'Analisis AI gagal dibuat. Coba lagi.'}`;
+        const code = String((data && data.error) || '');
+        const friendly = code === 'timeout'
+          ? 'Server AI melebihi batas waktu (data terlalu besar). Coba lagi sebentar lagi.'
+          : code === 'too_many_requests'
+            ? 'Terlalu banyak permintaan ke AI. Tunggu 1 menit lalu coba lagi.'
+            : code || 'Analisis AI gagal dibuat. Coba lagi.';
+        lapNotice = `⚠️ ${friendly}`;
       } else {
         lapAiText = String(data.reply);
         lapAiMeta = { model: data.model || lapAiModel, at: Date.now() };
