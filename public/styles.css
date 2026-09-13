@@ -4609,3 +4609,13 @@ svg {
 .pt-orphan-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
 .pt-orphan-row .proj-task { flex: 1; min-width: 0; }
 .pt-orphan-row select { flex: 0 0 auto; max-width: 160px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(106,86,74,.25); background: #fff; font-size: 12px; }
+
+/* ---- akun: profil / ubah password / hapus akun ---- */
+.acct-pw-ok { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: #2e7d4f; }
+.acct-del-modal { gap: 14px; }
+.acct-del-modal p { font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.acct-del-confirm { display: grid; gap: 6px; font-size: 13px; font-weight: 700; color: var(--text); }
+.acct-del-confirm code { background: color-mix(in srgb, var(--rose) 10%, transparent); color: var(--rose-strong, #b3364a); padding: 1px 6px; border-radius: 6px; }
+.acct-del-confirm input { padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; background: var(--panel); color: var(--text); }
+.acct-del-confirm input:focus { outline: 2px solid color-mix(in srgb, var(--rose) 40%, transparent); border-color: var(--rose); }
+.account-form .auth-pw-wrap { display: block; }

@@ -5794,55 +5794,152 @@
     `;
   }
 
+  let accountPage = 'main';
+  let acctNewPwVisible = false;
+  let accountDeleteOpen = false;
+  let acctPwDraft = { pw: '', confirm: '' };
+
+  function acctEyeSvg(show) {
+    return `
+      <button class="auth-eye" type="button" data-action="${show ? 'acct-eye-off' : 'acct-eye-on'}" aria-label="${show ? 'Sembunyikan password' : 'Tampilkan password'}" aria-pressed="${show ? 'true' : 'false'}">
+        <svg class="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${show ? ' style="display:none"' : ''}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="eye-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${show ? '' : ' style="display:none"'}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0 11-8 11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.13a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      </button>`;
+  }
+
+  function renderAccountPasswordPage() {
+    const meta = authSession?.user?.user_metadata || {};
+    return `
+      <div class="account-layout">
+        <section class="panel account-panel">
+          <div class="section-heading">
+            <div>
+              <h3>Ganti Password</h3>
+              <p>Buat password baru. Semua kriteria di bawah harus lolos sebelum password bisa disimpan.</p>
+            </div>
+            <button class="ghost-button" type="button" data-action="account-back">← Kembali</button>
+          </div>
+          <form id="accountPasswordForm" class="account-form">
+            <label>
+              <span>Password Baru</span>
+              <div class="auth-pw-wrap">
+                <input name="password" type="${acctNewPwVisible ? 'text' : 'password'}" autocomplete="new-password" placeholder="Minimal 8 karakter" value="${escapeHtml(acctPwDraft.pw)}" required />
+                ${acctEyeSvg(acctNewPwVisible)}
+              </div>
+            </label>
+            <ul class="auth-pw-rules" id="acctPwRules" aria-label="Kriteria password">
+              <li data-rule="len">○ ${PW_RULE_LABELS.len}</li>
+              <li data-rule="upper">○ ${PW_RULE_LABELS.upper}</li>
+              <li data-rule="other">○ ${PW_RULE_LABELS.other}</li>
+            </ul>
+            <p class="acct-pw-ok" id="acctPwOk" hidden>✓ Password lolos semua kriteria</p>
+            <label>
+              <span>Ulangi Password</span>
+              <div class="auth-pw-wrap">
+                <input name="confirmPassword" type="password" autocomplete="new-password" placeholder="Ketik ulang password baru" value="${escapeHtml(acctPwDraft.confirm)}" required />
+              </div>
+            </label>
+            <button class="primary-button" type="submit" disabled>Simpan Password Baru</button>
+          </form>
+        </section>
+      </div>
+    `;
+  }
+
+  function refreshAcctPwUi(pw) {
+    const checks = evaluatePassword(pw);
+    const screen = dom.content;
+    if (!screen) return;
+    const list = screen.querySelector('#acctPwRules');
+    if (list) {
+      ['len', 'upper', 'other'].forEach((rule) => {
+        const li = list.querySelector(`[data-rule="${rule}"]`);
+        if (!li) return;
+        const ok = checks[rule];
+        li.classList.toggle('pass', ok);
+        li.textContent = `${ok ? '✓' : '○'} ${PW_RULE_LABELS[rule]}`;
+      });
+      list.classList.toggle('all-pass', allPwChecksPass(checks));
+    }
+    const okLabel = screen.querySelector('#acctPwOk');
+    if (okLabel) okLabel.hidden = !allPwChecksPass(checks);
+    const submit = screen.querySelector('#accountPasswordForm .primary-button');
+    if (submit && !authIsBusy) submit.disabled = !allPwChecksPass(checks);
+  }
+
   function renderAccountTab() {
+    if (accountPage === 'password') return renderAccountPasswordPage();
+
+    const meta = authSession?.user?.user_metadata || {};
+    const fullName = meta.display_name || meta.full_name || '';
+    const phone = meta.phone || '';
     return `
       <div class="account-layout">
         <section class="panel account-panel">
           <div class="section-heading">
             <div>
               <h3>Profil Akun</h3>
-              <p>Ubah nama yang tampil di aplikasi.</p>
+              <p>Data yang dipakai untuk masuk dan tampil di aplikasi.</p>
             </div>
           </div>
           <form id="accountProfileForm" class="account-form">
             <label>
-              <span>Username</span>
-              <input name="username" type="text" maxlength="40" value="${escapeHtml(authDisplayName())}" autocomplete="username" required />
+              <span>Nama</span>
+              <input name="fullName" type="text" maxlength="60" value="${escapeHtml(fullName)}" autocomplete="name" />
             </label>
-            <button class="primary-button" type="submit">Simpan Username</button>
+            <label>
+              <span>Username</span>
+              <input name="username" type="text" maxlength="40" value="${escapeHtml(meta.username || '')}" autocomplete="username" />
+            </label>
+            <label>
+              <span>Email yang digunakan</span>
+              <input type="email" value="${escapeHtml(authEmail())}" disabled />
+            </label>
+            <label>
+              <span>Nomor Telepon</span>
+              <input name="phone" type="tel" maxlength="20" value="${escapeHtml(phone)}" autocomplete="tel" placeholder="08xxxxxxxxxx" />
+            </label>
+            <button class="primary-button" type="submit">Simpan Profil</button>
           </form>
         </section>
 
         <section class="panel account-panel">
           <div class="section-heading">
             <div>
-              <h3>Ganti Password</h3>
-              <p>Password baru minimal 6 karakter.</p>
+              <h3>Keamanan</h3>
+              <p>Password digunakan untuk masuk ke akun ini.</p>
             </div>
           </div>
-          <form id="accountPasswordForm" class="account-form">
-            <label>
-              <span>Password Baru</span>
-              <input name="password" type="password" minlength="6" autocomplete="new-password" required />
-            </label>
-            <label>
-              <span>Ulangi Password</span>
-              <input name="confirmPassword" type="password" minlength="6" autocomplete="new-password" required />
-            </label>
-            <button class="primary-button" type="submit">Ganti Password</button>
-          </form>
+          <button class="primary-button" type="button" data-action="account-password-page">Ubah Password</button>
         </section>
 
         <section class="panel account-panel danger-zone">
           <div class="section-heading">
             <div>
               <h3>Hapus Akun</h3>
-              <p>Menghapus data tracker dari perangkat dan Supabase lalu keluar dari aplikasi. Penghapusan identitas Auth penuh memerlukan admin Supabase.</p>
+              <p>Menghapus akun akan menghapus semua data tracker dari perangkat dan database website. Penghapusan identitas akan otomatis berlangsung 24 jam sejak akun dihapus.</p>
             </div>
           </div>
           <button class="danger-button" type="button" data-action="delete-account-data">Hapus Akun</button>
         </section>
       </div>
+      ${accountDeleteOpen ? `
+      <div class="doc-modal-wrap" id="acctDeleteModal" role="dialog" aria-modal="true" aria-labelledby="acctDeleteTitle" data-action="account-delete-cancel">
+        <div class="doc-modal acct-del-modal" data-action="acct-del-noop">
+          <div class="doc-modal-head"><b id="acctDeleteTitle">Hapus Akun?</b>
+            <button class="ghost-button" type="button" data-action="account-delete-cancel">✕</button>
+          </div>
+          <p>Konfirmasi sekali lagi. Ini akan menghapus <strong>semua data tracker</strong> dari perangkat dan database website. Penghapusan identitas akun berlangsung otomatis <strong>24 jam</strong> setelah akun dihapus.</p>
+          <label class="acct-del-confirm">
+            <span>Ketik: <code>ya, saya ingin hapus akun</code></span>
+            <input id="acctDelConfirm" type="text" autocomplete="off" placeholder="ya, saya ingin hapus akun" />
+          </label>
+          <div class="doc-modal-foot">
+            <button class="ghost-button" type="button" data-action="account-delete-cancel">Batal</button>
+            <button class="danger-button" type="button" id="acctDelGo" data-action="account-delete-confirm" disabled>Hapus Permanen</button>
+          </div>
+        </div>
+      </div>` : ''}
     `;
   }
 
@@ -6370,11 +6467,14 @@
 
   async function updateAccountProfile(form) {
     const data = new FormData(form);
-    const username = String(data.get('username') || '').trim();
-    if (!username) {
-      showToast('Username tidak boleh kosong.');
-      return;
-    }
+    const username = canonicalUsername(String(data.get('username') || ''));
+    const fullName = String(data.get('fullName') || '').trim().slice(0, 60);
+    const phone = String(data.get('phone') || '').replace(/[^\d+\-\s()]/g, '').trim().slice(0, 20);
+
+    const meta = {};
+    if (username) meta.username = username;
+    if (fullName) { meta.display_name = fullName; meta.full_name = fullName; }
+    meta.phone = phone;
 
     authIsBusy = true;
     renderShell();
@@ -6383,20 +6483,14 @@
       const token = await getAccessToken();
       const response = await authFetch('/auth/v1/user', {
         method: 'PUT',
-        body: JSON.stringify({
-          data: {
-            username: username.slice(0, 40),
-            display_name: username.slice(0, 40),
-            full_name: username.slice(0, 40),
-          },
-        }),
+        body: JSON.stringify({ data: meta }),
       }, token);
 
       mergeAuthUser(response?.user || response);
-      showToast('Username akun diperbarui.');
+      showToast('Profil akun diperbarui.');
     } catch (error) {
       console.warn(error);
-      showToast('Gagal memperbarui username.');
+      showToast('Gagal memperbarui profil.');
     } finally {
       authIsBusy = false;
       renderShell();
@@ -6408,8 +6502,8 @@
     const password = String(data.get('password') || '');
     const confirmPassword = String(data.get('confirmPassword') || '');
 
-    if (password.length < 6) {
-      showToast('Password minimal 6 karakter.');
+    if (!allPwChecksPass(evaluatePassword(password))) {
+      showToast('Password belum lolos semua kriteria.');
       return;
     }
 
@@ -6429,6 +6523,8 @@
       }, token);
 
       mergeAuthUser(response?.user || response);
+      accountPage = 'main';
+      acctNewPwVisible = false;
       showToast('Password akun diperbarui.');
     } catch (error) {
       console.warn(error);
@@ -6439,12 +6535,34 @@
     }
   }
 
-  async function deleteAccountData() {
-    const confirmed = confirm('Hapus data tracker akun ini dari perangkat dan Supabase, lalu keluar? Tindakan ini tidak bisa dibatalkan dari aplikasi.');
-    if (!confirmed) return;
+  async function confirmAccountDeletion() {
+    const typed = (dom.content.querySelector('#acctDelConfirm')?.value || '').trim().toLowerCase();
+    if (typed !== 'ya, saya ingin hapus akun') {
+      showToast('Ketik konfirmasi dengan tepat.');
+      return;
+    }
 
     authIsBusy = true;
     renderShell();
+
+    const leavingUid = authSession?.user?.id || '';
+
+    // Ask the server to schedule identity deletion in 24h (best-effort).
+    try {
+      if (leavingUid && authSession?.access_token) {
+        await fetch('/api/schedule-deletion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + authSession.access_token,
+          },
+          body: JSON.stringify({ userId: leavingUid }),
+          cache: 'no-store',
+        });
+      }
+    } catch (error) {
+      console.warn('schedule-deletion failed:', error);
+    }
 
     try {
       if (canSyncRemote()) {
@@ -6464,7 +6582,6 @@
       console.warn(error);
     }
 
-    const leavingUid = authSession?.user?.id || '';
     clearAuthSession();
     removeUserDataFor(leavingUid);
     state = createFreshState();
@@ -6473,9 +6590,11 @@
     activeMonth = new Date().getMonth();
     ensureYear(activeYear);
     localStorage.setItem(scopedKey(STORAGE_KEY), JSON.stringify(state));
+    accountDeleteOpen = false;
+    accountPage = 'main';
     authIsBusy = false;
     renderShell();
-    showToast('Data tracker akun dihapus dari aplikasi.');
+    showToast('Akun dihapus. Identitas dimusnahkan otomatis dalam 24 jam.');
   }
 
   function renameHabit(categoryKey, habitId) {
@@ -6758,7 +6877,22 @@
       if (action === 'toggle-active') toggleActive(category, habitId);
       if (action === 'delete-habit') deleteHabit(category, habitId);
       if (action === 'reset-month') resetMonthChecks();
-      if (action === 'delete-account-data') deleteAccountData();
+      if (action === 'delete-account-data') { accountDeleteOpen = true; renderShell(); dom.content.querySelector('#acctDelConfirm')?.focus(); return; }
+      if (action === 'acct-del-noop') return;
+      if (action === 'account-delete-cancel') { accountDeleteOpen = false; renderShell(); return; }
+      if (action === 'account-delete-confirm') confirmAccountDeletion();
+      if (action === 'account-password-page') { accountPage = 'password'; acctNewPwVisible = false; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
+      if (action === 'account-back') { accountPage = 'main'; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
+      if (action === 'acct-eye-on' || action === 'acct-eye-off') {
+        const form = dom.content.querySelector('#accountPasswordForm');
+        if (form) acctPwDraft = { pw: form.password.value, confirm: form.confirmPassword.value };
+        acctNewPwVisible = action === 'acct-eye-on';
+        renderShell();
+        const inp = dom.content.querySelector('#accountPasswordForm [name=password]');
+        if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+        refreshAcctPwUi(acctPwDraft.pw);
+        return;
+      }
     });
 
     dom.content.addEventListener('change', (event) => {
@@ -6811,6 +6945,13 @@
     });
 
     dom.content.addEventListener('input', (event) => {
+      const acctPw = event.target.closest('#accountPasswordForm [name=password]');
+      if (acctPw) { refreshAcctPwUi(acctPw.value); }
+      const delInp = event.target.closest('#acctDelConfirm');
+      if (delInp) {
+        const go = dom.content.querySelector('#acctDelGo');
+        if (go) go.disabled = delInp.value.trim().toLowerCase() !== 'ya, saya ingin hapus akun';
+      }
       const projSearch = event.target.closest('[data-proj-search]');
       if (projSearch) handleProjectChange(projSearch);
       const noteEl = event.target.closest('[data-note-search],[data-note-title],[data-note-tags],[data-note-body]');
