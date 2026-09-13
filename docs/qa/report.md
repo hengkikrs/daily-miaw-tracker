@@ -135,3 +135,26 @@ Tidak ada perubahan data, tidak ada toast; submit diblokir oleh validasi native 
 1. **Perbandingan pra/pasca refactor** dilakukan pada dua origin: build pra-refactor (`:3998`, commit `a21cdb9`) vs build pasca-refactor (`:8899`, 33 modul). Semua penyimpangan yang muncul (label menit pada jam `transaksi`, nama berkas tanpa ekstensi) terbukti **turunan data dinamis / perilaku lama**, bukan akibat pemecahan file.
 2. **Perbaikan kecil saat QA:** token cache-bust CSS (`styles.css`/`theme.css`/`runtime-config.js`) masih `?v=20260910-ui41` sementara JS sudah `ui42` — diseragamkan ke `?v=20260914-ui42` sebelum deploy agar pengguna lama tidak menerima CSS/JS tidak sinkron.
 3. **Kandidat perbaikan berikutnya (di luar lingkup refactor, tidak diubah):** (a) pesan validasi eksplisit untuk form kosong, (b) pertahankan ekstensi nama berkas unggahan, (c) `miaw-tracker.daily-tasks.v1` belum terdaftar di `DATA_STORE_KEYS` (tidak ikut migrasi/pembersihan saat hapus akun).
+
+---
+
+## Verifikasi Produksi (post-deploy)
+
+**URL:** https://tracker-daily-pi.vercel.app · **Deployment:** `tracker-daily-co9n6jho5-hengkikrs-projects.vercel.app` (Production)
+**Token rilis:** `?v=20260914-ui42` (33 script + 2 CSS + runtime-config)
+
+| Pemeriksaan | Hasil |
+|---|---|
+| HTML produksi menyajikan build baru | ✅ 35 token `ui42` (33 `<script>` + `styles.css` + `theme.css`), `runtime-config.js?v=20260914-ui42` |
+| `runtime-config.js` produksi | ✅ keempat nilai terisi (Supabase URL/key/table/clientId) → `remoteEnabled = true` |
+| Aset modul baru | ✅ `js/core/01-config.js` 200 (5.105 B), `js/core/09-router.js` 200 (8.842 B), `js/modules/tasks.js` 200 (35.942 B), `js/modules/laporan-export.js` 200 (42.770 B), `js/events/20-bind-events.js` 200 (24.494 B), `js/bootstrap/30-init.js` 200 (1.136 B), `app.js` 200 (239 B = shim) |
+| Deployment Protection (SSO) | ✅ tidak aktif — root `200` (bukan 302 ke `vercel.com/sso-api`) |
+| Layar login produksi (tanpa sesi) | ✅ ter-render (3.087 karakter), `body.auth-required` |
+| 17 view dengan sesi uji | ✅ **17/17 ter-render**, tanpa error |
+| Error JS produksi | ✅ **0** uncaught / 0 error listener (harness `addEventListener`) |
+| Jalur gagal-dengan-sopan remote sync | ✅ toast "Sinkron Supabase gagal — data masih tersimpan di perangkat ini." |
+| Serverless function (bundel build output v3) | ✅ `GET /api/lookup-user?u=tidakada-qa` → `404 {"error":"not_found"}` |
+| Isolasi data per akun di produksi | ✅ kunci ber-scope (`…:qa-prod`) terpisah dari kunci akun asli (`…:061e306a-…`) |
+| Request gagal satu-satunya | `POST /auth/v1/token?grant_type=refresh_token` → 400 — **artefak sesi palsu QA** (refresh token dummy), bukan bug aplikasi |
+
+**Kesimpulan:** deploy produksi **terverifikasi** — build modular ui42 hidup, aset lengkap, fungsi serverless jalan, tanpa error.

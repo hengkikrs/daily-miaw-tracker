@@ -84,3 +84,10 @@ Hal yang **belum pernah** diuji (jangan diklaim lulus): login Supabase asli, OTP
   2. Potensi bug `miaw-tracker.daily-tasks.v1` tidak ada di `DATA_STORE_KEYS` — masih **tidak diperbaiki** (di luar lingkup refactor).
   3. Belum diuji: login Supabase asli, OTP, Google OAuth, remote sync nyata (butuh kredensial/jaringan).
   4. `js/` belum diuji di deployment Vercel nyata (hanya build output lokal yang diverifikasi berisi semua file).
+
+
+## Deploy & verifikasi produksi (2026-09-14)
+- Commit rilis: `4bbd3bd` (cache-bust `?v=20260914-ui42`). Rantai commit: `51b442a` (FASE 0) → `290bba3` (A) → `a21cdb9` (B) → `f97a1e6` (C–H) → `fa23346` + `4bbd3bd` (cache-bust) → `29dc914` (laporan QA).
+- QA pra-deploy (skill `dogfood`): 0 Critical/High/Medium, 2 Low (kosmetik, terbukti identik pada build pra-refactor). Laporan: `docs/qa/report.md`; bukti JSON + 2 screenshot: `~/tracker-daily-refactor-audit/qa/`.
+- Deploy: `vercel deploy --prod --yes --token …` → produksi `tracker-daily-pi.vercel.app` kini menyajikan 33 script `ui42`; `runtime-config.js` terisi; `/api/lookup-user` 404 `not_found` (fungsi serverless sehat); 17/17 view render di produksi tanpa error; tanpa SSO protection.
+- Catatan: `?v=` untuk **CSS** sebelumnya tertinggal di `ui41` (skrip migrasi hanya menulis ulang tag `<script>`) — diseragamkan ke `ui42` sebelum deploy.
