@@ -1093,6 +1093,12 @@
     return checks.len && checks.upper && checks.other;
   }
 
+  const PW_RULE_LABELS = {
+    len: 'Minimal 8 karakter',
+    upper: 'Minimal 1 huruf besar (A-Z)',
+    other: 'Minimal 1 angka / karakter non-huruf',
+  };
+
   // Update checklist + tombol submit in-place tanpa re-render (fokus input tidak hilang).
   function refreshPwChecklistUi(pw) {
     authPwChecks = evaluatePassword(pw);
@@ -1105,7 +1111,7 @@
         if (!li) return;
         const ok = authPwChecks[rule];
         li.classList.toggle('pass', ok);
-        li.firstChild.textContent = ok ? '✓ ' : '○ ';
+        li.textContent = `${ok ? '✓' : '○'} ${PW_RULE_LABELS[rule]}`;
       });
       list.classList.toggle('all-pass', allPwChecksPass(authPwChecks));
     }
