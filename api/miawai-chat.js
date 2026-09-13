@@ -2,7 +2,7 @@
 // POST { model, messages:[{role,content}] } -> OpenAI-style chat completion (non-stream).
 // Only whitelisted models are allowed; the scope system prompt is enforced here too.
 
-const ALLOWED = new Set(['glm-5.3-flash', 'deepseek-v4-flash']);
+const ALLOWED = new Set(['glm-5.3-flash', 'deepseek-v4-flash', 'qwen3.8-flash']);
 const BASE = 'https://api.b.ai/v1';
 
 const SYSTEM_PROMPT = [

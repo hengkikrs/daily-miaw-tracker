@@ -4620,35 +4620,70 @@ svg {
 .acct-del-confirm input:focus { outline: 2px solid color-mix(in srgb, var(--rose) 40%, transparent); border-color: var(--rose); }
 .account-form .auth-pw-wrap { display: block; }
 
-/* ===== MiawAI chat ===== */
-.miaw-layout { display: flex; flex-direction: column; min-height: 100%; }
-.miaw-panel { display: flex; flex-direction: column; flex: 1; padding: 0; overflow: hidden; }
-.miaw-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid rgba(120,90,60,.12); background: rgba(255,252,246,.7); }
-.miaw-model-pick { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #7a6a55; }
-.miaw-model-pick select { border: 1px solid rgba(120,90,60,.25); border-radius: 10px; padding: 6px 10px; background: #fffdf8; color: #3d3327; font-size: 13px; }
-.miaw-chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 320px; max-height: calc(100vh - 300px); }
-.miaw-msg { display: flex; }
+
+/* ===== MiawAI chat (rapi) ===== */
+.miaw-layout { display: flex; flex-direction: column; }
+.miaw-panel { display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 18px; height: min(calc(100vh - 170px), 740px); min-height: min(430px, calc(100vh - 170px)); }
+.miaw-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid rgba(120,90,60,.12); background: linear-gradient(180deg, rgba(255,250,242,.95), rgba(250,243,231,.9)); }
+.miaw-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.miaw-brand-avatar { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: #6f5b3e; font-size: 18px; box-shadow: 0 2px 8px rgba(90,70,40,.22); flex: none; }
+.miaw-brand-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.miaw-brand-text b { font-size: 14.5px; color: #3d3327; }
+.miaw-brand-text small { font-size: 11px; color: #8a775c; letter-spacing: .02em; }
+.miaw-tools { display: flex; align-items: center; gap: 8px; flex: none; }
+.miaw-model-pick select { appearance: none; -webkit-appearance: none; border: 1px solid rgba(120,90,60,.25); border-radius: 10px; padding: 7px 30px 7px 12px; background: #fffdf8 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="%237a6a55" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>') no-repeat right 10px center; color: #3d3327; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.miaw-model-pick select:focus { outline: 2px solid rgba(140,110,70,.35); }
+.miaw-newchat { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; border: 1px solid rgba(120,90,60,.25); background: #fffdf8; color: #5d4e38; font-size: 16px; cursor: pointer; line-height: 1; }
+.miaw-newchat:hover { background: #f3ead9; }
+.miaw-chat { flex: 1; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: thin; }
+.miaw-msg { display: flex; align-items: flex-end; gap: 8px; animation: miawIn .18s ease-out; }
+@keyframes miawIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .miaw-you { justify-content: flex-end; }
 .miaw-ai { justify-content: flex-start; }
-.miaw-bubble { max-width: min(82%, 640px); border-radius: 14px; padding: 10px 14px; font-size: 14px; line-height: 1.55; box-shadow: 0 2px 8px rgba(90,70,40,.08); }
-.miaw-you .miaw-bubble { background: #6f5b3e; color: #fdf8f0; border-bottom-right-radius: 4px; }
-.miaw-ai .miaw-bubble { background: #fffdf8; border: 1px solid rgba(120,90,60,.15); color: #3d3327; border-bottom-left-radius: 4px; }
+.miaw-avatar { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; background: #6f5b3e; font-size: 13px; flex: none; margin-bottom: 2px; }
+.miaw-bubble { max-width: min(78%, 620px); border-radius: 16px; padding: 10px 14px; font-size: 14px; line-height: 1.6; box-shadow: 0 2px 8px rgba(90,70,40,.08); overflow-wrap: anywhere; }
+.miaw-you .miaw-bubble { background: #6f5b3e; color: #fdf8f0; border-bottom-right-radius: 5px; }
+.miaw-ai .miaw-bubble { background: #fffdf8; border: 1px solid rgba(120,90,60,.14); color: #3d3327; border-bottom-left-radius: 5px; }
 .miaw-msg-files { display: block; font-size: 11.5px; opacity: .8; margin-bottom: 4px; }
+.miaw-bubble p { margin: 0 0 8px; }
+.miaw-bubble p:last-child { margin-bottom: 0; }
+.miaw-bubble ul, .miaw-bubble ol { margin: 6px 0; padding-left: 20px; }
+.miaw-bubble li { margin: 3px 0; }
+.miaw-bubble strong { font-weight: 700; }
 .miaw-bubble code { background: rgba(120,90,60,.12); border-radius: 5px; padding: 1px 5px; font-size: 12.5px; }
-.miaw-empty { margin: auto; text-align: center; max-width: 460px; color: #6f6252; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-.miaw-empty-emoji { font-size: 44px; }
-.miaw-suggests { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.miaw-suggest { border: 1px solid rgba(120,90,60,.3); background: #fffdf8; border-radius: 999px; padding: 7px 14px; font-size: 12.5px; color: #5d4e38; cursor: pointer; }
-.miaw-suggest:hover { background: #f3ead9; }
-.miaw-files { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 16px 0; }
+.miaw-bubble pre { background: #f6efe2; border: 1px solid rgba(120,90,60,.15); border-radius: 10px; padding: 10px 12px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; }
+.miaw-typing { display: inline-flex; gap: 4px; align-items: center; padding: 4px 2px; }
+.miaw-typing i { width: 6px; height: 6px; border-radius: 50%; background: #a08a68; animation: miawDot 1s infinite ease-in-out; }
+.miaw-typing i:nth-child(2) { animation-delay: .15s; }
+.miaw-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes miawDot { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
+.miaw-empty { margin: auto; text-align: center; max-width: 480px; color: #6f6252; display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 12px; }
+.miaw-empty-avatar { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 22px; background: linear-gradient(145deg, #6f5b3e, #8a714d); font-size: 30px; box-shadow: 0 6px 18px rgba(90,70,40,.25); }
+.miaw-empty-title { font-size: 17px; color: #3d3327; }
+.miaw-empty p { font-size: 13px; line-height: 1.6; margin: 0; }
+.miaw-suggests { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
+.miaw-suggest { display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(120,90,60,.28); background: #fffdf8; border-radius: 999px; padding: 8px 14px; font-size: 12.5px; color: #5d4e38; cursor: pointer; transition: background .15s, transform .1s; }
+.miaw-suggest:hover { background: #f3ead9; transform: translateY(-1px); }
+.miaw-suggest span { font-size: 13px; }
+.miaw-files { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px 0; }
 .miaw-file { display: inline-flex; align-items: center; gap: 6px; background: #f3ead9; border: 1px solid rgba(120,90,60,.25); border-radius: 10px; padding: 5px 10px; font-size: 12.5px; color: #4d4130; }
-.miaw-file button { border: 0; background: none; cursor: pointer; color: #8a775c; font-size: 12px; }
-.miaw-composer { display: flex; gap: 8px; align-items: center; padding: 12px 16px; border-top: 1px solid rgba(120,90,60,.12); background: rgba(255,252,246,.85); }
-.miaw-composer input[type=text] { flex: 1; border: 1px solid rgba(120,90,60,.25); border-radius: 12px; padding: 10px 14px; font-size: 14px; background: #fffdf8; color: #3d3327; }
-.miaw-composer input[type=text]:focus { outline: 2px solid rgba(140,110,70,.35); }
-.miaw-attach { border: 1px solid rgba(120,90,60,.25); background: #fffdf8; border-radius: 12px; width: 40px; height: 40px; font-size: 17px; cursor: pointer; }
-.miaw-send { white-space: nowrap; }
+.miaw-file button { border: 0; background: none; cursor: pointer; color: #8a775c; font-size: 12px; padding: 2px; }
+.miaw-composer { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-top: 1px solid rgba(120,90,60,.12); background: rgba(255,252,246,.9); }
+.miaw-composer input[type=text] { flex: 1; min-width: 0; border: 1px solid rgba(120,90,60,.25); border-radius: 999px; padding: 11px 16px; font-size: 14px; background: #fffdf8; color: #3d3327; }
+.miaw-composer input[type=text]:focus { outline: 2px solid rgba(140,110,70,.35); border-color: transparent; }
+.miaw-attach { display: grid; place-items: center; border: 1px solid rgba(120,90,60,.25); background: #fffdf8; border-radius: 50%; width: 42px; height: 42px; font-size: 17px; cursor: pointer; flex: none; }
+.miaw-attach:hover { background: #f3ead9; }
+.miaw-send { display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 50%; background: #6f5b3e; color: #fdf8f0; cursor: pointer; flex: none; box-shadow: 0 3px 10px rgba(90,70,40,.28); transition: background .15s, opacity .15s; }
+.miaw-send:hover { background: #5d4a30; }
+.miaw-send:disabled { opacity: .55; cursor: default; }
+.miaw-spin { width: 16px; height: 16px; border: 2px solid rgba(253,248,240,.35); border-top-color: #fdf8f0; border-radius: 50%; animation: miawSpin .7s linear infinite; }
+@keyframes miawSpin { to { transform: rotate(360deg); } }
 @media (max-width: 640px) {
-  .miaw-bubble { max-width: 92%; }
-  .miaw-chat { max-height: calc(100vh - 280px); }
+  .miaw-panel { height: min(calc(100vh - 150px), 700px); border-radius: 14px; }
+  .miaw-bubble { max-width: 86%; }
+  .miaw-brand-text small { display: none; }
+  .miaw-topbar { padding: 10px 12px; }
+  .miaw-composer { padding: 10px; }
 }
+.miaw-bubble .miaw-h { display: inline-block; margin: 6px 0 2px; font-size: 14px; }
+.miaw-bubble ul + br, .miaw-bubble ol + br { display: none; }

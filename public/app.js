@@ -5805,6 +5805,7 @@
   const MIAW_MODELS = [
     { id: 'glm-5.3-flash', label: 'GLM 5.3 Flash' },
     { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash' },
+    { id: 'qwen3.8-flash', label: 'Qwen 3.8 Flash' },
   ];
   const MIAW_FILE_MAX = 60000; // chars per file sent to model
   let miawModel = 'glm-5.3-flash';
@@ -5843,15 +5844,48 @@
   function miawBubble(msg) {
     const who = msg.role === 'user' ? 'you' : 'ai';
     const files = (msg.files && msg.files.length) ? `<span class="miaw-msg-files">📎 ${msg.files.map(escapeHtml).join(', ')}</span>` : '';
-    return `<div class="miaw-msg miaw-${who}"><div class="miaw-bubble">${files}<div class="miaw-text">${msg.role === 'user' ? escapeHtml(msg.content).replace(/\n/g, '<br/>') : miawSimpleMarkdown(msg.content)}</div></div></div>`;
+    const inner = (!msg.content && msg.role === 'assistant')
+      ? '<span class="miaw-typing"><i></i><i></i><i></i></span>'
+      : (msg.role === 'user' ? escapeHtml(msg.content).replace(/\n/g, '<br/>') : miawSimpleMarkdown(msg.content));
+    const avatar = msg.role === 'assistant' ? '<span class="miaw-avatar">🐱</span>' : '';
+    return `<div class="miaw-msg miaw-${who}">${avatar}<div class="miaw-bubble">${files}<div class="miaw-text">${inner}</div></div></div>`;
   }
 
   function miawSimpleMarkdown(text) {
-    return escapeHtml(text || '')
+    const esc = escapeHtml(text || '');
+    const lines = esc.split('\n');
+    const html = [];
+    let list = null;
+    const closeList = () => { if (list) { html.push(`</${list}>`); list = null; } };
+    const inline = (s) => s
       .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/`([^`\n]+)`/g, '<code>$1</code>')
-      .replace(/^\s*[-•] (.*)$/gm, '• $1')
-      .replace(/\n/g, '<br/>');
+      .replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    for (const raw of lines) {
+      const ln = raw.trim();
+      let m;
+      if ((m = ln.match(/^[-•*] +(.*)$/))) {
+        if (list !== 'ul') { closeList(); html.push('<ul>'); list = 'ul'; }
+        html.push(`<li>${inline(m[1])}</li>`);
+      } else if ((m = ln.match(/^(\d+)[.)] +(.*)$/))) {
+        if (list !== 'ol') { closeList(); html.push('<ol>'); list = 'ol'; }
+        html.push(`<li>${inline(m[2])}</li>`);
+      } else if ((m = ln.match(/^#{1,4} +(.*)$/))) {
+        closeList();
+        html.push(`<strong class="miaw-h">${inline(m[1])}</strong><br/>`);
+      } else if (!ln) {
+        closeList();
+      } else {
+        closeList();
+        html.push(`${inline(ln)}<br/>`);
+      }
+    }
+    closeList();
+    let out = html.join('');
+    out = out.replace(/<br\/>(<\/(?:ul|ol)>)/g, '$1');
+    out = out.replace(/(<\/(?:ul|ol)>)<br\/>/g, '$1');
+    out = out.replace(/(<\/(?:ul|ol)>)\s*<br\/>\s*<strong class="miaw-h">/g, '$1<strong class="miaw-h">');
+    out = out.replace(/<br\/>\s*<(ul|ol)>/g, '<$1>');
+    return out.replace(/(<\/(?:ul|ol)>)<br\/>\s*(?![\s\S]*<\/(?:ul|ol)>)/g, '$1');
   }
 
   function renderMiawAIView() {
@@ -5859,13 +5893,13 @@
     const body = miawMessages.length
       ? miawMessages.map(miawBubble).join('')
       : `<div class="miaw-empty">
-           <div class="miaw-empty-emoji">🤖</div>
-           <b>MiawAI</b>
-           <p>Asisten khusus untuk <strong>website ini</strong>, <strong>Habit</strong>, dan <strong>Goals</strong>. Tanya cara pakai fitur, minta saran kebiasaan, atau breakdown target. Bisa lampirkan file (teks/CSV/markdown) untuk dianalisis.</p>
+           <div class="miaw-empty-avatar">🐱</div>
+           <b class="miaw-empty-title">MiawAI</b>
+           <p>Asisten khusus <strong>website ini</strong>, <strong>Habit</strong>, dan <strong>Goals</strong>.<br/>Tanya cara pakai fitur, minta saran kebiasaan, atau breakdown target — bisa lampirkan file untuk dianalisis.</p>
            <div class="miaw-suggests">
-             <button type="button" class="miaw-suggest" data-miaw-q="Bagaimana cara membuat Goals dan Project di website ini?">Cara pakai Goals &amp; Project</button>
-             <button type="button" class="miaw-suggest" data-miaw-q="Bantu aku bikin rencana kebiasaan pagi yang konsisten">Saran Habit pagi</button>
-             <button type="button" class="miaw-suggest" data-miaw-q="Pecah goalsku jadi target jangka pendek yang realistis">Breakdown Goals</button>
+             <button type="button" class="miaw-suggest" data-miaw-q="Bagaimana cara membuat Goals dan Project di website ini?"><span>🎯</span> Cara pakai Goals &amp; Project</button>
+             <button type="button" class="miaw-suggest" data-miaw-q="Bantu aku bikin rencana kebiasaan pagi yang konsisten"><span>🌅</span> Saran Habit pagi</button>
+             <button type="button" class="miaw-suggest" data-miaw-q="Pecah goalsku jadi target jangka pendek yang realistis"><span>🪜</span> Breakdown Goals</button>
            </div>
          </div>`;
     const files = miawFiles.length
@@ -5875,19 +5909,24 @@
       <div class="miaw-layout">
         <section class="panel miaw-panel">
           <div class="miaw-topbar">
-            <label class="miaw-model-pick">
-              <span>Model</span>
-              <select id="miawModelSel">${modelOpts}</select>
-            </label>
-            <button class="ghost-button" type="button" data-action="miaw-new">＋ Obrolan Baru</button>
+            <div class="miaw-brand">
+              <span class="miaw-brand-avatar">🐱</span>
+              <span class="miaw-brand-text"><b>MiawAI</b><small>Website · Habit · Goals</small></span>
+            </div>
+            <div class="miaw-tools">
+              <label class="miaw-model-pick" title="Pilih model AI">
+                <select id="miawModelSel" aria-label="Pilih model AI">${modelOpts}</select>
+              </label>
+              <button class="miaw-newchat" type="button" data-action="miaw-new" title="Mulai obrolan baru">＋</button>
+            </div>
           </div>
-          <div class="miaw-chat" id="miawChat">${body}${miawBusy && !miawMessages.length ? '' : ''}</div>
+          <div class="miaw-chat" id="miawChat">${body}</div>
           ${files}
           <div class="miaw-composer">
             <input type="file" id="miawFile" hidden multiple accept=".txt,.md,.csv,.tsv,.json,.log,.html,.js,.xml,.yml,.yaml,text/plain,text/markdown,text/csv,application/json" />
-            <button class="miaw-attach" type="button" data-action="miaw-attach" title="Lampirkan file untuk dianalisis">📎</button>
+            <button class="miaw-attach" type="button" data-action="miaw-attach" title="Lampirkan file untuk dianalisis" aria-label="Lampirkan file">📎</button>
             <input id="miawInput" type="text" placeholder="Tanya seputar website, Habit, atau Goals…" value="${escapeHtml(miawDraft)}" autocomplete="off" />
-            <button class="primary-button miaw-send" type="button" data-action="miaw-send" ${miawBusy ? 'disabled' : ''}>${miawBusy ? 'Mengetik…' : 'Kirim'}</button>
+            <button class="miaw-send" type="button" data-action="miaw-send" ${miawBusy ? 'disabled' : ''} aria-label="Kirim pesan">${miawBusy ? '<span class="miaw-spin"></span>' : '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>'}</button>
           </div>
         </section>
       </div>
