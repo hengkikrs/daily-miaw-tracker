@@ -129,3 +129,11 @@ Permintaan pengguna (tangkapan layar "Detail Kegiatan — Anjing"): kata "Umum" 
 Perubahan: `public/styles.css` (`.task-detail-chips .task-chip.tag` digabung rule `.prio/.status`; `.task-info-cell:nth-of-type(n+3)` diberi `border-top`), `public/js/modules/daily-tasks.js` (chip kategori selalu dirender dengan default `'Umum'`; fallback kartu info & agenda `'Kegiatan'` → `'Umum'`), `public/index.html` (cache-bust ui46→ui47→ui48).
 
 Verifikasi produksi (replika persis kasus pengguna: kegiatan tanpa kategori eksplisit, prioritas sedang, jam 18:46, sudah pernah fokus): chip `Umum`/`Prioritas Sedang`/`In Progres` identik (12px/800/4px 12px/28px/999px); sel Kategori & Total fokus `border-top: 1px`, padding 14px seragam, posisi y sejajar; agenda menampilkan `Umum`; 0 error JS.
+
+## ui49 — perataan Kategori di kartu Info Daily Task (2026-09-14, commit `0d5061d`)
+
+Keluhan lanjutan dari ui46–48: "Umum" belum rapi — harus persis di bawah "Tanggal hari ini".
+
+Diagnosis terukur (getBoundingClientRect, viewport 390px): sel Kategori di kolom kiri baris kedua mendapat `border-left + padding-left:16px + margin-left:16px` karena selektor pemisah lama `.task-info-cell + .task-info-cell` juga cocok dengan sel ke-3 ⇒ x=51 (Tanggal: 35), lebar 144 (Tanggal: 160).
+
+Perbaikan: pemisah kolom dipindah ke `.task-info-cell:nth-child(even)` (hanya kolom kanan). Verifikasi lokal & produksi: x Kategori = x Tanggal = 35 (label & nilai), lebar kolom sama 160px, pemisah kolom kanan tetap 1px, baris kedua sejajar, 0 error JS.

@@ -93,3 +93,13 @@ Log rutinitas memakai kunci turunan (`dailyRoutineDoneKey`) di dalam store `dail
 - **Chip "Umum" disamakan dengan Prioritas/In Progres**: `.task-chip.prio/.status` memakai 12px/weight 800/padding 4px 12px, sedangkan `.task-chip.tag` tidak mendefinisikan ukuran sendiri (mewarisi `.task-chip` = padding 1px 8px, weight 600). Solusi: `.task-detail-chips .task-chip.tag` ikut dalam satu rule dengan `.prio/.status` + `border-color` biru. Bukti ukur: ketiganya 12px / 800 / 4px 12px / h 28 / radius 999px.
 - **Chip kategori selalu tampil** (ui47): sebelumnya `t.category ? … : ''` — kegiatan lama tanpa properti `category` kehilangan chip. Sekarang `${escapeHtml(t.category || 'Umum')}` (chip detail kegiatan & rutinitas), dan fallback `'Kegiatan'` di kartu info + agenda diseragamkan menjadi `'Umum'` (ui48).
 - **Garis pemisah kartu info**: `.task-info-cell + .task-info-cell` hanya memberi garis vertikal antar kolom; baris kedua grid (Kategori/Total fokus) kini diberi `border-top` via `.task-info-cell:nth-of-type(n+3)` sehingga sejajar & bergaris seperti baris Tanggal/Jam. Padding sel tetap 14px vertikal di semua sel.
+
+## ui49 — Kategori lurus persis di bawah Tanggal
+
+Keluhan: pada kartu Info, teks "Kategori/Umum" tidak segaris dengan "Tanggal/Hari ini".
+
+Akar masalah (hasil pengukuran geometri, mobile 390px): pemisah kolom dipasang lewat `.task-info-cell + .task-info-cell` — **hanya sel kedua** yang dapat `border-left + padding-left:16px + margin-left:16px`. Di grid 2 kolom, sel ke-3 (**Kategori**, kolom kiri baris kedua) juga cocok dengan selektor itu, jadi ia bergeser +16px (x=51 vs Tanggal x=35) dan lebih sempit (144px vs 160px).
+
+Perbaikan: pemisah kolom hanya untuk **kolom kanan** — `.task-info-cell:nth-child(even)` (sel ke-2, ke-4, …). Kolom kiri (ke-1, ke-3) tanpa margin/padding kiri.
+
+Bukti (lokal & produksi, 390px): x Kategori = x Tanggal = 35 (label & nilai juga 35), lebar sama 160px, garis pemisah tetap di kolom kanan (Jam/Total fokus, bl=1px), baris kedua tetap sejajar (y sama), 0 error JS. Catatan: jangan pindahkan garis ke kolom kiri — sel Tanggal harus "menggantung" dari tepi kartu.
