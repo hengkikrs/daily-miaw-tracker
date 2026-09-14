@@ -563,7 +563,7 @@ function renderDailyDetail() {
       <div class="task-card task-detail-head">
         <div class="task-detail-chips">
           <span class="task-chip status ${doneTodayR ? 'done' : 'prog'}">${doneTodayR ? 'Sudah hari ini' : 'Belum hari ini'}</span>
-          ${item.category ? `<span class="task-chip tag">${escapeHtml(item.category)}</span>` : ''}
+          <span class="task-chip tag">${escapeHtml(item.category || 'Umum')}</span>
         </div>
         <h2 class="task-detail-title">${item.icon ? `${item.icon} ` : ''}${escapeHtml(item.title)}</h2>
       </div>
@@ -604,7 +604,7 @@ function renderDailyDetail() {
       <div class="task-detail-chips">
         <span class="task-chip prio ${prio[1]}">${prio[0]}</span>
         <span class="task-chip status ${t.done ? 'done' : 'prog'}">${t.done ? 'Selesai' : 'In Progres'}</span>
-        ${t.category ? `<span class="task-chip tag">${escapeHtml(t.category)}</span>` : ''}
+        <span class="task-chip tag">${escapeHtml(t.category || 'Umum')}</span>
       </div>
       <h2 class="task-detail-title">${t.icon ? `${t.icon} ` : ''}${escapeHtml(t.title)}</h2>
     </div>
