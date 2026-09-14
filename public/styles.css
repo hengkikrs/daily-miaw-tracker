@@ -3006,7 +3006,9 @@ svg {
   padding: 14px 0;
 }
 
-.task-info-cell + .task-info-cell {
+/* Sel kolom kanan (2,4,…) diberi garis pemisah; kolom kiri mulai dari sel ketiga.
+   Kolom kiri tanpa margin/padding kiri → teksnya lurus persis di bawah Tanggal. */
+.task-info-cell:nth-child(even) {
   border-left: 1px solid var(--line);
   padding-left: 16px;
   margin-left: 16px;
