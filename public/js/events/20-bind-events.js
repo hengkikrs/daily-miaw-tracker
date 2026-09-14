@@ -140,7 +140,7 @@ function bindEvents() {
   const lapBtn = event.target.closest('[data-lap-mode],[data-lap-sec],[data-lap-all],[data-lap-ai],[data-lap-dl]');
   if (lapBtn && handleLaporanAction(lapBtn)) return;
 
-    const dailyBtn = event.target.closest('[data-daily-tab],[data-daily-add],[data-daily-cancel],[data-daily-toggle],[data-daily-open],[data-daily-jadwal],[data-daily-delete],[data-daily-back]');
+    const dailyBtn = event.target.closest('[data-daily-tab],[data-daily-add],[data-daily-cancel],[data-daily-toggle],[data-daily-open],[data-daily-jadwal],[data-daily-delete],[data-daily-back],[data-daily-rtedit],[data-daily-rtdel]');
     if (dailyBtn && handleDailyAction(dailyBtn)) return;
     const dashBtn = event.target.closest('[data-dash-go]');
     if (dashBtn && handleDashAction(dashBtn)) return;
@@ -384,17 +384,7 @@ function bindEvents() {
     }
     if (event.target.id === 'dailyAddForm') {
       event.preventDefault();
-      const form = event.target;
-      const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
-      const title = val('title');
-      if (!title) return;
-      const list = loadDailyTasks();
-      list.push({ id: `dt${Date.now()}`, title, icon: val('icon') || '📌', time: val('time'), priority: val('priority') || 'med', date: dailyTodayIso(), done: false, routine: true, activity: [{ text: 'Rutinitas dibuat', at: Date.now() }] });
-      list.__dailyLog = list.__dailyLog || {};
-      saveDailyTasks(list);
-      dailyAdding = false; dailyDraft = null;
-      showToast('Rutinitas ditambahkan.');
-      renderShell();
+      dailySubmitAdd(event.target);
       return;
     }
     if (event.target.id === 'jadwalAddForm') {

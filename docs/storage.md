@@ -23,7 +23,9 @@ scopedKey(key) = authSession?.user?.id ? `${key}:${authSession.user.id}` : key
 | `miaw-tracker.goals.v1` | goals + milestone. **Juga dipakai modul report/keuangan lama (L4116–4326)** | Goals, finance-reports-legacy |
 | `proj-tracker.projects.v1` | project + task project (perhatikan prefix `proj-tracker`, bukan `miaw-tracker`) | Projects |
 | `miaw-tracker.notes.v1` | catatan (HTML tersanitasi) | Notes |
-| `miaw-tracker.daily-tasks.v1` (+ `.log`) | rutinitas harian + log penyelesaian | Daily Tasks |
+| `miaw-tracker.daily-tasks.v1` | kegiatan sekali (satu tanggal) | Daily Tasks |
+| `miaw-tracker.daily-tasks.v1.log` | log centang rutinitas (streak) | Daily Tasks |
+| `miaw-tracker.daily-tasks.v1.routines` | daftar rutinitas kustom (dibuat hanya setelah user mengubah daftar) | Daily Tasks |
 | `miaw-tracker.theme` | tema terang/gelap (**tidak** di-scope) | core/theme |
 | `miaw-tracker.auth-session.v1` | sesi Supabase (**tidak** di-scope) | auth/session |
 | `miaw-tracker.client-id` | id klien anonim sebelum login | core/state |
@@ -37,7 +39,7 @@ scopedKey(key) = authSession?.user?.id ? `${key}:${authSession.user.id}` : key
 - `loadState()` (L437): parse `scopedKey(STORAGE_KEY)`; valid bila `schemaVersion === SCHEMA_VERSION (1)` **dan** ada `years`; jika tidak → `createFreshState()`.
 - `saveState()` (L450): menyelaraskan `state.selectedYear/selectedView/selectedMonth/openNavGroups` dari variabel runtime, `localStorage.setItem(scopedKey(STORAGE_KEY), …)`, lalu `queueRemoteSave()`.
 - `readStoreJson(key, fallback)` (L460): baca store terpisah dengan fallback aman.
-- `buildStoresPayload()` (L469): `{ jadwal, goals, projects, notes, dailyTasks, dailyLog, savedAt }`.
+- `buildStoresPayload()` (L469): `{ jadwal, goals, projects, notes, dailyTasks, dailyLog, dailyRoutines, savedAt }`.
 - `applyStoresPayload(stores)` (L483): menulis balik store-store tersebut via `scopedKey`.
 - Store terpisah per modul: `loadDailyTasks/saveDailyTasks`, `loadJadwalEvents/saveJadwalEvents`, `loadTasks/saveTasks`, `loadGoals/saveGoals`, `loadProjects/saveProjects`, `loadNotes/saveNotes`.
 - Finance (`ensureSaveStore/ensureBudStore/ensureTxStore/ensureDocStore`) tidak memakai kunci sendiri: sub-store-nya hidup di dalam `state` lalu ikut `saveState()`.

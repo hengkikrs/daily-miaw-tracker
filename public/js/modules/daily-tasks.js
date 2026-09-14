@@ -14,10 +14,19 @@ const DAILY_ROUTINES = [
   { id: 'r5', title: 'Planning mingguan', time: '07:00', icon: '🗓️', priority: 'med', days: 'monday', note: '' },
   { id: 'r6', title: 'Bersih-bersih rumah', time: '08:00', icon: '🧹', priority: 'low', days: 'sunday', note: '' },
 ];
+const DAILY_ROUTINE_DAYS = [
+  ['everyday', 'Setiap hari'],
+  ['weekdays', 'Senin–Jumat'],
+  ['weekend', 'Sabtu & Minggu'],
+  ['monday', 'Setiap Senin'],
+  ['sunday', 'Setiap Minggu'],
+];
 let dailyTab = 'today';        // today | rutin | selesai
 let dailyAdding = false;
 let dailyDraft = null;
 let dailyDetailId = null;
+let dailyEditingRoutineId = null;   // id rutinitas yang sedang diubah (null = tambah baru)
+let dailyAddKind = 'rutin';         // rutin | sekali  (jenis yang ditambahkan form)
 
 function dailyTodayIso() { return taskTodayIso(); }
 
@@ -57,20 +66,119 @@ function loadDailyTasks() {
       list.__dailyLog = (raw && typeof raw === 'object') ? raw : {};
     } catch { list.__dailyLog = {}; }
   }
+  // daftar rutinitas kustom (bila pengguna pernah menambah/mengubah/menghapus).
+  // Disimpan di kunci terpisah karena saveDailyTasks() menulis hasil filter() — properti array tidak ikut tersimpan.
+  try {
+    const rawR = JSON.parse(localStorage.getItem(scopedKey(`${DAILY_TASK_STORE_KEY}.routines`)) || 'null');
+    if (Array.isArray(rawR)) { list.__routines = rawR; list.__hasRoutines = true; }
+  } catch { /* abaikan */ }
   return list;
 }
 
 function saveDailyTasks(list) {
   const plain = list.filter((x) => x && x.id);
   const log = list.__dailyLog || {};
+  const routines = Array.isArray(list.__routines) ? list.__routines : null;
   try {
     localStorage.setItem(scopedKey(DAILY_TASK_STORE_KEY), JSON.stringify(plain));
     localStorage.setItem(scopedKey(`${DAILY_TASK_STORE_KEY}.log`), JSON.stringify(log));
+    if (routines) localStorage.setItem(scopedKey(`${DAILY_TASK_STORE_KEY}.routines`), JSON.stringify(routines));
   } catch { /* ignore */ }
   if (typeof queueRemoteSave === 'function') queueRemoteSave();
 }
 
 function dailyRoutineDoneKey(r, iso) { return `${iso}:${r.id}`; }
+
+/* ── Rutinitas tersimpan (store) ─────────────────────────────────────────────
+   Daftar rutinitas bawaan (DAILY_ROUTINES) hanya menjadi benih. Begitu pengguna
+   menambah/mengubah/menghapus, daftar lengkapnya disimpan di properti
+   `__routines` pada store daily-tasks (pola sama seperti `__dailyLog`), sehingga
+   id rutinitas bawaan tetap sama dan riwayat/streak tidak hilang. */
+function loadDailyRoutines() {
+  const store = loadDailyTasks();
+  const list = Array.isArray(store.__routines) ? store.__routines : null;
+  if (Array.isArray(list)) return list.filter((r) => r && r.id && r.title);
+  return DAILY_ROUTINES;
+}
+
+function saveDailyRoutines(routines) {
+  const store = loadDailyTasks();
+  store.__routines = (routines || []).map((r) => ({
+    id: r.id,
+    title: r.title,
+    icon: r.icon || '📌',
+    time: r.time || '',
+    priority: r.priority || 'med',
+    days: r.days || 'everyday',
+    note: r.note || '',
+  }));
+  saveDailyTasks(store);
+}
+
+function dailyRoutineById(id) {
+  return loadDailyRoutines().find((r) => r.id === id) || null;
+}
+
+function dailyRoutineNewId() {
+  return `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+}
+
+/* Hapus jejak log (streak/riwayat) milik rutinitas yang dihapus. */
+function dailyPurgeRoutineLog(id) {
+  const store = loadDailyTasks();
+  const log = store.__dailyLog || {};
+  Object.keys(log).forEach((k) => { if (k.endsWith(`:${id}`)) delete log[k]; });
+  store.__dailyLog = log;
+  saveDailyTasks(store);
+}
+
+/* Dipanggil dari submit handler di events/20-bind-events.js. */
+function dailySubmitAdd(form) {
+  const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
+  const title = val('title');
+  if (!title) return;
+  const icon = val('icon') || '📌';
+  const time = val('time');
+  const priority = val('priority') || 'med';
+  const kind = val('kind') === 'sekali' ? 'sekali' : 'rutin';
+
+  if (kind === 'rutin') {
+    const list = loadDailyRoutines().slice();
+    const days = val('days') || 'everyday';
+    if (dailyEditingRoutineId) {
+      const idx = list.findIndex((r) => r.id === dailyEditingRoutineId);
+      if (idx >= 0) list[idx] = { ...list[idx], title, icon, time, priority, days };
+      saveDailyRoutines(list);
+      showToast('Rutinitas diperbarui.');
+    } else {
+      list.push({ id: dailyRoutineNewId(), title, icon, time, priority, days, note: '' });
+      saveDailyRoutines(list);
+      showToast('Rutinitas ditambahkan.');
+    }
+  } else {
+    const store = loadDailyTasks();
+    store.push({
+      id: `dt${Date.now()}`,
+      title,
+      icon,
+      time,
+      priority,
+      date: dailyTodayIso(),
+      done: false,
+      routine: false,
+      activity: [{ text: 'Kegiatan ditambahkan', at: Date.now() }],
+    });
+    store.__dailyLog = store.__dailyLog || {};
+    saveDailyTasks(store);
+    showToast('Kegiatan hari ini ditambahkan.');
+  }
+
+  dailyAdding = false;
+  dailyDraft = null;
+  dailyEditingRoutineId = null;
+  dailyAddKind = kind;
+  renderShell();
+}
 function dailyIsRoutineDone(r, iso) {
   const tasks = loadDailyTasks();
   const log = tasks.__dailyLog || {};
@@ -125,10 +233,11 @@ function renderDailyTaskView() {
   const doneToday = allTasks.filter((t) => t.date === todayIso && t.done).length;
   const openToday = allTasks.filter((t) => t.date === todayIso && !t.done);
   const todayAll = allTasks.filter((t) => t.date === todayIso);
-  const totalToday = todayAll.length + DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso)).length;
-  const doneTotal = doneToday + DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso) && dailyIsRoutineDone(r, todayIso)).length;
+  const routines = loadDailyRoutines();
+  const routinesToday = routines.filter((r) => dailyRoutineApplies(r, todayIso));
+  const totalToday = todayAll.length + routinesToday.length;
+  const doneTotal = doneToday + routinesToday.filter((r) => dailyIsRoutineDone(r, todayIso)).length;
   const pct = totalToday ? Math.round((doneTotal / totalToday) * 100) : 0;
-  const routinesToday = DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso));
   const routinesDone = routinesToday.filter((r) => dailyIsRoutineDone(r, todayIso)).length;
   const now = new Date();
   const dateLabel = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -141,7 +250,7 @@ function renderDailyTaskView() {
   // tab rutin
   let body = '';
   if (dailyTab === 'rutin') {
-    const cards = DAILY_ROUTINES.map((r) => {
+    const cards = routines.map((r) => {
       const st = dailyRoutineStats(r);
       const daysLabel = { everyday: 'Setiap hari', weekdays: 'Senin–Jumat', weekend: 'Sabtu & Minggu', monday: 'Setiap Senin', sunday: 'Setiap Minggu' }[r.days] || 'Terjadwal';
       const doneTodayR = dailyIsRoutineDone(r, todayIso);
@@ -159,6 +268,10 @@ function renderDailyTaskView() {
           </div>
           <div class="dt-hist" aria-hidden="true">
             ${st.hist.map((hh) => `<span class="dt-h ${hh.skip ? 'skip' : hh.on ? 'on' : ''}" title="${hh.iso}"></span>`).join('')}
+          </div>
+          <div class="dt-card-tools">
+            <button class="dt-tool edit" type="button" data-daily-rtedit="${r.id}" aria-label="Ubah rutinitas" title="Ubah rutinitas">✎</button>
+            <button class="dt-tool" type="button" data-daily-rtdel="${r.id}" aria-label="Hapus rutinitas" title="Hapus rutinitas">✕</button>
           </div>
         </section>`;
     }).join('');
@@ -224,19 +337,28 @@ function renderDailyTaskView() {
       <button type="button" class="dt-tab ${dailyTab === 'selesai' ? 'on' : ''}" data-daily-tab="selesai">Selesai</button>
     </div>`;
 
+  const draft = dailyDraft || dailyAddDraftDefaults();
   const addForm = dailyAdding ? `
     <form class="dt-add-card" id="dailyAddForm">
-      <div class="jadwal-add-head"><span>Tambah Kegiatan</span><button type="button" class="task-add-x" data-daily-cancel aria-label="Batal">×</button></div>
-      <input name="title" type="text" maxlength="90" placeholder="Nama kegiatan rutin…" autocomplete="off" required value="${escapeHtml((dailyDraft || {}).title || '')}" />
+      <div class="jadwal-add-head"><span>${dailyEditingRoutineId ? 'Ubah Rutinitas' : 'Tambah Kegiatan'}</span><button type="button" class="task-add-x" data-daily-cancel aria-label="Batal">×</button></div>
+      <input name="title" type="text" maxlength="90" placeholder="Nama kegiatan rutin…" autocomplete="off" required value="${escapeHtml(draft.title || '')}" />
       <div class="jadwal-add-grid">
-        <label><span>Ikun</span><select name="icon">${['📌','💧','🏃','📚','🧘','🛒','🐶','🎸','🧹','📮'].map((ic) => `<option value="${ic}" ${((dailyDraft || {}).icon) === ic ? 'selected' : ''}>${ic}</option>`).join('')}</select></label>
-        <label><span>Jam</span><input name="time" type="time" value="${escapeHtml((dailyDraft || {}).time || '')}" /></label>
+        <label><span>Ikon</span><select name="icon">${['📌','💧','🏃','📚','🧘','🛒','🐶','🎸','🧹','📮'].map((ic) => `<option value="${ic}" ${draft.icon === ic ? 'selected' : ''}>${ic}</option>`).join('')}</select></label>
+        <label><span>Jam</span><input name="time" type="time" value="${escapeHtml(draft.time || '')}" /></label>
         <label><span>Prioritas</span><select name="priority">
-          <option value="low" ${((dailyDraft || {}).priority) === 'low' ? 'selected' : ''}>Rendah</option>
-          <option value="med" ${((dailyDraft || {}).priority) === 'med' ? 'selected' : ''}>Sedang</option>
-          <option value="high" ${((dailyDraft || {}).priority) === 'high' ? 'selected' : ''}>Tinggi</option>
+          <option value="low" ${draft.priority === 'low' ? 'selected' : ''}>Rendah</option>
+          <option value="med" ${draft.priority === 'med' ? 'selected' : ''}>Sedang</option>
+          <option value="high" ${draft.priority === 'high' ? 'selected' : ''}>Tinggi</option>
+        </select></label>
+        <label><span>Jenis</span><select name="kind" ${dailyEditingRoutineId ? 'disabled' : ''}>
+          <option value="rutin" ${(draft.kind || 'rutin') === 'rutin' ? 'selected' : ''}>Rutinitas (berulang)</option>
+          <option value="sekali" ${draft.kind === 'sekali' ? 'selected' : ''}>Sekali (hari ini)</option>
+        </select></label>
+        <label><span>Jadwal</span><select name="days" ${dailyEditingRoutineId ? 'disabled' : ''}>
+          ${DAILY_ROUTINE_DAYS.map(([v, label]) => `<option value="${v}" ${(draft.days || 'everyday') === v ? 'selected' : ''}>${label}</option>`).join('')}
         </select></label>
       </div>
+      <p class="dt-add-hint">Jenis <b>Rutinitas</b> menyimpan di daftar Rutinitas (berulang sesuai Jadwal). <b>Sekali</b> hanya menambah kegiatan untuk hari ini.</p>
       <button class="primary-button jadwal-add-save" type="submit">Simpan</button>
     </form>` : '';
 
@@ -303,14 +425,41 @@ function renderDailyDetail() {
 function handleDailyAction(btn) {
   if (btn.matches('[data-daily-tab]')) { dailyTab = btn.dataset.dailyTab; renderShell(); return true; }
   if (btn.matches('[data-daily-add]')) {
-    dailyAdding = true; dailyDraft = dailyDraft || dailyAddDraftDefaults();
+    dailyAdding = true;
+    dailyEditingRoutineId = null;
+    dailyAddKind = dailyTab === 'rutin' ? 'rutin' : 'sekali';
+    dailyDraft = { ...dailyAddDraftDefaults(), kind: dailyAddKind, days: 'everyday' };
     renderShell(); setTimeout(() => document.querySelector('#dailyAddForm [name=title]')?.focus(), 30);
     return true;
   }
-  if (btn.matches('[data-daily-cancel]')) { dailyAdding = false; dailyDraft = null; renderShell(); return true; }
+  if (btn.matches('[data-daily-cancel]')) { dailyAdding = false; dailyDraft = null; dailyEditingRoutineId = null; renderShell(); return true; }
+  if (btn.matches('[data-daily-rtedit]')) {
+    const r = dailyRoutineById(btn.dataset.dailyRtedit);
+    if (r) {
+      dailyTab = 'rutin';
+      dailyEditingRoutineId = r.id;
+      dailyAddKind = 'rutin';
+      dailyAdding = true;
+      dailyDraft = { title: r.title, icon: r.icon || '📌', time: r.time || '', priority: r.priority || 'med', kind: 'rutin', days: r.days || 'everyday' };
+      renderShell(); setTimeout(() => document.querySelector('#dailyAddForm [name=title]')?.focus(), 30);
+    }
+    return true;
+  }
+  if (btn.matches('[data-daily-rtdel]')) {
+    const id = btn.dataset.dailyRtdel;
+    const target = dailyRoutineById(id);
+    if (target) {
+      saveDailyRoutines(loadDailyRoutines().filter((r) => r.id !== id));
+      dailyPurgeRoutineLog(id);
+      if (dailyEditingRoutineId === id) { dailyEditingRoutineId = null; dailyAdding = false; dailyDraft = null; }
+      showToast(`Rutinitas "${target.title}" dihapus.`);
+      renderShell();
+    }
+    return true;
+  }
   if (btn.matches('[data-daily-rt]')) {
     // checkbox: toggle selesai-hari-ini rutinitas
-    const r = DAILY_ROUTINES.find((x) => x.id === btn.dataset.dailyRt);
+    const r = dailyRoutineById(btn.dataset.dailyRt);
     if (r) { dailySetRoutineDone(r, btn.dataset.iso || dailyTodayIso(), btn.checked); renderShell(); }
     return true;
   }

@@ -20,8 +20,9 @@ Mengelola rutinitas non-project: daftar "Hari Ini", jadwal rutin per-hari (DAILY
 - `handleDailyAction`
 
 ### Baca & tulis store
-- `loadDailyTasks`
-- `saveDailyTasks`
+- `loadDailyTasks` / `saveDailyTasks` (+ `__dailyLog` & `__routines` disimpan ke kunci terpisah karena `saveDailyTasks()` menulis hasil `filter()` → properti array tidak ikut tersimpan)
+- `loadDailyRoutines` / `saveDailyRoutines` / `dailyRoutineById` / `dailyRoutineNewId` / `dailyPurgeRoutineLog`
+- `dailySubmitAdd(form)` — dipanggil dari submit handler `#dailyAddForm` di `events/20-bind-events.js`
 
 ### Helper internal
 - `dailyTodayIso`
@@ -65,6 +66,9 @@ Mengelola rutinitas non-project: daftar "Hari Ini", jadwal rutin per-hari (DAILY
 - `shell-router (1)`
 
 ## Safe editing guide
+- Rutinitas: `loadDailyRoutines()`/`saveDailyRoutines()` di `modules/daily-tasks.js`; id rutinitas bawaan (r1–r6) dipertahankan saat materialisasi supaya riwayat/streak tidak hilang.
+- Menambah atribut `data-daily-*` baru wajib menambahkannya ke daftar `closest()` di `events/20-bind-events.js` (kalau tidak, klik tidak ter-dispatch).
+- Sinkronisasi: `buildStoresPayload()` mengirim `dailyRoutines` (null bila belum pernah diubah) dan `applyStoresPayload()` menulis `${DAILY_TASK_STORE_KEY}.routines` di `core/05-storage.js`.
 UI/tab → `renderDailyTaskView`/`renderDailyDetail` + `data-daily-*`. Tambah/ubah rutinitas → `DAILY_ROUTINES` + `dailyRoutineApplies`. Penyimpanan → `loadDailyTasks`/`saveDailyTasks`.
 
 ## Known risks

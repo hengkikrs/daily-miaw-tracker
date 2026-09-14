@@ -56,6 +56,8 @@ function buildStoresPayload() {
     notes: readStoreJson(NOTES_STORE_KEY, []),
     dailyTasks: dailyRows,
     dailyLog: (daily && daily.__dailyLog) || {},
+    // null bila pengguna belum pernah mengubah daftar rutinitas → jangan menimpa bawaan di perangkat lain
+    dailyRoutines: Array.isArray(daily && daily.__routines) ? daily.__routines : null,
     savedAt: Date.now(),
   };
 }
@@ -72,6 +74,8 @@ function applyStoresPayload(stores) {
   if (Array.isArray(stores.dailyTasks)) {
     write(DAILY_TASK_STORE_KEY, stores.dailyTasks);
     write(`${DAILY_TASK_STORE_KEY}.log`, stores.dailyLog && typeof stores.dailyLog === 'object' ? stores.dailyLog : {});
+    // daftar rutinitas kustom (hanya bila memang ada di snapshot → [] tetap tersimpan)
+    if (Array.isArray(stores.dailyRoutines)) write(`${DAILY_TASK_STORE_KEY}.routines`, stores.dailyRoutines);
   }
   return true;
 }

@@ -91,3 +91,15 @@ Hal yang **belum pernah** diuji (jangan diklaim lulus): login Supabase asli, OTP
 - QA pra-deploy (skill `dogfood`): 0 Critical/High/Medium, 2 Low (kosmetik, terbukti identik pada build pra-refactor). Laporan: `docs/qa/report.md`; bukti JSON + 2 screenshot: `~/tracker-daily-refactor-audit/qa/`.
 - Deploy: `vercel deploy --prod --yes --token …` → produksi `tracker-daily-pi.vercel.app` kini menyajikan 33 script `ui42`; `runtime-config.js` terisi; `/api/lookup-user` 404 `not_found` (fungsi serverless sehat); 17/17 view render di produksi tanpa error; tanpa SSO protection.
 - Catatan: `?v=` untuk **CSS** sebelumnya tertinggal di `ui41` (skrip migrasi hanya menulis ulang tag `<script>`) — diseragamkan ke `ui42` sebelum deploy.
+
+
+## Perubahan fitur setelah refactor — ui43 (2026-09-14)
+Perbaikan dari laporan pengguna pada menu Activity → Daily Task:
+1. **Bug**: form "Tambah Kegiatan" selalu membuat kegiatan sekali (tanggal hari ini), bukan rutinitas berulang → diperbaiki: ada pilihan **Jenis** (Rutinitas berulang / Sekali) + **Jadwal** (Setiap hari, Senin–Jumat, Sabtu & Minggu, Setiap Senin, Setiap Minggu). Default jenis mengikuti tab (tab Rutinitas → Rutinitas; tab Hari Ini → Sekali).
+2. **Label** "Ikun" → **"Ikon"** pada form.
+3. **Fitur baru**: tombol **ubah (✎)** dan **hapus (✕)** pada setiap kartu rutinitas di tab Rutinitas.
+- Penyimpanan: `DAILY_ROUTINES` menjadi benih; daftar kustom disimpan di kunci `miaw-tracker.daily-tasks.v1.routines` (pola sama dengan `.log`). Materialisasi mempertahankan id r1–r6 sehingga riwayat/streak lama tetap.
+- Sinkronisasi: `buildStoresPayload()` mengirim `dailyRoutines` (null bila belum diubah → tidak menimpa bawaan perangkat lain); `applyStoresPayload()` menulis kunci `.routines`.
+- Berkas diubah: `public/js/modules/daily-tasks.js`, `public/js/events/20-bind-events.js` (2 selector baru + submit didelegasikan ke `dailySubmitAdd`), `public/js/core/05-storage.js`, `public/styles.css` (blok `.dt-card-tools/.dt-tool/.dt-add-hint`), `public/index.html` (cache-bust ui43).
+- Validasi: `check-syntax.js` LULUS · uji browser (offline, sesi palsu): kartu 6 → tambah 7 (tersimpan di `.routines`, payload sync berisi rutinitas) → ubah (prefill + tersimpan, toast) → centang (entri log streak) → hapus (kembali 6, log dibersihkan, toast) → jenis "Sekali" tetap menambah agenda hari ini → reload tetap tersimpan · tombol ✎/✕ terlihat (7+7) · 0 error JS.
+- Catatan: temuan bug internal saat implementasi — `saveDailyTasks()` menulis hasil `.filter()` sehingga properti array (`__routines`) hilang; karena itu rutinitas disimpan di kunci terpisah seperti `__dailyLog`.
