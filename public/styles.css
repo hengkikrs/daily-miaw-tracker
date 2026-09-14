@@ -2952,13 +2952,16 @@ svg {
 }
 
 .task-chip.prio,
-.task-chip.status {
+.task-chip.status,
+.task-detail-chips .task-chip.tag {
   font-size: 12px;
   font-weight: 800;
   padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid transparent;
 }
+
+.task-detail-chips .task-chip.tag { border-color: color-mix(in srgb, var(--blue) 35%, var(--line)); }
 
 .task-chip.prio.high { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--panel)); border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
 .task-chip.prio.med { color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, var(--panel)); border-color: color-mix(in srgb, var(--amber) 30%, transparent); }
@@ -2989,6 +2992,12 @@ svg {
 }
 
 .task-info-grid + .task-info-grid { border-top: 1px solid var(--line); }
+
+/* Semua sel pada baris kedua ke dalam (kolom 2) ikut diberi garis atas,
+   supaya baris Kategori/Total fokus sejajar & bergaris seperti baris Tanggal/Jam. */
+.task-info-cell:nth-of-type(n+3) {
+  border-top: 1px solid var(--line);
+}
 
 .task-info-cell {
   display: flex;
