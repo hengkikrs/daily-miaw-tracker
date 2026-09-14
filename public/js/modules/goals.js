@@ -35,6 +35,9 @@ function captureGoalAdd() {
   goalsAddDraft = { title: f.querySelector('[name=title]').value, description: f.querySelector('[name=description]').value, deadline: f.querySelector('[name=deadline]').value };
 }
 let goalsCalSel = null;
+let goalsEditId = null;      // id goal yang sedang diubah (null = tambah baru)
+let goalsMsAdding = false;   // form sub goal inline
+let goalsConfirmDel = false; // konfirmasi hapus goal 2 langkah (tanpa window.confirm)
 
 function loadGoals() {
   try {
@@ -161,11 +164,21 @@ function renderGoalDetailPage() {
   if (!g) { goalsPage = 'list'; return renderGoalsView(); }
   const p = goalProgress(g);
   const rows = (g.milestones || []).map((mi) => `
-      <label class="goal-ms${mi.done ? ' done' : ''}">
-        <input type="checkbox" class="task-check" data-goal-ms="${g.id}:${mi.id}" ${mi.done ? 'checked' : ''} />
-        <span class="goal-ms-text">${escapeHtml(mi.text)}</span>
-        <span class="goal-ms-date">${escapeHtml(taskDateRead(mi.target || ''))}</span>
-      </label>`).join('');
+      <div class="goal-ms-row">
+        <label class="goal-ms${mi.done ? ' done' : ''}">
+          <input type="checkbox" class="task-check" data-goal-ms="${g.id}:${mi.id}" ${mi.done ? 'checked' : ''} />
+          <span class="goal-ms-text">${escapeHtml(mi.text)}</span>
+          <span class="goal-ms-date">${escapeHtml(taskDateRead(mi.target || ''))}</span>
+        </label>
+        <button type="button" class="dt-tool" data-goal-ms-del="${g.id}:${mi.id}" aria-label="Hapus sub goal" title="Hapus sub goal">✕</button>
+      </div>`).join('');
+  const msForm = goalsMsAdding
+    ? `<form class="goal-ms-form" id="goalMsForm">
+        <input name="text" type="text" maxlength="90" placeholder="Nama sub goal / milestone…" required />
+        <input name="target" type="date" value="${escapeHtml(g.deadline || taskTodayIso())}" />
+        <div class="goal-ms-form-btns"><button type="submit" class="primary-button">Simpan</button><button type="button" class="secondary-button" data-goal-ms-cancel>Batal</button></div>
+      </form>`
+    : '<button class="goal-ms-add" type="button" data-goal-ms-add>+ Tambah Sub Goal</button>';
   return `<div class="goals-page">
       <button class="goal-back-btn" type="button" data-goal-back>← Kembali</button>
       <div class="goal-detail-card proj-blk">
@@ -185,26 +198,33 @@ function renderGoalDetailPage() {
         ${(() => { const linked = loadProjects().filter((p) => p.goalId === g.id); return linked.length ? linked.map((p) => `<button type="button" class="goal-proj-chip link" data-proj-open="${p.id}">${p.icon || '🧩'} ${escapeHtml(p.name)} ${projStatusChip(p.status)}</button>`).join(' ') : '<span class="goal-proj-chip">Belum ada project — buat lewat menu Project</span>'; })()}
         <div class="goal-detail-sec">Sub Goal / Milestone</div>
         <div class="goal-ms-list">${rows || '<p class="task-empty">Belum ada sub goal.</p>'}</div>
-        <button class="goal-ms-add" type="button" data-goal-ms-add>+ Tambah Sub Goal</button>
+        ${msForm}
+        ${goalsConfirmDel ? `<div class="goal-del-confirm"><span>Hapus goal ini beserta ${(g.milestones || []).length} sub goal?</span><button type="button" class="danger-button" data-goal-del-confirm="${g.id}">Ya, hapus</button><button type="button" class="secondary-button" data-goal-del-cancel>Batal</button></div>` : ''}
+        <div class="goal-detail-actions">
+          <button class="secondary-button" type="button" data-goal-edit="${g.id}">✏️ Edit Goal</button>
+          <button class="secondary-button danger" type="button" data-goal-del="${g.id}">🗑️ Hapus Goal</button>
+        </div>
       </div>
     </div>`;
 }
 
 /* GOALS-PART2 */
 function renderGoalAddPage() {
+  const editing = goalsEditId ? loadGoals().find((x) => x.id === goalsEditId) : null;
   const cats = Object.keys(GOAL_CATS);
   const chips = cats.map((c) => `<button type="button" class="goal-cat-chip${goalsAddCat === c ? ' on' : ''}" data-goal-cat="${c}"><span class="goal-cat-dot" style="background:${GOAL_CATS[c]}"></span>${c}</button>`).join('');
   const terms = Object.entries(GOAL_TERMS).map(([k, t]) => `<button type="button" class="goal-cat-chip${goalsAddTerm === k ? ' on' : ''}" data-goal-term="${k}"><span class="goal-cat-dot" style="background:${t.color}"></span>${t.label}<em class="goal-term-mini">${t.hint}</em></button>`).join('');
   return `<div class="goals-page">
       <form class="goal-add-card" id="goalAddForm">
+        <h3 class="goal-form-title">${editing ? 'Edit Goal' : 'Tambah Goal'}</h3>
         <label class="goal-field"><span>Judul</span><input name="title" type="text" maxlength="90" placeholder="Raih tujuan besar…" required value="${escapeHtml(goalsAddDraft.title)}" /></label>
         <label class="goal-field"><span>Deskripsi</span><textarea name="description" rows="3" maxlength="240" placeholder="Ceritakan goal ini…">${escapeHtml(goalsAddDraft.description)}</textarea></label>
         <div class="goal-field"><span>Jangka Waktu</span><div class="goal-cat-row">${terms}</div></div>
         <label class="goal-field"><span>Deadline</span><input name="deadline" type="date" value="${escapeHtml(goalsAddDraft.deadline || taskTodayIso())}" /></label>
         <div class="goal-field"><span>Kategori</span><div class="goal-cat-row">${chips}</div></div>
         <p class="goal-form-hint">💡 Project dibuat menyusul: di halaman Project, pilih goal ini sebagai induknya (Goals → Project → Task → Subtask).</p>
-        <button class="primary-button goal-save" type="submit">Simpan</button>
-        <button class="secondary-button goal-save2" type="button" data-goal-add-again>Simpan &amp; Tambah Lagi</button>
+        <button class="primary-button goal-save" type="submit">${editing ? 'Simpan Perubahan' : 'Simpan'}</button>
+        ${editing ? '' : '<button class="secondary-button goal-save2" type="button" data-goal-add-again>Simpan &amp; Tambah Lagi</button>'}
       </form>
     </div>`;
 }
@@ -258,6 +278,9 @@ function renderGoalCalendarPage() {
 function handleGoalAction(btn) {
   if (btn.matches('[data-goal-add]')) {
     goalsPage = 'add';
+    goalsEditId = null;
+    goalsMsAdding = false;
+    goalsConfirmDel = false;
     goalsAddCat = 'Karier';
     goalsAddTerm = 'pendek';
     goalsAddDraft = { title: '', description: '', deadline: '' };
@@ -273,15 +296,53 @@ function handleGoalAction(btn) {
   if (btn.matches('[data-goal-term]')) { captureGoalAdd(); goalsAddTerm = btn.dataset.goalTerm; renderShell(); return true; }
   if (btn.matches('[data-goal-add-again]')) { submitGoalForm(document.querySelector('#goalAddForm'), true); return true; }
   if (btn.matches('[data-goal-ms-add]')) {
-    const g = loadGoals().find((x) => x.id === goalsDetailId);
+    goalsMsAdding = true;
+    renderShell();
+    setTimeout(() => document.querySelector('#goalMsForm [name=text]')?.focus(), 30);
+    return true;
+  }
+  if (btn.matches('[data-goal-ms-cancel]')) { goalsMsAdding = false; renderShell(); return true; }
+  if (btn.matches('[data-goal-ms-del]')) {
+    const parts = String(btn.dataset.goalMsDel).split(':');
+    const items = loadGoals();
+    const g = items.find((x) => x.id === parts[0]);
     if (g) {
-      const text = prompt('Sub goal baru:');
-      if (text && text.trim()) {
-        g.milestones.push({ id: `m${Date.now()}`, text: text.trim(), target: g.deadline, done: false });
-        saveGoals(loadGoals());
-        renderShell();
-      }
+      g.milestones = (g.milestones || []).filter((m) => m.id !== parts.slice(1).join(':'));
+      saveGoals(items);
+      showToast('Sub goal dihapus.');
+      renderShell();
     }
+    return true;
+  }
+  if (btn.matches('[data-goal-edit]')) {
+    const g = loadGoals().find((x) => x.id === btn.dataset.goalEdit);
+    if (g) {
+      goalsEditId = g.id;
+      goalsPage = 'add';
+      goalsMsAdding = false;
+      goalsConfirmDel = false;
+      goalsAddCat = g.category || 'Karier';
+      goalsAddTerm = goalTermOf(g);
+      goalsAddDraft = { title: g.title, description: g.description || '', deadline: g.deadline || '' };
+      renderShell();
+      setTimeout(() => document.querySelector('#goalAddForm [name=title]')?.focus(), 30);
+    }
+    return true;
+  }
+  if (btn.matches('[data-goal-del]')) { goalsConfirmDel = true; renderShell(); return true; }
+  if (btn.matches('[data-goal-del-cancel]')) { goalsConfirmDel = false; renderShell(); return true; }
+  if (btn.matches('[data-goal-del-confirm]')) {
+    const id = btn.dataset.goalDelConfirm;
+    saveGoals(loadGoals().filter((g) => g.id !== id));
+    const projs = loadProjects();
+    let changed = false;
+    projs.forEach((p) => { if (p.goalId === id) { p.goalId = ''; changed = true; } });
+    if (changed) saveProjects(projs);
+    goalsConfirmDel = false;
+    goalsDetailId = null;
+    goalsPage = 'list';
+    showToast('Goal dihapus.');
+    renderShell();
     return true;
   }
   if (btn.matches('[data-goal-cal-prev]')) { goalsMonthOffset -= 1; renderShell(); return true; }
@@ -296,11 +357,31 @@ function submitGoalForm(form, again) {
   const val = (n) => form.querySelector(`[name=${n}]`)?.value.trim() || '';
   const title = val('title');
   if (!title) return;
+  const items = loadGoals();                       // satu kali baca → objek yang sama disimpan
+
+  if (goalsEditId) {
+    // mode edit: perbarui goal yang ada (sub goal & status tidak diubah)
+    const g = items.find((x) => x.id === goalsEditId);
+    if (g) {
+      g.title = title;
+      g.description = val('description');
+      g.deadline = val('deadline') || g.deadline;
+      g.category = goalsAddCat;
+      g.term = goalsAddTerm;
+      saveGoals(items);
+      showToast('Goal diperbarui.');
+    }
+    goalsEditId = null;
+    goalsDetailId = g ? g.id : null;
+    goalsPage = goalsDetailId ? 'detail' : 'list';
+    renderShell();
+    return;
+  }
+
   const item = {
     id: `g${Date.now()}`, title, description: val('description'), deadline: val('deadline') || taskTodayIso(),
     term: goalsAddTerm, project: '', category: goalsAddCat, status: 'aktif', createdAt: taskTodayIso(), milestones: [],
   };
-  const items = loadGoals();
   items.push(item);
   saveGoals(items);
   if (again) {
@@ -310,4 +391,22 @@ function submitGoalForm(form, again) {
     goalsPage = 'list';
     renderShell();
   }
+}
+
+/* Simpan sub goal inline (pengganti prompt lama yang kehilangan data karena
+   saveGoals(loadGoals()) memuat ulang store sebelum mutasi disimpan). */
+function submitGoalMsForm(form) {
+  if (!form) return;
+  const text = form.querySelector('[name=text]')?.value.trim() || '';
+  if (!text) return;
+  const target = form.querySelector('[name=target]')?.value || '';
+  const items = loadGoals();
+  const g = items.find((x) => x.id === goalsDetailId);
+  if (!g) return;
+  g.milestones = g.milestones || [];
+  g.milestones.push({ id: `m${Date.now()}`, text, target: target || g.deadline || taskTodayIso(), done: false });
+  saveGoals(items);
+  goalsMsAdding = false;
+  showToast('Sub goal ditambahkan.');
+  renderShell();
 }

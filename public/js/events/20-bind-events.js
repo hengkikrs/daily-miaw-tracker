@@ -113,13 +113,13 @@ function bindEvents() {
     const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel],[data-jadwal-ev],[data-jadwal-task]');
     if (jadwalBtn && event.target.tagName !== 'INPUT' && handleJadwalAction(jadwalBtn)) return;
 
-  const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-term],[data-goal-add-again],[data-goal-ms-add],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page],[data-goal-proj]');
+  const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-term],[data-goal-add-again],[data-goal-ms-add],[data-goal-ms-cancel],[data-goal-ms-del],[data-goal-edit],[data-goal-del],[data-goal-del-cancel],[data-goal-del-confirm],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page],[data-goal-proj]');
   if (goalBtn && handleGoalAction(goalBtn)) return;
 
   const progBtn = event.target.closest('[data-progress-tab]');
   if (progBtn && handleProgressAction(progBtn)) return;
 
-  const projBtn = event.target.closest('[data-proj-add],[data-proj-form-back],[data-proj-filter],[data-proj-open],[data-proj-back],[data-proj-tab],[data-proj-tfilter],[data-proj-menu],[data-proj-icon],[data-proj-color],[data-proj-status],[data-proj-edit],[data-proj-archive],[data-proj-del],[data-proj-task-add],[data-proj-note-add],[data-proj-file-add],[data-proj-note-del],[data-proj-file-del],[data-goal-from-proj],[data-pt-add-task]');
+  const projBtn = event.target.closest('[data-proj-add],[data-proj-form-back],[data-proj-filter],[data-proj-open],[data-proj-back],[data-proj-tab],[data-proj-tfilter],[data-proj-menu],[data-proj-icon],[data-proj-color],[data-proj-status],[data-proj-edit],[data-proj-archive],[data-proj-del],[data-proj-task-add],[data-proj-note-add],[data-proj-file-add],[data-proj-note-del],[data-proj-file-del],[data-goal-from-proj],[data-pt-add-task],[data-pt-edit],[data-pt-edit-cancel],[data-pt-del],[data-proj-setstatus]');
   if (projBtn && handleProjectAction(projBtn)) return;
 
   const noteBtn = event.target.closest('[data-note-new],[data-note-tab],[data-note-tagfil],[data-note-tag],[data-note-open],[data-note-menu],[data-note-menu-close],[data-note-sheet-close],[data-note-dmenu],[data-note-back],[data-note-tpl],[data-note-edit],[data-note-edit2],[data-note-pin],[data-note-fav],[data-note-arch],[data-note-del],[data-note-epin],[data-note-efav],[data-note-cat],[data-note-cmd]');
@@ -140,7 +140,7 @@ function bindEvents() {
   const lapBtn = event.target.closest('[data-lap-mode],[data-lap-sec],[data-lap-all],[data-lap-ai],[data-lap-dl]');
   if (lapBtn && handleLaporanAction(lapBtn)) return;
 
-    const dailyBtn = event.target.closest('[data-daily-tab],[data-daily-add],[data-daily-cancel],[data-daily-toggle],[data-daily-open],[data-daily-jadwal],[data-daily-delete],[data-daily-back],[data-daily-rtedit],[data-daily-rtdel]');
+    const dailyBtn = event.target.closest('[data-daily-tab],[data-daily-add],[data-daily-cancel],[data-daily-toggle],[data-daily-open],[data-daily-jadwal],[data-daily-delete],[data-daily-back],[data-daily-rtedit],[data-daily-rtdel],[data-daily-rt-toggle],[data-daily-edit],[data-daily-focus-start],[data-daily-focus-pause],[data-daily-focus-stop]');
     if (dailyBtn && handleDailyAction(dailyBtn)) return;
     const dashBtn = event.target.closest('[data-dash-go]');
     if (dashBtn && handleDashAction(dashBtn)) return;
@@ -353,7 +353,7 @@ function bindEvents() {
       renderShell();
       return;
     }
-    if (event.target.id === 'projTaskForm' || event.target.id === 'projNoteForm' || event.target.id === 'projFileForm') { submitProjectSubForm(event.target); return; }
+    if (event.target.id === 'projTaskForm' || event.target.id === 'projNoteForm' || event.target.id === 'projFileForm' || event.target.id === 'ptEditForm') { submitProjectSubForm(event.target); return; }
     if (event.target.id === 'taskComposer') {
       const form = event.target;
       const title = form.querySelector('#taskQuickInput').value.trim();
@@ -380,6 +380,11 @@ function bindEvents() {
     if (event.target.id === 'goalAddForm') {
       event.preventDefault();
       submitGoalForm(event.target, false);
+      return;
+    }
+    if (event.target.id === 'goalMsForm') {
+      event.preventDefault();
+      submitGoalMsForm(event.target);
       return;
     }
     if (event.target.id === 'dailyAddForm') {
@@ -452,6 +457,13 @@ function bindEvents() {
     if (running) {
       focusTaskId = running.id;
       if (!focusInterval) focusInterval = setInterval(tickFocusDisplay, 1000);
+    }
+    // sesi fokus daily task (kegiatan sekali / rutinitas) juga dilanjutkan setelah reload
+    const dailyRunningTask = loadDailyTasks().find((x) => x && x.id && x.focusAt);
+    const dailyRunningRoutine = dailyRunningTask ? null : loadDailyRoutines().find((r) => r.focusAt);
+    if (dailyRunningTask || dailyRunningRoutine) {
+      dailyFocusKey = dailyRunningTask ? `task:${dailyRunningTask.id}` : `rutin:${dailyRunningRoutine.id}`;
+      if (!dailyFocusInterval) dailyFocusInterval = setInterval(dailyTickFocus, 1000);
     }
   }
 

@@ -36,6 +36,8 @@ let projTaskFilter = 'all';
 let projMenuOpen = false;
 let projFormId = null;         // null = tambah baru, id = edit
 let projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' };
+let projFormSelId = null;      // project yang sedang diinisialisasi pilihan form-nya
+let projTaskEditId = null;     // id project task yang sedang diubah inline
 let projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' };
 let projTaskAdding = false;
 let projNoteAdding = false;
@@ -111,9 +113,16 @@ function projSeed() {
 }
 
 function loadProjects() {
+  let raw = null;
   try {
-    const raw = JSON.parse(localStorage.getItem(scopedKey(PROJ_STORE_KEY)) || 'null');
-    if (Array.isArray(raw) && raw.length) {
+    raw = JSON.parse(localStorage.getItem(scopedKey(PROJ_STORE_KEY)) || 'null');
+  } catch { raw = null; }
+
+  if (Array.isArray(raw) && raw.length) {
+    // Penautan otomatis goal lama. Blok ini dipisah try/catch SENDIRI: kalau gagal
+    // (mis. goals.js belum dimuat), data pengguna tetap dikembalikan apa adanya —
+    // sebelumnya kegagalan di sini jatuh ke cabang seed dan MENIMPA seluruh data project.
+    try {
       let changed = false;
       const goals = loadGoals();
       raw.forEach((p) => {
@@ -122,10 +131,10 @@ function loadProjects() {
           if (guess) { p.goalId = guess.id; changed = true; }
         }
       });
-      if (changed) { try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(raw)); } catch { /* ignore */ } }
-      return raw;
-    }
-  } catch { /* seed ulang */ }
+      if (changed) localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(raw));
+    } catch { /* biarkan data tersimpan tanpa penautan */ }
+    return raw;
+  }
   const seed = projSeed();
   try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(seed)); } catch { /* ignore */ }
   return seed;
@@ -270,7 +279,7 @@ function renderProjectDetailPage() {
         <button type="button" class="goal-chip${projTaskFilter === 'done' ? ' on' : ''}" data-proj-tfilter="done">Selesai (${ts.filter((t) => t.done).length})</button>
       </div>`;
     const rows = flt.length
-      ? flt.map((t) => `<label class="proj-task${t.done ? ' done' : ''}"><input type="checkbox" data-proj-task="${t.id}"${t.done ? ' checked' : ''} /><span class="proj-task-main"><span class="proj-task-title">${escapeHtml(t.title)}</span><span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${t.priority === 'high' ? ' · ⚡ Tinggi' : ''}</span></span></label>`).join('')
+      ? flt.map((t) => `<div class="pt-row">${t.id === projTaskEditId ? ptEditFormHtml(t) : `<label class="proj-task${t.done ? ' done' : ''}"><input type="checkbox" data-proj-task="${t.id}"${t.done ? ' checked' : ''} /><span class="proj-task-main"><span class="proj-task-title">${escapeHtml(t.title)}</span><span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${t.priority === 'high' ? ' · ⚡ Tinggi' : ''}</span></span></label><span class="dt-row-tools">${ptToolsHtml(t.id)}</span>`}</div>`).join('')
       : `<p class="proj-hint">${ts.length ? 'Tidak ada task pada filter ini.' : 'Belum ada task yang terhubung ke project ini.'}</p>`;
     const add = projTaskAdding
       ? `<form class="proj-inline" id="projTaskForm"><input name="title" placeholder="Judul task baru" required maxlength="90" /><input name="date" type="date" value="${taskTodayIso()}" /><button type="submit" class="proj-inline-go">Tambah</button></form>`
@@ -307,6 +316,10 @@ function renderProjectDetailPage() {
       </div>
       ${menu}
       <div class="proj-meta-row"><span>📅 Mulai ${escapeHtml(taskDateRead(p.start || p.createdAt || ''))}</span><span>⏳ ${p.deadline ? escapeHtml(taskDateRead(p.deadline)) : '—'}</span><span>✅ ${pr.done}/${pr.total}</span></div>
+      <div class="proj-status-row">
+        <span class="proj-status-row-label">Status:</span>
+        ${Object.entries(PROJ_STATUS).map(([k, s]) => `<button type="button" class="goal-cat-chip${p.status === k ? ' on' : ''}" data-proj-setstatus="${k}" title="Ubah status project"><span class="goal-cat-dot" style="background:${s.color}"></span>${s.label}</button>`).join('')}
+      </div>
       ${p.goalId ? `<div class="proj-goal-row">🎯 Goal: <button type="button" class="goal-proj-chip link" data-goal-from-proj="${p.goalId}">${escapeHtml(goalTitleOf(p.goalId) || 'Goal (terhapus)')}</button></div>` : '<div class="proj-goal-row">🎯 Belum terhubung ke goal — edit project untuk memilih goal.</div>'}
       <div class="goal-bar big"><span style="width:${pr.pct}%;background:${p.color}"></span></div>
       <div class="jadwal-seg proj-tabs">${tabs}</div>
@@ -316,7 +329,12 @@ function renderProjectDetailPage() {
 
 function renderProjectFormPage() {
   const editing = projFormId ? loadProjects().find((x) => x.id === projFormId) : null;
-  if (editing) projFormSel = { status: editing.status, icon: editing.icon || '🧩', color: editing.color || '#6a564a' };
+  // hanya inisialisasi sekali per project: kalau tidak, pilihan status/ikon/warna yang
+  // baru diklik akan ter-reset setiap render (sebab status tidak bisa diubah).
+  if (editing && projFormSelId !== editing.id) {
+    projFormSel = { status: editing.status, icon: editing.icon || '🧩', color: editing.color || '#6a564a' };
+    projFormSelId = editing.id;
+  }
   const d = editing ? { name: editing.name, description: editing.description || '', category: editing.category || '', start: editing.start || '', deadline: editing.deadline || '', goalId: editing.goalId || '', err: '' } : projFormDraft;
   if (!editing) projFormDraft = d;
   const goals = loadGoals();
@@ -358,14 +376,18 @@ function renderProjectTaskView() {
     return { p, ts, done: ts.filter((t) => t.done).length };
   });
   const noProj = tasks.filter((t) => !nameOf(t) || !groups.some((g) => g.p.name.trim().toLowerCase() === nameOf(t).toLowerCase()));
-  const row = (t) => `
+  const row = (t) => (t.id === projTaskEditId
+    ? `<div class="pt-row">${ptEditFormHtml(t)}</div>`
+    : `<div class="pt-row">
     <label class="proj-task${t.done ? ' done' : ''}">
       <input type="checkbox" data-task-toggle="${t.id}"${t.done ? ' checked' : ''} />
       <span class="proj-task-main">
         <span class="proj-task-title">${escapeHtml(t.title)}</span>
         <span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${t.time ? ` · ⏱ ${escapeHtml(t.time)}` : ''}${t.priority === 'high' ? ' · ⚡ Tinggi' : ''}</span>
       </span>
-    </label>`;
+    </label>
+    <span class="dt-row-tools">${ptToolsHtml(t.id)}</span>
+  </div>`);
   const cards = groups.map((g) => {
     const pct = g.ts.length ? Math.round((g.done / g.ts.length) * 100) : 0;
     const gt = goalTitleOf(g.p.goalId);
@@ -414,6 +436,25 @@ function renderProjectTaskView() {
   </section>`;
 }
 
+/* Tombol ubah/hapus task project — dipakai di daftar Project Task & tab Task project. */
+function ptToolsHtml(id) {
+  return `<button class="dt-tool edit" type="button" data-pt-edit="${id}" aria-label="Ubah task" title="Ubah task">✎</button><button class="dt-tool" type="button" data-pt-del="${id}" aria-label="Hapus task" title="Hapus task">✕</button>`;
+}
+
+function ptEditFormHtml(t) {
+  return `<form class="proj-inline pt-edit-form" id="ptEditForm" data-pt-edit-id="${t.id}">
+      <input name="title" value="${escapeHtml(t.title)}" maxlength="90" required placeholder="Judul task" />
+      <input name="date" type="date" value="${escapeHtml(t.date || taskTodayIso())}" />
+      <select name="priority">
+        <option value="low"${(t.priority || 'med') === 'low' ? ' selected' : ''}>Rendah</option>
+        <option value="med"${(t.priority || 'med') === 'med' ? ' selected' : ''}>Sedang</option>
+        <option value="high"${t.priority === 'high' ? ' selected' : ''}>Tinggi</option>
+      </select>
+      <input name="time" type="time" value="${escapeHtml(t.time || '')}" />
+      <div class="pt-edit-btns"><button type="submit" class="proj-inline-go">Simpan</button><button type="button" class="secondary-button" data-pt-edit-cancel>Batal</button></div>
+    </form>`;
+}
+
 function projFormValues(form) {
   return { name: form.querySelector('[name=name]').value.trim(), description: form.querySelector('[name=description]').value.trim(), category: form.querySelector('[name=category]').value.trim(), start: form.querySelector('[name=start]').value, deadline: form.querySelector('[name=deadline]').value, goalId: form.querySelector('[name=goalId]')?.value || '' };
 }
@@ -427,10 +468,12 @@ function submitProjectForm(form) {
   const items = loadProjects();
   if (projFormId) {
     const p = items.find((x) => x.id === projFormId);
+    projFormSelId = null;
     if (p) { Object.assign(p, { name: v.name, description: v.description, category: v.category, start: v.start || p.start, deadline: v.deadline, goalId: v.goalId || p.goalId, status: projFormSel.status, icon: projFormSel.icon, color: projFormSel.color }); projLog(p, 'Detail project diperbarui'); }
     saveProjects(items);
     projFormId = null;
     projPage = 'detail';
+    showToast('Project diperbarui.');
     renderShell();
     return;
   }
@@ -444,7 +487,7 @@ function submitProjectForm(form) {
 }
 
 function handleProjectAction(btn) {
-  if (btn.matches('[data-proj-add]')) { projFormId = null; projFormDraft = { name: '', description: '', category: '', start: taskTodayIso(), deadline: '', goalId: '', err: '' }; projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' }; projPage = 'form'; renderShell(); setTimeout(() => document.querySelector('#projForm [name=name]')?.focus(), 30); return true; }
+  if (btn.matches('[data-proj-add]')) { projFormId = null; projFormSelId = null; projTaskEditId = null; projFormDraft = { name: '', description: '', category: '', start: taskTodayIso(), deadline: '', goalId: '', err: '' }; projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' }; projPage = 'form'; renderShell(); setTimeout(() => document.querySelector('#projForm [name=name]')?.focus(), 30); return true; }
   if (btn.matches('[data-proj-form-back]')) { projPage = projFormId ? 'detail' : 'list'; renderShell(); return true; }
   if (btn.matches('[data-proj-filter]')) { projFilter = btn.dataset.projFilter; renderShell(); return true; }
   if (btn.matches('[data-proj-open]')) { projDetailId = btn.dataset.projOpen; projPage = 'detail'; projTab = 'overview'; projMenuOpen = false; projTaskAdding = projNoteAdding = projFileAdding = false; activeView = 'project'; state.selectedView = 'project'; renderShell(); return true; }
@@ -455,7 +498,17 @@ function handleProjectAction(btn) {
   if (btn.matches('[data-proj-icon]')) { captureProjForm(); projFormSel.icon = btn.dataset.projIcon; renderShell(); return true; }
   if (btn.matches('[data-proj-color]')) { captureProjForm(); projFormSel.color = btn.dataset.projColor; renderShell(); return true; }
   if (btn.matches('[data-proj-status]')) { captureProjForm(); projFormSel.status = btn.dataset.projStatus; renderShell(); return true; }
-  if (btn.matches('[data-proj-edit]')) { projFormId = btn.dataset.projEdit; projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' }; projPage = 'form'; renderShell(); return true; }
+  if (btn.matches('[data-proj-edit]')) {
+    const pj = loadProjects().find((x) => x.id === btn.dataset.projEdit);
+    // inisialisasi pilihan form dari project sekali saja; render berikutnya (klik chip) tidak boleh menimpanya
+    if (pj) projFormSel = { status: pj.status, icon: pj.icon || '🧩', color: pj.color || '#6a564a' };
+    projFormSelId = btn.dataset.projEdit;
+    projFormId = btn.dataset.projEdit;
+    projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' };
+    projPage = 'form';
+    renderShell();
+    return true;
+  }
   if (btn.matches('[data-proj-archive]')) {
     const items = loadProjects(); const p = items.find((x) => x.id === btn.dataset.projArchive);
     if (p) { p.status = p.status === 'archived' ? 'active' : 'archived'; projLog(p, p.status === 'archived' ? 'Project diarsipkan' : 'Project dipulihkan'); saveProjects(items); projMenuOpen = false; renderShell(); }
@@ -483,6 +536,45 @@ function handleProjectAction(btn) {
     return true;
   }
   if (btn.matches('[data-goal-from-proj]')) { goalsDetailId = btn.dataset.goalFromProj; goalsPage = 'detail'; activeView = 'goals'; state.selectedView = 'goals'; saveState(); renderShell(); return true; }
+  if (btn.matches('[data-proj-setstatus]')) {
+    const items = loadProjects();
+    const p = items.find((x) => x.id === projDetailId);
+    const key = btn.dataset.projSetstatus;
+    if (p && PROJ_STATUS[key] && p.status !== key) {
+      p.status = key;
+      projLog(p, `Status diubah ke ${PROJ_STATUS[key].label}`);
+      saveProjects(items);
+      projMenuOpen = false;
+      showToast(`Status project: ${PROJ_STATUS[key].label}`);
+      renderShell();
+    }
+    return true;
+  }
+  if (btn.matches('[data-pt-edit]')) {
+    projTaskEditId = btn.dataset.ptEdit;
+    renderShell();
+    setTimeout(() => document.querySelector('#ptEditForm [name=title]')?.focus(), 40);
+    return true;
+  }
+  if (btn.matches('[data-pt-edit-cancel]')) { projTaskEditId = null; renderShell(); return true; }
+  if (btn.matches('[data-pt-del]')) {
+    const id = btn.dataset.ptDel;
+    const tasks = loadTasks();
+    const idx = tasks.findIndex((x) => x.id === id);
+    if (idx >= 0) {
+      const t = tasks[idx];
+      const projName = t.project || '';
+      tasks.splice(idx, 1);
+      saveTasks();
+      const items = loadProjects();
+      const p = items.find((x) => x.name === projName) || items.find((x) => x.id === projDetailId);
+      if (p) { projLog(p, `🗑️ Task "${t.title}" dihapus`); saveProjects(items); }
+      if (projTaskEditId === id) projTaskEditId = null;
+      showToast(`Task "${t.title}" dihapus.`);
+      renderShell();
+    }
+    return true;
+  }
   if (btn.matches('[data-pt-add-task]')) { activeView = 'project'; state.selectedView = 'project'; projDetailId = btn.dataset.ptAddTask; projPage = 'detail'; projTab = 'tasks'; projTaskAdding = true; saveState(); renderShell(); setTimeout(() => document.querySelector('#projTaskForm [name=title]')?.focus(), 60); return true; }
   return false;
 }
@@ -523,6 +615,27 @@ function handleProjectChange(el) {
 }
 
 function submitProjectSubForm(form) {
+  if (form.id === 'ptEditForm') {
+    // edit task project — dikerjakan lebih dulu karena projDetailId boleh kosong
+    const id = form.dataset.ptEditId;
+    const tasks = loadTasks();
+    const t = tasks.find((x) => x.id === id);
+    if (!t) return;
+    const title = form.querySelector('[name=title]').value.trim();
+    if (!title) return;
+    t.title = title;
+    t.date = form.querySelector('[name=date]').value || t.date;
+    t.priority = form.querySelector('[name=priority]').value || t.priority;
+    t.time = form.querySelector('[name=time]').value || '';
+    saveTasks();
+    const itemsAll = loadProjects();
+    const pj = itemsAll.find((x) => x.name === (t.project || '')) || itemsAll.find((x) => x.id === projDetailId);
+    if (pj) { projLog(pj, `✏️ Task "${title}" diubah`); saveProjects(itemsAll); }
+    projTaskEditId = null;
+    showToast('Task diperbarui.');
+    renderShell();
+    return;
+  }
   const items = loadProjects();
   const p = items.find((x) => x.id === projDetailId);
   if (!p) return;
