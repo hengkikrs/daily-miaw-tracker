@@ -292,7 +292,8 @@ function renderDailyTaskView() {
             <span class="dt-ico">${r.icon}</span>
             <span class="dt-title" data-daily-open="r:${r.id}" role="button" tabindex="0" title="Lihat detail rutinitas">
               <strong>${escapeHtml(r.title)}</strong>
-              <small>${daysLabel}${r.time ? ` · ⏰ ${escapeHtml(r.time)}` : ''} · 🔥 streak ${st.streak} hari${r.category ? ` · ${escapeHtml(r.category)}` : ''}</small>
+              <small>${daysLabel}${r.time ? ` · ⏰ ${escapeHtml(r.time)}` : ''} · 🔥 streak ${st.streak} hari</small>
+              ${r.category ? `<span class="dt-tags"><span class="task-chip tag">${escapeHtml(r.category)}</span></span>` : ''}
             </span>
             <label class="task-check-wrap" title="${doneTodayR ? 'Sudah dilakukan hari ini' : 'Tandai selesai hari ini'}">
               <input class="task-check" type="checkbox" ${doneTodayR ? 'checked' : ''} data-daily-rt="${r.id}" data-iso="${todayIso}" />
@@ -516,25 +517,19 @@ function dailyTickFocus() {
   if (line) line.textContent = f.item.focusPausedSince ? 'Fokus dijeda' : 'Sesi fokus berjalan';
 }
 
-function dailyFocusCardHtml(kind, id, item) {
+/* Kontrol sesi fokus — sengaja sebaris dengan tombol Tandai Selesai. */
+function dailyFocusActionHtml(kind, id, item) {
   const key = `${kind}:${id}`;
   if (item.focusAt && dailyFocusKey === key) {
-    return `<section class="task-card task-detail-sec dt-focus-card">
-      <h3>Sesi Fokus</h3>
-      <div class="task-focus-timer-card">
-        <div class="task-focus-timer ${item.focusPausedSince ? 'paused' : ''}"><span class="task-focus-dotpulse"></span><span class="task-focus-state dt-focus-state">${item.focusPausedSince ? 'Fokus dijeda' : 'Sesi fokus berjalan'}</span><strong data-daily-focus-live>${focusSecondsLabel(focusElapsedMs(item))}</strong></div>
-        <div class="task-focus-btns">
-          <button class="secondary-button" type="button" data-daily-focus-pause>${item.focusPausedSince ? 'Lanjut' : 'Jeda'}</button>
-          <button class="primary-button" type="button" data-daily-focus-stop>Stop</button>
-        </div>
-      </div>
-    </section>`;
+    return `<span class="dt-focus-inline${item.focusPausedSince ? ' paused' : ''}">
+        <span class="task-focus-dotpulse"></span>
+        <span class="dt-focus-state">${item.focusPausedSince ? 'Dijeda' : 'Fokus'}</span>
+        <strong data-daily-focus-live>${focusSecondsLabel(focusElapsedMs(item))}</strong>
+        <button class="secondary-button" type="button" data-daily-focus-pause>${item.focusPausedSince ? 'Lanjut' : 'Jeda'}</button>
+        <button class="secondary-button danger" type="button" data-daily-focus-stop>Stop</button>
+      </span>`;
   }
-  return `<section class="task-card task-detail-sec dt-focus-card">
-    <h3>Sesi Fokus</h3>
-    ${item.actual ? `<div class="dt-focus-total">Total fokus tercatat: <b>${Math.round(item.actual)} menit</b></div>` : ''}
-    <button class="primary-button task-focus-btn" type="button" data-daily-focus-start="${key}">Mulai Fokus</button>
-  </section>`;
+  return `<button class="secondary-button task-focus-btn" type="button" data-daily-focus-start="${key}">${item.actual ? '▶ Fokus Lagi' : '▶ Mulai Fokus'}</button>`;
 }
 
 function dailyActivityHtml(item) {
@@ -578,17 +573,20 @@ function renderDailyDetail() {
           <div class="task-info-cell"><span class="task-info-label">Jam</span><span class="task-info-value">${item.time || '—'}</span></div>
           <div class="task-info-cell"><span class="task-info-label">Streak</span><span class="task-info-value">🔥 ${st.streak} hari</span></div>
           <div class="task-info-cell"><span class="task-info-label">Total selesai</span><span class="task-info-value">${st.total || 0}x</span></div>
+          ${item.actual ? `<div class="task-info-cell"><span class="task-info-label">Total fokus</span><span class="task-info-value">${Math.round(item.actual)} menit</span></div>` : ''}
         </div>
         <div class="dt-hist" aria-hidden="true">
           ${st.hist.map((hh) => `<span class="dt-h ${hh.skip ? 'skip' : hh.on ? 'on' : ''}" title="${hh.iso}"></span>`).join('')}
         </div>
       </div>
-      <div class="task-detail-actions">
+      <div class="task-detail-actions dt-actions-main">
         <button class="primary-button" type="button" data-daily-rt-toggle="${item.id}">${doneTodayR ? 'Batalkan Hari Ini' : 'Tandai Selesai Hari Ini'}</button>
+        ${dailyFocusActionHtml('rutin', item.id, item)}
+      </div>
+      <div class="task-detail-actions dt-actions-sub">
         <button class="secondary-button" type="button" data-daily-rtedit="${item.id}">Ubah</button>
         <button class="secondary-button danger" type="button" data-daily-rtdel="${item.id}">Hapus</button>
       </div>
-      ${dailyFocusCardHtml('rutin', item.id, item)}
       ${actsBlock}
     </section>`;
   }
@@ -618,12 +616,14 @@ function renderDailyDetail() {
         <div class="task-info-cell"><span class="task-info-label">Total fokus</span><span class="task-info-value">${Math.round(t.actual || 0)} menit</span></div>
       </div>
     </div>
-    <div class="task-detail-actions">
+    <div class="task-detail-actions dt-actions-main">
       <button class="primary-button" type="button" data-daily-toggle="${t.id}">${t.done ? 'Tandai Belum Selesai' : 'Tandai Selesai'}</button>
+      ${dailyFocusActionHtml('task', t.id, t)}
+    </div>
+    <div class="task-detail-actions dt-actions-sub">
       <button class="secondary-button" type="button" data-daily-edit="${t.id}">Ubah</button>
       <button class="secondary-button danger" type="button" data-daily-delete="${t.id}">Hapus</button>
     </div>
-    ${dailyFocusCardHtml('task', t.id, t)}
     ${actsBlock}
   </section>`;
 }
