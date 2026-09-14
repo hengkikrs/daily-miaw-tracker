@@ -245,7 +245,7 @@ function dailyDayList(iso) {
     .filter((e) => e.date === iso)
     .map((e) => ({ id: e.id, jadwal: true, time: e.time || '', title: e.title, sub: e.category || '', color: jadwalCatColor(e.category), kind: e.kind === 'task' ? 'task' : 'event', done: false }));
   loadDailyTasks().forEach((t) => {
-    if (t.date === iso) items.push({ id: t.id, jadwal: false, time: t.time || '', title: t.title, sub: t.category || 'Kegiatan', color: t.priority === 'high' ? '#d96a6a' : t.priority === 'med' ? '#e8a33d' : '#8a9a5b', kind: 'task', done: !!t.done });
+    if (t.date === iso) items.push({ id: t.id, jadwal: false, time: t.time || '', title: t.title, sub: t.category || 'Umum', color: t.priority === 'high' ? '#d96a6a' : t.priority === 'med' ? '#e8a33d' : '#8a9a5b', kind: 'task', done: !!t.done });
   });
   items.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
   return items;
@@ -612,7 +612,7 @@ function renderDailyDetail() {
       <div class="task-info-grid">
         <div class="task-info-cell"><span class="task-info-label">Tanggal</span><span class="task-info-value">${taskDateRead(t.date)}</span></div>
         <div class="task-info-cell"><span class="task-info-label">Jam</span><span class="task-info-value">${t.time || '—'}</span></div>
-        <div class="task-info-cell"><span class="task-info-label">Kategori</span><span class="task-info-value">${escapeHtml(t.category || 'Kegiatan')}</span></div>
+        <div class="task-info-cell"><span class="task-info-label">Kategori</span><span class="task-info-value">${escapeHtml(t.category || 'Umum')}</span></div>
         <div class="task-info-cell"><span class="task-info-label">Total fokus</span><span class="task-info-value">${Math.round(t.actual || 0)} menit</span></div>
       </div>
     </div>
