@@ -46,7 +46,7 @@ Supabase Auth: PKCE + Google OAuth, OTP, password login, refresh token, logout, 
 `authFetch` (Auth/GoTrue), `supabaseFetch` (tabel REST), `getAccessToken` (refresh bila < 60 s). Detail: `docs/auth.md`.
 
 ## Lokasi dokumentasi
-`docs/overview.md` · `docs/architecture.md` · `docs/navigation.md` · `docs/storage.md` · `docs/auth.md` · `docs/symbol-index.md` · `docs/modules/*.md` · `docs/decisions/refactor-log.md` · `docs/refactor-audit.md`
+`docs/overview.md` · `docs/architecture.md` · `docs/navigation.md` · `docs/storage.md` · `docs/auth.md` · `docs/symbol-index.md` · `docs/modules/*.md` · `docs/prompts.md` (template prompt hemat token) · `docs/qa/report.md` · `docs/decisions/refactor-log.md` · `docs/refactor-audit.md`
 
 ## ATURAN HEMAT TOKEN (wajib)
 1. **Do not read every module by default.** Baca hanya file modul yang relevan + `docs/navigation.md`.
