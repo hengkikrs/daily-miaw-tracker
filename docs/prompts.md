@@ -109,25 +109,51 @@ Jangan menulis ulang; cukup temuan + usulan minimal, dengan bukti baris.
 
 ---
 
-## 4. Supaya Anda tidak perlu menempel header setiap kali
+## 4. Yang SUDAH diterapkan di mesin ini (2026-09-14)
 
-Mekanisme Hermes yang relevan (diperiksa di sumber `hermes-agent`):
+Status konfigurasi (terverifikasi, bukan asumsi):
 
-- **Posture coding** hanya aktif untuk platform `cli`/`tui`/`acp`/`desktop` (`agent.coding_context: auto`) dan hanya bila cwd adalah root proyek (ada `package.json`/`AGENTS.md`/`.cursorrules`/git berisi kode). **Sesi Telegram tidak termasuk** → brief coding + blok `coding_instructions` **tidak** disuntik, dan `AGENTS.md` root repo tidak ikut otomatis (repo juga di luar tree cwd `/home/ubuntu`).
-- **Subdirectory hints** (`AGENTS.md` di subfolder) hanya dimuat untuk path **di dalam tree workdir** sesi, jadi `/opt/tracker-daily` tidak ikut saat cwd = `/home/ubuntu`.
-- Blok `agent.coding_instructions` hanya dikirim bila posture coding aktif (`if not self.is_coding: return ...`).
+```yaml
+agent:
+  coding_context: on          # posture coding dipaksa di semua platform, termasuk Telegram
+  coding_instructions: "<aturan repo Tracker Daily, 583 karakter>"
+```
 
-Empat pilihan, dari yang paling murah:
+**Bukti verifikasi** (memanggil `resolve_runtime_mode(platform='telegram', cwd='/home/ubuntu', config=…)`):
 
-1. **Satu baris di prompt** (tanpa konfigurasi): `Ikuti AGENTS.md di /opt/tracker-daily.` → ≈40 token per tugas. Ini yang direkomendasikan untuk chat/Telegram.
-2. **Paksa posture coding + instruksi tetap** (sekali set, berlaku lintas sesi):
-   ```bash
-   hermes config set agent.coding_context on
-   hermes config set agent.coding_instructions "Untuk pekerjaan di /opt/tracker-daily: ikuti AGENTS.md repo; peta di docs/navigation.md; cari simbol sebelum membaca file; jangan baca semua modul; validasi dengan scripts/dev/check-syntax.js + coverage_check.py."
-   ```
-   Konsekuensi yang perlu diketahui: mode `on` menambahkan **brief coding generik** tiap sesi (ratusan token) dan snapshot workspace hanya muncul bila cwd adalah repo/proyek — untuk cwd `/home/ubuntu` (bukan repo) snapshot kosong, jadi biaya tambahannya hanya brief + instruksi Anda.
-3. **Jalankan dari CLI/TUI di folder repo** (`cd /opt/tracker-daily && hermes`) → posture coding otomatis; `AGENTS.md` root terpakai, tanpa perlu baris tambahan di prompt.
-4. **Tugas terjadwal / kanban:** set `workdir: /opt/tracker-daily` → Hermes menyuntik `AGENTS.md`/context file direktori itu dan mengikat terminal+file tool di sana.
+| | profil | blok brief | blok instruksi | tambahan prompt |
+|---|---|---|---|---|
+| Sebelum (`auto`) | general, `is_coding=False` | 0 | 0 | 0 token |
+| Sesudah (`on` + instruksi) | **coding, `is_coding=True`** | 2.626 char | 620 char (instruksi kita) | **≈812 token/sesi** |
+
+- Blok instruksi **benar-benar terkirim** (isi `trailing[0]` = "Operator instructions (from config): Saat mengerjakan kode di /opt/tracker-daily …").
+- Snapshot workspace = kosong karena cwd `/home/ubuntu` bukan repo → tidak ada biaya tambahan dari situ.
+- Biaya +812 token dibayar **sekali per sesi** (prefix sistem stabil → ikut prompt cache, tidak dihitung ulang tiap turn).
+- Balik modal pada tugas kode pertama: satu tugas modul menghemat ≈6–7 rb token (terukur), pola "baca window besar" ≈20–35 rb token.
+- Efek samping yang perlu diketahui: sesi **non-koding** (mis. tanya berita) juga menerima brief coding generik (~656 token). Kalau tidak mau, kembalikan ke `auto`.
+- Konfigurasi dibaca saat **sesi dimulai** — aktif pada sesi berikutnya (`/new`), bukan di percakapan yang sedang berjalan (agar prompt cache tidak rusak).
+
+**Cara membatalkan:**
+```bash
+hermes config set agent.coding_context auto
+hermes config set agent.coding_instructions ""
+```
+
+### Prompt biasa yang sekarang sudah cukup
+
+Dengan instruksi tetap di atas, prompt pendek seperti ini sudah memadai:
+- `Tambah filter tag di halaman catatan`
+- `Tombol simpan di form Budget tidak muncul di HP, cek`
+- `Perbaiki angka total di laporan bulan ini`
+- `Ubah warna tombol Tambah Dokumen jadi hijau`
+- `Deploy rilis ui43`
+
+Alasannya: instruksi tetap sudah memaksa urutan **AGENTS.md → docs/navigation.md → file modul**, larangan membaca semua modul, larangan mengubah storage key/auth/api, dan kewajiban validasi `check-syntax.js` + laporan file yang dibaca.
+
+Opsi lain (tetap berlaku):
+1. **Baris tambahan di prompt** bila ingin lebih eksplisit: `Ikuti AGENTS.md di /opt/tracker-daily.`
+2. **CLI/TUI dari folder repo** (`cd /opt/tracker-daily && hermes`) → posture coding otomatis tanpa `on`.
+3. **Tugas terjadwal / kanban:** set `workdir: /opt/tracker-daily` → `AGENTS.md`/context file direktori itu ikut disuntik.
 
 ---
 
