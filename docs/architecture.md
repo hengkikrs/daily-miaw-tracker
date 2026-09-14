@@ -101,3 +101,13 @@ Classic script berurutan + **buka pembungkus IIFE**; potong berdasarkan section 
 | `js/bootstrap/30-init.js` | 27 | `init` |
 
 Daftar simbol+baris per section: `docs/symbol-index.md`. Rencana & progres: `docs/decisions/refactor-log.md`.
+
+## Kontrak urutan `<script>` — tambahan penting (ui44)
+
+Urutan di `public/index.html` bukan sekadar gaya: beberapa file memanggil fungsi file lain **saat load** (bukan saat interaksi).
+
+- `tasks.js` memanggil `taskAddDefaults()` di level atas → `firstProjName()` → `loadProjects()`.
+- `loadProjects()` memakai `loadGoals()` untuk penautan goal lama.
+- Karena itu urutan wajib: **`goals.js` → `projects.js` → `tasks.js` → `schedule.js`** (`schedule.js` memakai `taskTodayIso()` saat load).
+
+Aturan aman: bila sebuah fungsi dipanggil dari kode level atas, semua fungsi yang dipanggilnya harus berasal dari file yang dimuat **lebih awal**. Bila ragu, bungkus blok opsional (migrasi/penautan) dalam `try/catch` sendiri agar kegagalan tidak menjatuhkan pembacaan data dan memicu seed/penimpaan data.

@@ -73,3 +73,10 @@ UI/tab → `renderDailyTaskView`/`renderDailyDetail` + `data-daily-*`. Tambah/ub
 
 ## Known risks
 Log rutinitas memakai kunci turunan (`dailyRoutineDoneKey`) di dalam store `daily-tasks.v1`; jangan ubah bentuknya tanpa migrasi. Dipakai juga oleh Jadwal (L1652+) — ubah `dailyDayList` dengan hati-hati.
+
+## ui44 — kategori, ubah kegiatan, detail + sesi fokus
+
+- **Kategori** menggantikan label lama `rutinitas` di samping nama pada "Agenda hari ini": baris agenda memakai `t.category || 'Kegiatan'` (fungsi `dailyDayList()`), dan form punya field **Kategori** (`name="category"`, datalist `#dailyCats` dari `DAILY_CATEGORIES`, default `Umum`). Rutinitas juga menyimpan `category` (opsional) dan menampilkannya di kartu.
+- **Ubah kegiatan sekali**: tombol ✎ di baris agenda/"Mendatang" dan di halaman detail → `data-daily-edit` → `dailyEditingTaskId`, form yang sama dibuka dengan mode "Ubah Kegiatan" (jenis & jadwal `disabled`), disimpan oleh `dailySubmitAdd()` (memperbarui title/ikon/jam/prioritas/kategori, tanggal tidak diubah, activity dicatat).
+- **Detail + sesi fokus (khusus Daily Task)**: `renderDailyDetail()` menangani dua jenis item — kegiatan (id langsung) dan **rutinitas** (prefix `r:<id>`). Kartu fokus dibuat oleh `dailyFocusCardHtml()` dengan state `dailyFocusKey`/`dailyFocusInterval` dan timer `data-daily-focus-live`; aksi: `data-daily-focus-start|pause|stop`. Field sesi (`focusAt`, `focusPausedSince`, `focusPauseAccum`, `actual`, `activity`) disimpan pada item dan **dipertahankan** oleh `saveDailyRoutines()`; sesi yang berjalan dipulihkan setelah reload di `bindEvents()` (`resume-fokus-daily`). Hapus item/rutinitas yang sedang difokuskan otomatis menghentikan sesi.
+- Atribut baru WAJIB ditambahkan ke daftar `closest('[data-daily-…]')` di `js/events/20-bind-events.js` sebelum `handleDailyAction()` — kalau tidak, tombol dirender tetapi kliknya tidak melakukan apa pun (sempat terjadi pada ui44).

@@ -70,3 +70,9 @@ Render → `renderGoalsView`/`renderGoalDetailPage`/`renderGoalAddPage`/`renderG
 
 ## Known risks
 Kunci `miaw-tracker.goals.v1` **juga dipakai modul report/keuangan lama (L4116–4326)** — jangan ubah kunci/bentuk data. `GOAL_TERMS` & `GOAL_CATS` dipakai lintas modul (Projects menautkan goal ke project).
+
+## ui44 — edit/hapus goal + tambah sub goal (perbaikan bug)
+
+- **Edit Goal**: tombol `data-goal-edit` di halaman detail → `goalsEditId` + draft terisi dari goal → `renderGoalAddPage()` berjudul "Edit Goal" (tombol "Simpan Perubahan", "Simpan & Tambah Lagi" disembunyikan) → `submitGoalForm()` memperbarui title/deskripsi/deadline/kategori/jangka waktu (sub goal tidak diubah) lalu balik ke detail.
+- **Hapus Goal**: `data-goal-del` → bar konfirmasi 2 langkah (`data-goal-del-confirm` / `data-goal-del-cancel`, tanpa `window.confirm` agar bisa diuji otomatis) → goal dihapus **dan** `goalId` project yang menunjuk goal itu dikosongkan.
+- **Sub goal / milestone (bug diperbaiki)**: penambahan lama memakai `prompt()` lalu `saveGoals(loadGoals())` — daftar dimuat ulang dari localStorage sehingga objek `g` yang dimutasi tidak ikut tersimpan dan sub goal hilang tanpa pesan. Sekarang form inline (`#goalMsForm`, `data-goal-ms-add` / `data-goal-ms-cancel`) dan `submitGoalMsForm()` memakai **satu kali baca** (`const items = loadGoals()` → push → `saveGoals(items)`). Sub goal juga bisa dihapus via `data-goal-ms-del="<goalId>:<msId>"` (tombol diletakkan di luar `<label>` supaya tidak memicu toggle checkbox).
