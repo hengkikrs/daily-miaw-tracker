@@ -121,3 +121,11 @@ Permintaan pengguna (dari tangkapan layar): samakan font/ukuran chip kategori de
 Perubahan: `public/js/modules/daily-tasks.js` (chip kategori di kartu rutinitas, `dailyFocusActionHtml()` menggantikan `dailyFocusCardHtml()`, sel Total fokus pada detail rutinitas, dua baris aksi `dt-actions-main`/`dt-actions-sub` di kedua halaman detail), `public/styles.css` (blok `ui45`: `.dt-tags`, `.dt-actions-*`, `.dt-focus-inline`, media query ≤420px), `public/index.html` (cache-bust `ui45`), `docs/modules/daily-tasks.md`.
 
 Bukti ukur (lokal & produksi, computed style): chip kategori rutin vs chip agenda → 12px / weight 600 / tinggi 22px / border 1px / radius 999px (identik); detail kegiatan baris utama `flexDirection: row` berisi [Tandai Selesai, ▶ Mulai Fokus] (saat fokus berjalan: [Tandai Selesai, grup timer + Jeda/Stop]); baris kedua [Ubah, Hapus]; section "Sesi Fokus" terpisah sudah tidak ada; tanpa overflow horizontal; 0 error JS.
+
+## ui46–ui48 — rapikan detail kegiatan Daily Task (2026-09-14, commit `563a5ae`, `d3b2e77`, `a61f30e`)
+
+Permintaan pengguna (tangkapan layar "Detail Kegiatan — Anjing"): kata "Umum" disamakan font/ukurannya dengan "Prioritas Sedang" dan "In Progres"; bagian kategori (Kartu Info) diberi spacing/garis seperti sel Tanggal.
+
+Perubahan: `public/styles.css` (`.task-detail-chips .task-chip.tag` digabung rule `.prio/.status`; `.task-info-cell:nth-of-type(n+3)` diberi `border-top`), `public/js/modules/daily-tasks.js` (chip kategori selalu dirender dengan default `'Umum'`; fallback kartu info & agenda `'Kegiatan'` → `'Umum'`), `public/index.html` (cache-bust ui46→ui47→ui48).
+
+Verifikasi produksi (replika persis kasus pengguna: kegiatan tanpa kategori eksplisit, prioritas sedang, jam 18:46, sudah pernah fokus): chip `Umum`/`Prioritas Sedang`/`In Progres` identik (12px/800/4px 12px/28px/999px); sel Kategori & Total fokus `border-top: 1px`, padding 14px seragam, posisi y sejajar; agenda menampilkan `Umum`; 0 error JS.
