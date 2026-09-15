@@ -6,15 +6,16 @@
 
 /* ============ MODUL GOALS (target & milestone) ============ */
 const GOALS_STORE_KEY = 'miaw-tracker.goals.v1';
+// Warna kategori memakai token tema (theme.css: --cat-*) agar ikut light/dark.
 const GOAL_CATS = {
-  Karier: '#3b82f6', Keuangan: '#ea8a2f', Kesehatan: '#3f9d63',
-  Pendidikan: '#8b5cf6', Personal: '#ec6aa0', Lainnya: '#6b7280',
+  Karier: 'var(--cat-karier)', Keuangan: 'var(--cat-keuangan)', Kesehatan: 'var(--cat-kesehatan)',
+  Pendidikan: 'var(--cat-pendidikan)', Personal: 'var(--cat-personal)', Lainnya: 'var(--cat-lainnya)',
 };
 const GOAL_ICONS = { Karier: '💼', Keuangan: '💰', Kesehatan: '💚', Pendidikan: '🎓', Personal: '🌸', Lainnya: '📌' };
 const GOAL_TERMS = {
-  pendek: { label: 'Jangka Pendek', hint: '≤ 3 bulan', color: '#3f9d63' },
-  menengah: { label: 'Jangka Menengah', hint: '3–12 bulan', color: '#ea8a2f' },
-  panjang: { label: 'Jangka Panjang', hint: '> 12 bulan', color: '#2f8fbf' },
+  pendek: { label: 'Jangka Pendek', hint: '≤ 3 bulan', color: 'var(--cat-kesehatan)' },
+  menengah: { label: 'Jangka Menengah', hint: '3–12 bulan', color: 'var(--cat-keuangan)' },
+  panjang: { label: 'Jangka Panjang', hint: '> 12 bulan', color: 'var(--orange-strong)' },
 };
 function goalTermOf(g) {
   if (g.term && GOAL_TERMS[g.term]) return g.term;

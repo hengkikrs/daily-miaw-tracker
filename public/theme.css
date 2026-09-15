@@ -19,7 +19,7 @@
   --panel-raised: #ffffff;
 
   --text: #26201a;
-  --muted: #857a6b;
+  --muted: #776b5e;
   --line: #e8dfd0;
   --line-strong: #cfc2ac;
 
@@ -47,6 +47,71 @@
   --shadow: 0 1px 2px rgba(58, 42, 24, 0.05), 0 10px 30px -12px rgba(58, 42, 24, 0.14);
   --shadow-lift: 0 2px 4px rgba(58, 42, 24, 0.06), 0 18px 40px -14px rgba(58, 42, 24, 0.22);
   --radius: 14px;
+
+  /* --- Lapisan semantik (audit warna 2026-09-15) --- */
+  --green-strong: #2a6b4a;   /* teks hijau kecil, aman AA di panel terang */
+  --green-soft: #cfe6d8;
+  --blue-strong: #2f6f8f;    /* teks biru kecil (pengganti #1d5fbf) */
+  --violet-soft: #ded3f2;
+  --rose-strong: #a8314a;
+
+  /* warna kategori goal (chip & dot) */
+  --cat-karier: #3e7b8c;
+  --cat-keuangan: #d98324;
+  --cat-kesehatan: #3d9a5f;
+  --cat-pendidikan: #7c5cbf;
+  --cat-personal: #d05792;
+  --cat-lainnya: #8a7a68;
+
+  /* status project */
+  --st-planning: #7c6a9a;
+  --st-active: #3d9a5f;
+  --st-onhold: #d98324;
+  --st-completed: #3e7b8c;
+  --st-archived: #8a7a68;
+
+  /* kategori agenda */
+  --jv-kantor: #3e7b8c;
+  --jv-sales: #d98324;
+  --jv-marketing: #7c5cbf;
+  --jv-konten: #d05792;
+  --jv-keuangan: #3d9a5f;
+  --jv-pribadi: #e0682f;
+  --jv-belajar: #8a6f47;
+
+  /* palet chart (legend, donut, bar) */
+  --chart-1: #d98324;
+  --chart-2: #6f9a7f;
+  --chart-3: #3e7b8c;
+  --chart-4: #b0557a;
+  --chart-5: #7c5cbf;
+  --chart-6: #c2402f;
+  --chart-7: #8a7a68;
+  --chart-8: #e0682f;
+  --chart-9: #a9885f;
+
+  /* aksen hangat (tombol utama) — sebelumnya hex mentah */
+  --accent-1: #6a564a;
+  --accent-2: #57443a;
+  --accent-3: #7d685c;
+  --accent-ghost: #6a564a;
+  --on-accent: #fdf7ee;
+
+  /* status angka & bar */
+  --amber-strong: #9a6b0f;
+  --amber-soft: #eecb72;
+  --orange-strong: #c2410c;
+  --danger-soft: #ef9184;
+
+  /* panel Miaw AI */
+  --miaw-surface: #f3ead9;
+  --miaw-bubble: #fffdf8;
+  --miaw-you: #6f5b3e;
+  --miaw-ink: #3d3327;
+  --miaw-ink-soft: #8a775c;
+  --miaw-border: #5d4e38;
+  --miaw-dot: #a08a68;
+  --miaw-avatar: #8a714d;
 }
 
 /* ---------- Tokens: Dark ---------- */
@@ -83,6 +148,65 @@
   --focus: 0 0 0 3px rgba(239, 114, 99, 0.3);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 34px -12px rgba(0, 0, 0, 0.55);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 22px 48px -16px rgba(0, 0, 0, 0.65);
+
+  /* --- Lapisan semantik (versi gelap, dinaikkan agar tetap AA) --- */
+  --green-strong: #7cc79a;
+  --green-soft: #2c4a38;
+  --blue-strong: #7fb8cf;
+  --violet-soft: #3a3153;
+  --rose-strong: #ef8a9e;
+
+  --cat-karier: #6aa7b8;
+  --cat-keuangan: #e9a83f;
+  --cat-kesehatan: #5cb87e;
+  --cat-pendidikan: #a487e0;
+  --cat-personal: #e077ab;
+  --cat-lainnya: #a89b88;
+
+  --st-planning: #a487e0;
+  --st-active: #5cb87e;
+  --st-onhold: #e9a83f;
+  --st-completed: #6aa7b8;
+  --st-archived: #a89b88;
+
+  --jv-kantor: #6aa7b8;
+  --jv-sales: #e9a83f;
+  --jv-marketing: #a487e0;
+  --jv-konten: #e077ab;
+  --jv-keuangan: #5cb87e;
+  --jv-pribadi: #ef8148;
+  --jv-belajar: #c2a37a;
+
+  --chart-1: #e9a83f;
+  --chart-2: #8fb79a;
+  --chart-3: #6aa7b8;
+  --chart-4: #d98aa6;
+  --chart-5: #a487e0;
+  --chart-6: #d9705f;
+  --chart-7: #a89b88;
+  --chart-8: #ef8148;
+  --chart-9: #c2a37a;
+
+  /* aksen hangat: versi gelap sedikit lebih terang agar tombol tetap terbaca */
+  --accent-1: #8a7263;
+  --accent-2: #6f5a4d;
+  --accent-3: #a08773;
+  --accent-ghost: #d8c4b2;
+  --on-accent: #fff9f2;
+
+  --amber-strong: #e9a83f;
+  --amber-soft: #6b4f1a;
+  --orange-strong: #ef8148;
+  --danger-soft: #6b2b24;
+
+  --miaw-surface: #2a231b;
+  --miaw-bubble: #211d17;
+  --miaw-you: #8a7263;
+  --miaw-ink: #f3ede3;
+  --miaw-ink-soft: #a89b88;
+  --miaw-border: #4d4335;
+  --miaw-dot: #a89b88;
+  --miaw-avatar: #8a7263;
 }
 
 /* ---------- Tipografi dasar ---------- */
@@ -368,16 +492,13 @@ textarea,
 .habit-form input,
 .habit-form select,
 .account-form input,
-.auth-form input,
-.auth-page-form input,
-.otp-form input {
+.auth-page-form input {
   border-radius: 12px;
 }
 
 .habit-form input:focus,
 .habit-form select:focus,
 .account-form input:focus,
-.auth-form input:focus,
 .auth-page-form input:focus,
 .year-select:focus {
   border-color: var(--teal);

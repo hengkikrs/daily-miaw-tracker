@@ -113,3 +113,29 @@ Aksen dipakai sebagai **teks kecil** (mis. `.dash-mod-cta` 12px, `.lap-card-head
 
 - Pemindaian hex diulang kapan saja dengan `python3 scripts/dev/audit-theme.py` (opsi `--json` untuk data mentah).
 - Pengukuran live (contoh): bar goal `linear-gradient(90deg, rgb(63,157,99), rgb(88,181,122))`; `.green` budget `rgb(46,125,91)`; bar tabungan soft `rgb(157,185,216)→rgb(111,151,196)`; legend laporan `.lg-in rgb(127,181,160)`; persen bulan 1–3 `rgb(94,234,212)`, `rgb(252,211,77)`, `rgb(196,181,253)` — identik di light & dark (bukti tidak adaptif).
+
+---
+
+## 6. EKSEKUSI PERBAIKAN (ui61–ui63, 2026-09-15)
+
+Semua rekomendasi §4 dikerjakan. Ringkasan hasil:
+
+| Sebelum | Sesudah |
+|---|---|
+| 109 hex unik di luar token · 44 warna bernuansa dingin (95 pemakaian) | **0 warna dingin**; guard `check-theme.js` **LULUS** (34 file, 126 hex token) |
+| 2 palet hidup berdampingan (styles.css dingin + theme.css hangat) | Token tunggal di `theme.css`; 42 token → **126 hex token** (termasuk lapisan semantik baru) |
+| `--muted` light 4,14:1 (gagal AA) | `#776b5e` → **5,10:1 (OK)** |
+| Teks beraksen kecil gagal AA (hijau 3,45 · oranye 3,34 · pink 3,79 · teal 3,38) | 63 aturan teks beraksen memakai `color-mix(… 70%, var(--text))` → **≥4,65:1 di light, ≥7,3:1 di dark** |
+| Panel MiawAI memakai 11 hex + 3 rgba terang (tidak ikut dark mode) | Token `--miaw-*` ligth/dark; topbar & bubble ikut tema (terukur: topbar dark `#211d17`) |
+| Sidebar: teks mint `rgba(237,247,246,…)`, ikon bulan mint/ungu/biru | `color-mix(… var(--sidebar-text) …)` krem hangat + aksen per seksi |
+| CSS mati membawa palet lama (`.auth-form`, `.otp-form`, `.auth-link`, gradient teal→biru) | Dihapus; `.auth-button` kini bertema (`.secondary` tetap dipakai) |
+| Bayangan/overlay dingin `rgba(15,23,42)`, `rgba(35,52,78)`, `rgba(8,16,23)`, fokus sky `rgba(125,211,252)` | Hangat `rgba(58,42,24)`, overlay `rgba(20,12,6)`, fokus `color-mix(var(--teal)…)` |
+| Palet chart tersebar di 5 file JS dengan warna dingin | `chartPalette()` (`04-utils.js`) → `--chart-1..9`; dipakai dashboard, laporan, tabungan, progress |
+| Hijau berbeda 3 varian (#3f9d63, #2e7d5b, #2e7d4f) untuk arti sama | `--green`, `--green-strong`, `--green-soft` |
+| Warna kategori/status/agenda hardcode di JS | Token `--cat-*`, `--st-*`, `--jv-*` (ikut light/dark) |
+| Warna project & tabungan tersimpan sebagai hex lama | Palet baru hangat + peta `PROJ_COLOR_LEGACY` / `SAVE_COLOR_LEGACY` (data lama otomatis senada, storage key & bentuk data tidak berubah) |
+| Header grup "Jangka Panjang" biru | Ramp hangat: pendek hijau → menengah amber → panjang terakota (`--orange-strong`) |
+
+**Guardrail baru**: `node scripts/dev/check-theme.js` — gagal bila ada hex literal di luar blok token (allowlist: logo Google, baris peta LEGACY, palet cetak `laporan-export.js`). Tambahkan ke alur validasi bersama `check-syntax.js`.
+
+**Verifikasi**: `check-syntax.js` LULUS 34 file · `check-theme.js` LULUS · `audit-theme.py` 0 warna dingin · QA browser light+dark pada budget, tabungan, transaksi, laporan, goals, catatan, dashboard, MiawAI (warna computed sesuai token) · produksi rilis **ui63** (35/35 tag, root 200).

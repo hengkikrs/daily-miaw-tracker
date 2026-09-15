@@ -6,9 +6,10 @@
 
 /* ============ MODUL JADWAL (kalender + agenda harian) ============ */
 const JADWAL_STORE_KEY = 'miaw-tracker.jadwal.v1';
+// Warna kategori agenda memakai token tema (theme.css: --jv-*).
 const JADWAL_COLORS = {
-  kantor: '#35a7b0', sales: '#efc343', marketing: '#9c5fd1', konten: '#d96a6a',
-  keuangan: '#4c9f70', pribadi: '#e8a33d', belajar: '#8b6f47',
+  kantor: 'var(--jv-kantor)', sales: 'var(--jv-sales)', marketing: 'var(--jv-marketing)', konten: 'var(--jv-konten)',
+  keuangan: 'var(--jv-keuangan)', pribadi: 'var(--jv-pribadi)', belajar: 'var(--jv-belajar)',
 };
 let jadwalMode = 'kalender';           // 'kalender' | 'daftar'
 let jadwalSelIso = taskTodayIso();

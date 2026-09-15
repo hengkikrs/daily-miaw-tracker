@@ -75,8 +75,8 @@ function repBarChartSvg(flows, W, H) {
     const cx = pad.l + gw * i + gw / 2;
     const hi = Math.max(2, (f.inc / max) * (H - pad.t - pad.b));
     const ho = Math.max(2, (f.exp / max) * (H - pad.t - pad.b));
-    bars += `<rect x="${(cx - bw - 2).toFixed(1)}" y="${(H - pad.b - hi).toFixed(1)}" width="${bw.toFixed(1)}" height="${hi.toFixed(1)}" rx="3" fill="#7fb5a0"><title>Masuk ${txRp(f.inc)}</title></rect>`;
-    bars += `<rect x="${(cx + 2).toFixed(1)}" y="${(H - pad.b - ho).toFixed(1)}" width="${bw.toFixed(1)}" height="${ho.toFixed(1)}" rx="3" fill="#e2a89b"><title>Keluar ${txRp(f.exp)}</title></rect>`;
+    bars += `<rect x="${(cx - bw - 2).toFixed(1)}" y="${(H - pad.b - hi).toFixed(1)}" width="${bw.toFixed(1)}" height="${hi.toFixed(1)}" rx="3" fill="var(--green)"><title>Masuk ${txRp(f.inc)}</title></rect>`;
+    bars += `<rect x="${(cx + 2).toFixed(1)}" y="${(H - pad.b - ho).toFixed(1)}" width="${bw.toFixed(1)}" height="${ho.toFixed(1)}" rx="3" fill="var(--orange)"><title>Keluar ${txRp(f.exp)}</title></rect>`;
     const ny = H - pad.b - Math.max(0, Math.min(1, (f.net + max * 0.15) / (max * 1.15))) * (H - pad.t - pad.b);
     netPts.push([cx, ny]);
     bars += `<text x="${cx}" y="${H - 7}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${repMonthLabel(f.m)}</text>`;
@@ -86,7 +86,7 @@ function repBarChartSvg(flows, W, H) {
   return `<svg viewBox="0 0 ${W} ${H}" class="rep-svg" role="img" aria-label="Grafik kasflow 6 bulan">${bars}<path d="${path}" fill="none" stroke="var(--text)" stroke-width="1.6" stroke-dasharray="3 3" opacity=".55"/>${dots}</svg>`;
 }
 function repDonutSvg(items, total) {
-  const COL = ['#d99a2b', '#7d685c', '#4a7fb5', '#b5567d', '#6a5acd', '#3e7b8c', '#c2402f', '#8a9a5b', '#b26a1f'];
+  const COL = chartPalette(9);
   const R = 52, C = 2 * Math.PI * R;
   let acc = 0;
   const arcs = items.map((it, i) => {
@@ -157,7 +157,7 @@ function renderReportView() {
       <div class="panel rep-card">
         <div class="rep-card-head"><h3>Spending per Kategori</h3><small>${repMonthLabel(cur)}</small></div>
         ${cats.length === 0 ? '<p class="muted rep-empty-line">Belum ada pengeluaran bulan ini.</p>' : `<div class="rep-donut-wrap">${repDonutSvg(cats, catTotal)}
-          <div class="rep-legend-list">${cats.slice(0, 6).map((it, i) => { const COL = ['#d99a2b', '#7d685c', '#4a7fb5', '#b5567d', '#6a5acd', '#3e7b8c', '#c2402f', '#8a9a5b', '#b26a1f']; const share = catTotal ? (it.amt / catTotal) * 100 : 0; return `<div class="rep-lg"><i style="background:${COL[i % COL.length]}"></i><b>${escapeHtml(it.cat)}</b><small>${share.toFixed(0)}%</small><span>${txRp(it.amt)}</span></div>`; }).join('')}</div></div>`}
+          <div class="rep-legend-list">${cats.slice(0, 6).map((it, i) => { const COL = chartPalette(9); const share = catTotal ? (it.amt / catTotal) * 100 : 0; return `<div class="rep-lg"><i style="background:${COL[i % COL.length]}"></i><b>${escapeHtml(it.cat)}</b><small>${share.toFixed(0)}%</small><span>${txRp(it.amt)}</span></div>`; }).join('')}</div></div>`}
       </div>
       <div class="panel rep-card">
         <div class="rep-card-head"><h3>🔭 Outlook</h3><small>proyeksi bulan depan</small></div>

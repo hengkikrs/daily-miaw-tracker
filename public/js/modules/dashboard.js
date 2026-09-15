@@ -144,7 +144,7 @@ function renderDashboard(year) {
   const cats = repSpendByCat(d.monthKey);
   const catTotal = repSum(cats.map((c) => ({ amount: c.amt })));
   const catLegend = cats.slice(0, 5).map((it, i) => {
-    const COL = ['#d99a2b', '#7fb5a0', '#4a7fb5', '#b5567d', '#6a5acd'];
+    const COL = chartPalette();
     return `<div class="rep-lg"><i style="background:${COL[i % COL.length]}"></i><b>${escapeHtml(it.cat)}</b><small>${catTotal ? Math.round((it.amt / catTotal) * 100) : 0}%</small><span>${txRp(it.amt)}</span></div>`;
   }).join('');
 

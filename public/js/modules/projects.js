@@ -7,14 +7,24 @@
 /* ============ MODUL PROJECT (proyek mandiri: task, notes, files) ============ */
 const PROJ_STORE_KEY = 'proj-' + 'tracker.projects.v1';
 const PROJ_STATUS = {
-  planning: { label: 'Planning', color: '#8b7bb8' },
-  active: { label: 'Active', color: '#3f9d63' },
-  onhold: { label: 'On Hold', color: '#ea8a2f' },
-  completed: { label: 'Completed', color: '#2f8fbf' },
-  archived: { label: 'Archived', color: '#9a917f' },
+  planning: { label: 'Planning', color: 'var(--st-planning)' },
+  active: { label: 'Active', color: 'var(--st-active)' },
+  onhold: { label: 'On Hold', color: 'var(--st-onhold)' },
+  completed: { label: 'Completed', color: 'var(--st-completed)' },
+  archived: { label: 'Archived', color: 'var(--st-archived)' },
 };
 const PROJ_ICONS = ['🧩', '🚀', '🏗️', '💻', '📣', '🎨', '📚', '🏠', '💼', '🌱'];
-const PROJ_COLORS = ['#6a564a', '#3f9d63', '#ea8a2f', '#2f8fbf', '#8b7bb8', '#d4576b', '#3f9a8f', '#9a8452'];
+// Palet warna project (disimpan per project) — keluarga warna hangat.
+const PROJ_COLORS = ['#6a564a', '#3d9a5f', '#d98324', '#3e7b8c', '#7c5cbf', '#d05792', '#e0682f', '#8a7a68'];
+// Warna lama (pra ui61) dipetakan ke palet baru agar data tersimpan tetap senada.
+const PROJ_COLOR_LEGACY = {
+  '#3f9d63': '#3d9a5f', '#ea8a2f': '#d98324', '#2f8fbf': '#3e7b8c', '#8b7bb8': '#7c5cbf',
+  '#d4576b': '#d05792', '#3f9a8f': '#3e7b8c', '#9a8452': '#8a7a68', '#9a917f': '#8a7a68',
+};
+function projColor(project) {
+  const c = (project && project.color) || PROJ_COLORS[0];
+  return PROJ_COLOR_LEGACY[c] || c;
+}
 const PROJ_FILTERS = [
   { key: 'all', label: 'Semua' },
   { key: 'active', label: 'Aktif' },
@@ -50,7 +60,7 @@ function projSeed() {
   const m = today.slice(5, 7);
   const day = (n) => `${y}-${m}-${String(n).padStart(2, '0')}`;
   return [
-    { id: 'p1', name: 'Marketing Batu Bata', icon: '📣', color: '#ea8a2f', category: 'Bisnis', status: 'active', goalId: 'g1',
+    { id: 'p1', name: 'Marketing Batu Bata', icon: '📣', color: '#d98324', category: 'Bisnis', status: 'active', goalId: 'g1',
       start: day(1), deadline: day(20), createdAt: day(1),
       description: 'Kampanye pemasaran digital untuk toko batu bata: landing page, iklan, dan follow-up pelanggan.',
       milestones: [
@@ -68,7 +78,7 @@ function projSeed() {
         { id: 'pf2', name: 'Desain banner (Figma)', url: 'https://figma.com/file/batu-bata-banner' },
       ],
       activity: [] },
-    { id: 'p2', name: 'Website Toko Online', icon: '💻', color: '#2f8fbf', category: 'Teknis', status: 'active', goalId: 'g1',
+    { id: 'p2', name: 'Website Toko Online', icon: '💻', color: '#3e7b8c', category: 'Teknis', status: 'active', goalId: 'g1',
       start: day(5), deadline: day(28), createdAt: day(5),
       description: 'Bangun website toko online lengkap dengan katalog, keranjang, dan pembayaran.',
       milestones: [
@@ -87,7 +97,7 @@ function projSeed() {
         { id: 'pm9', text: 'Bongkar kabinet lama', done: false },
       ],
       notes: [], files: [], activity: [] },
-    { id: 'p4', name: 'Skripsi Data Science', icon: '📚', color: '#8b7bb8', category: 'Pendidikan', status: 'planning', goalId: 'g2',
+    { id: 'p4', name: 'Skripsi Data Science', icon: '📚', color: '#7c5cbf', category: 'Pendidikan', status: 'planning', goalId: 'g2',
       start: day(15), deadline: `${y}-12-15`, createdAt: today,
       description: 'Penelitian prediksi harga komoditas dengan machine learning.',
       milestones: [
@@ -96,7 +106,7 @@ function projSeed() {
       ],
       notes: [{ id: 'pn4', text: 'Konsultasi dosen pembimbing tiap Selasa.', at: Date.now() - 3 * 86400000 }],
       files: [], activity: [] },
-    { id: 'p5', name: 'Otomasi Laporan Bulanan', icon: '🤖', color: '#3f9d63', category: 'Produktivitas', status: 'completed', goalId: 'g2',
+    { id: 'p5', name: 'Otomasi Laporan Bulanan', icon: '🤖', color: '#3d9a5f', category: 'Produktivitas', status: 'completed', goalId: 'g2',
       start: day(1), deadline: day(8), createdAt: day(1),
       description: 'Script Python yang menyusun laporan penjualan otomatis tiap awal bulan.',
       milestones: [
@@ -105,7 +115,7 @@ function projSeed() {
         { id: 'pm14', text: 'Jadwal cron jalan', done: true },
       ],
       notes: [], files: [{ id: 'pf4', name: 'repo: laporan-bot', url: 'https://github.com/contoh/laporan-bot' }], activity: [] },
-    { id: 'p6', name: 'Event Workshop 2025', icon: '🎨', color: '#9a917f', category: 'Acara', status: 'archived', goalId: 'g4',
+    { id: 'p6', name: 'Event Workshop 2025', icon: '🎨', color: '#8a7a68', category: 'Acara', status: 'archived', goalId: 'g4',
       start: `${y}-06-01`, deadline: `${y}-07-30`, createdAt: today,
       description: 'Workshop desain untuk komunitas lokal (sudah selesai,arsip).',
       milestones: [], notes: [], files: [], activity: [] },
@@ -211,11 +221,11 @@ function projCardHtml(p) {
   const pr = projProgress(p);
   const gt = goalTitleOf(p.goalId);
   return `<button type="button" class="proj-card" data-proj-open="${p.id}">
-      <span class="proj-ico" style="--pc:${p.color}">${p.icon || '🧩'}</span>
+      <span class="proj-ico" style="--pc:${projColor(p)}">${p.icon || '🧩'}</span>
       <span class="proj-card-main">
         <span class="proj-card-head"><span class="proj-card-title">${escapeHtml(p.name)}</span>${projStatusChip(p.status)}</span>
         <span class="proj-card-desc">${gt ? `🎯 ${escapeHtml(gt)} · ` : ''}${escapeHtml(p.description || 'Tanpa deskripsi')}</span>
-        <span class="goal-bar"><span style="width:${pr.pct}%;background:${p.color}"></span></span>
+        <span class="goal-bar"><span style="width:${pr.pct}%;background:${projColor(p)}"></span></span>
         <span class="proj-card-sub"><span>${pr.done}/${pr.total} ${pr.from === 'task' ? 'task' : 'milestone'} · ${pr.pct}%</span>${projDeadlineLabel(p)}</span>
       </span>
       <span class="goal-chev">›</span>
@@ -321,7 +331,7 @@ function renderProjectDetailPage() {
         ${Object.entries(PROJ_STATUS).map(([k, s]) => `<button type="button" class="goal-cat-chip${p.status === k ? ' on' : ''}" data-proj-setstatus="${k}" title="Ubah status project"><span class="goal-cat-dot" style="background:${s.color}"></span>${s.label}</button>`).join('')}
       </div>
       ${p.goalId ? `<div class="proj-goal-row">🎯 Goal: <button type="button" class="goal-proj-chip link" data-goal-from-proj="${p.goalId}">${escapeHtml(goalTitleOf(p.goalId) || 'Goal (terhapus)')}</button></div>` : '<div class="proj-goal-row">🎯 Belum terhubung ke goal — edit project untuk memilih goal.</div>'}
-      <div class="goal-bar big"><span style="width:${pr.pct}%;background:${p.color}"></span></div>
+      <div class="goal-bar big"><span style="width:${pr.pct}%;background:${projColor(p)}"></span></div>
       <div class="jadwal-seg proj-tabs">${tabs}</div>
       ${body}
     </div>`;
@@ -408,7 +418,7 @@ function renderProjectTaskView() {
   }).join('');
   const orphan = noProj.length ? `<section class="proj-blk goal-detail-card pt-group pt-orphan">
       <header class="pt-group-head">
-        <span class="pt-group-icon" style="background:#9a8f86">⚠️</span>
+        <span class="pt-group-icon" style="background:var(--muted)">⚠️</span>
         <div class="pt-group-title"><strong>Belum ada Project</strong><span class="pt-group-sub">Semua task harus berdasarkan project — pindahkan di bawah</span></div>
       </header>
       ${noProj.map((t) => `<div class="pt-orphan-row">

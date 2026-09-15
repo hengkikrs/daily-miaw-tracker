@@ -4,6 +4,13 @@
 // Dimuat sebagai classic script SEBELUM app.js — lihat urutan <script> di public/index.html.
 'use strict';
 
+// Palet chart mengikuti token tema (--chart-1..9) supaya otomatis ikut light/dark.
+function chartPalette(size = 5) {
+  const out = [];
+  for (let i = 0; i < size; i += 1) out.push(`var(--chart-${(i % 9) + 1})`);
+  return out;
+}
+
 function uid(prefix = 'h') {
   return `${prefix}_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
 }

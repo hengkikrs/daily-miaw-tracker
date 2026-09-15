@@ -245,7 +245,7 @@ function dailyDayList(iso) {
     .filter((e) => e.date === iso)
     .map((e) => ({ id: e.id, jadwal: true, time: e.time || '', title: e.title, sub: e.category || '', color: jadwalCatColor(e.category), kind: e.kind === 'task' ? 'task' : 'event', done: false }));
   loadDailyTasks().forEach((t) => {
-    if (t.date === iso) items.push({ id: t.id, jadwal: false, time: t.time || '', title: t.title, sub: t.category || 'Umum', color: t.priority === 'high' ? '#d96a6a' : t.priority === 'med' ? '#e8a33d' : '#8a9a5b', kind: 'task', done: !!t.done });
+    if (t.date === iso) items.push({ id: t.id, jadwal: false, time: t.time || '', title: t.title, sub: t.category || 'Umum', color: t.priority === 'high' ? 'var(--danger)' : t.priority === 'med' ? 'var(--amber)' : 'var(--green)', kind: 'task', done: !!t.done });
   });
   items.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
   return items;

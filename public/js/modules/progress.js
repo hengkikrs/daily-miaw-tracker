@@ -159,9 +159,9 @@ function renderProgressView() {
   const legend = catSegs.map((s) => `<div class="prog-legend-row"><span class="task-dot" style="background:${s.color}"></span><b style="flex:1">${escapeHtml(s.label)}</b><span style="color:var(--muted);font-weight:700">${Math.round((s.value / (catSegs.reduce((a, x) => a + x.value, 0) || 1)) * 100)}%</span><span style="width:26px;text-align:right;font-weight:800">${s.value}</span></div>`).join('');
 
   const habitCatRows = [
-    { lbl: 'Harian', keys: ['daily'], col: '#3b82f6' },
-    { lbl: 'Mingguan', keys: ['weekly', 'specificWeekly'], col: '#ea8a2f' },
-    { lbl: 'Bulanan', keys: ['monthly'], col: '#8b5cf6' },
+    { lbl: 'Harian', keys: ['daily'], col: 'var(--blue)' },
+    { lbl: 'Mingguan', keys: ['weekly', 'specificWeekly'], col: 'var(--orange)' },
+    { lbl: 'Bulanan', keys: ['monthly'], col: 'var(--violet)' },
   ].map((row) => {
     // Bug lama: baris 'Mingguan' hanya menjumlahkan kategori 'weekly' — kebiasaan
     // 'specificWeekly' (mingguan khusus) tidak pernah masuk, jadi tampak 0/0 pts
@@ -174,7 +174,7 @@ function renderProgressView() {
 
   return `<div class="goals-page">
       <div class="prog-hero">
-        ${progRing(overall, 130, '#3f9d63', 'Skor')}
+        ${progRing(overall, 130, 'var(--green)', 'Skor')}
         <div class="prog-hero-stats">
           <div class="prog-stat"><span class="prog-stat-num">${H.pct}%</span><span class="prog-stat-lbl">Kebiasaan</span></div>
           <div class="prog-stat"><span class="prog-stat-num">${T.pct}%</span><span class="prog-stat-lbl">Task selesai</span></div>
@@ -191,7 +191,7 @@ function renderProgressView() {
 
       <section class="panel" style="padding:14px 16px">
         <div class="prog-card-head"><h3>Aktivitas 7 Hari</h3><span class="prog-card-sub">kebiasaan ✓ + task selesai</span></div>
-        ${progBars(days, '#3f9d63')}
+        ${progBars(days, 'var(--green)')}
       </section>
 
       <section class="panel" style="padding:14px 16px">
@@ -202,7 +202,7 @@ function renderProgressView() {
       <section class="panel" style="padding:14px 16px">
         <div class="prog-card-head"><h3>Goal per Kategori</h3><span class="prog-card-sub">${G.count} goal</span></div>
         <div class="prog-donut-row">
-          ${progDonut(catSegs.length ? catSegs : [{ color: '#d9d3c7', value: 1 }], 120)}
+          ${progDonut(catSegs.length ? catSegs : [{ color: 'var(--line)', value: 1 }], 120)}
           <div class="prog-legend">${legend || '<div class="prog-legend-row">Belum ada goal</div>'}</div>
         </div>
         <div class="prog-two">

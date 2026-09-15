@@ -90,6 +90,12 @@ def scan():
                 if line.strip() == '}':
                     in_tokens = False
                 continue
+            # baris peta warna lama (LEGACY) memang harus memuat hex lama
+            if 'LEGACY' in line or 'legacy' in line:
+                continue
+            # entri peta warna lama: '  '#lama': '#baru',  '
+            if re.match(r"^\s*'#[0-9a-f]{6}':\s*'#[0-9a-f]{6}'", line, re.I):
+                continue
             for m in HEXRE.finditer(line):
                 h = norm(m.group(0))
                 if h not in BRAND_ALLOW:
@@ -102,7 +108,7 @@ def main():
     usage = scan()
     off = {h: v for h, v in usage.items() if h not in tok}
     cool = {h: v for h, v in off.items() if hue_kind(h).startswith('cool')}
-    light = dict(panel='#fffdf9', bg='#faf6ef', text='#26201a', muted='#857a6b', green='#3d9a5f',
+    light = dict(panel='#fffdf9', bg='#faf6ef', text='#26201a', muted='#776b5e', green='#3d9a5f',
                  pink='#d05792', violet='#7c5cbf', orange='#e0682f', danger='#c93c30', teal='#e85d4f')
     dark = dict(panel='#211d17', bg='#16130f', text='#f3ede3', muted='#a89b88', green='#5cb87e',
                 pink='#e077ab', violet='#a487e0', orange='#ef8148', danger='#e05a4d', teal='#ef7263')
