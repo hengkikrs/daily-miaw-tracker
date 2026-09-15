@@ -80,3 +80,10 @@ Render → `renderNotesView`/`renderNoteListPage`/`renderNoteDetailPage`/`render
 
 ## Known risks
 `sanitizeNoteHtml` memakai allowlist `ALLOW` (L3765+) — jangan longgarkan tanpa alasan keamanan. Kunci `miaw-tracker.notes.v1`.
+
+## ui54 — toolbar Catatan, tombol Dokumen, donut Laporan, Kalender Cashflow (2026-09-15)
+- notes.js: toolbar diberi pemisah grup (B/I/H • list • kutip/link • undo/redo), title tooltip per tombol, `noteSyncTb()` menyalakan kelas `.on` (latar gelap #57443a) mengikuti gaya di posisi kursor via `selectionchange` (debounce 120ms) + `queryCommandState`.
+- finance-documents.js: tombol "+ Kategori" kini `goal-chip` (40px, radius 999px, sama dgn tab); "+ Tambah Dokumen" dapat gaya `.docs-page .btn(.primary)` seragam tx-page (selama ini tanpa CSS → button polos browser). Mobile: toolbar disembunyikan, FAB tetap.
+- styles.css: `.rep-donut` 138px → `clamp(190px,46%,260px)`, wrap center + gap 26px.
+- finance-transactions.js: "Kalender PnL" → "Kalender Cashflow"; legend Rugi/Profit → Keluar/Masuk; ringkasan "N hari profit/rugi · terbaik/terburuk" → "masuk/keluar · terbesar". Subtitle router ikut.
+- QA lokal 390px: btns=10 seps=3, bold toggle on/off ✓, onBg rgb(87,68,58); donutW=190; chip Kategori 40px == tab 40px.
