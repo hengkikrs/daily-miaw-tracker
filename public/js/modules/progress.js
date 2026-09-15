@@ -26,13 +26,22 @@ function progHabitStats() {
     }
   });
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-  // streak harian: hitung berturut-turut dari hari terakhir yang ada datanya
-  const daily = habits.filter((h) => h.categoryKey === 'daily');
+  // Streak harian: hari berturut-turut (berlalu) di mana SEMUA kebiasaan harian
+  // AKTIF tercentang. Hari ini boleh belum lengkap — streak dihitung dari kemarin.
+  // (Bug lama: habits nonaktif ikut diminta centang, dan streak putus kalau
+  // hari ini belum dicentang → selalu '—'.)
+  const daily = habits.filter((h) => h.categoryKey === 'daily' && h.active !== false);
   const dim = daysInMonth(activeYear, activeMonth);
+  const nowD = new Date();
+  const isCur = activeYear === nowD.getFullYear() && activeMonth === nowD.getMonth();
   let streak = 0;
-  for (let day = Math.min(dim, new Date().getDate()); day >= 1; day -= 1) {
-    if (daily.length && daily.every((h) => h.slots[day - 1])) streak += 1;
-    else break;
+  if (daily.length) {
+    let day = Math.min(dim, nowD.getDate());
+    if (isCur && !daily.every((h) => h.slots[day - 1])) day -= 1;
+    for (; day >= 1; day -= 1) {
+      if (daily.every((h) => h.slots[day - 1])) streak += 1;
+      else break;
+    }
   }
   return { pct, done, total, earned, possible, byCat, streak, count: habits.length };
 }
@@ -63,23 +72,23 @@ function progGoalStats() {
 function progTaskStats() {
   const tasks = loadTasks();
   const done = tasks.filter(progTaskDone);
-  let estMin = 0;
-  let actMin = 0;
-  done.forEach((t) => {
-    const m = String(t.actual || '').match(/(\d+)\s*menit/);
-    if (m) actMin += Number(m[1]);
-    const e = String(t.estimate || '').match(/(\d+)\s*menit|(\d+)\s*jam/);
-    if (e) estMin += e[1] ? Number(e[1]) : Number(e[2]) * 60;
-  });
-  const prio = { high: 0, medium: 0, low: 0 };
-  done.forEach((t) => { const k = String(t.priority || 'medium').toLowerCase().slice(0, 6); prio[k in prio ? k : 'medium'] += 1; });
+  // Project task done: jumlah task selesai milik semua project (Goals and Habit
+  // → submenu Project). Sumber: projTasks() = task yang punya field project.
+  let ptTotal = 0;
+  let ptDone = 0;
+  try {
+    loadProjects().forEach((p) => {
+      const ts = projTasks(p.name);
+      ptTotal += ts.length;
+      ptDone += ts.filter(progTaskDone).length;
+    });
+  } catch { /* modul projects belum tersedia — biarkan 0 */ }
   return {
     total: tasks.length,
     done: done.length,
     pct: tasks.length === 0 ? 0 : Math.round((done.length / tasks.length) * 100),
-    estMin,
-    actMin,
-    prio,
+    ptTotal,
+    ptDone,
   };
 }
 
@@ -149,15 +158,19 @@ function renderProgressView() {
   const catSegs = Object.keys(GOAL_CATS).filter((c) => G.byCat[c]).map((c) => ({ color: GOAL_CATS[c], value: G.byCat[c], label: c }));
   const legend = catSegs.map((s) => `<div class="prog-legend-row"><span class="task-dot" style="background:${s.color}"></span><b style="flex:1">${escapeHtml(s.label)}</b><span style="color:var(--muted);font-weight:700">${Math.round((s.value / (catSegs.reduce((a, x) => a + x.value, 0) || 1)) * 100)}%</span><span style="width:26px;text-align:right;font-weight:800">${s.value}</span></div>`).join('');
 
-  const habitCatRows = ['daily', 'weekly', 'monthly'].map((k) => {
-    const c = H.byCat[k];
-    const pct = c.p === 0 ? 0 : Math.round((c.e / c.p) * 100);
-    const lbl = k === 'daily' ? 'Harian' : k === 'weekly' ? 'Mingguan' : 'Bulanan';
-    return `<div class="prog-habit-row"><b>${lbl}</b><span class="goal-bar"><i style="width:${pct}%;display:block;height:100%;border-radius:999px;background:${['#3b82f6', '#ea8a2f', '#8b5cf6'][k === 'daily' ? 0 : k === 'weekly' ? 1 : 2]}"></i></span><em>${c.e}/${c.p} pts</em></div>`;
+  const habitCatRows = [
+    { lbl: 'Harian', keys: ['daily'], col: '#3b82f6' },
+    { lbl: 'Mingguan', keys: ['weekly', 'specificWeekly'], col: '#ea8a2f' },
+    { lbl: 'Bulanan', keys: ['monthly'], col: '#8b5cf6' },
+  ].map((row) => {
+    // Bug lama: baris 'Mingguan' hanya menjumlahkan kategori 'weekly' — kebiasaan
+    // 'specificWeekly' (mingguan khusus) tidak pernah masuk, jadi tampak 0/0 pts
+    // walau slot mingguannya sudah tercentang.
+    const e = row.keys.reduce((a, k) => a + (H.byCat[k] ? H.byCat[k].e : 0), 0);
+    const p = row.keys.reduce((a, k) => a + (H.byCat[k] ? H.byCat[k].p : 0), 0);
+    const pct = p === 0 ? 0 : Math.round((e / p) * 100);
+    return `<div class="prog-habit-row"><b>${row.lbl}</b><span class="goal-bar"><i style="width:${pct}%;display:block;height:100%;border-radius:999px;background:${row.col}"></i></span><em>${e}/${p} pts</em></div>`;
   }).join('');
-
-  const prioTotal = (T.prio.high + T.prio.medium + T.prio.low) || 1;
-  const prioRows = [['Tinggi', T.prio.high, '#ef4444'], ['Sedang', T.prio.medium, '#f59e0b'], ['Rendah', T.prio.low, '#3b82f6']].map(([lbl, v, col]) => `<div class="prog-legend-row"><span class="task-dot" style="background:${col}"></span><b style="flex:1">${lbl}</b><span style="width:26px;text-align:right;font-weight:800">${v}</span></div>`).join('');
 
   return `<div class="goals-page">
       <div class="prog-hero">
@@ -171,7 +184,7 @@ function renderProgressView() {
 
       <div class="prog-kpis">
         <div class="prog-kpi"><span>🔥</span><b>${H.streak > 0 ? H.streak + ' hari' : '—'}</b><em>Streak harian</em></div>
-        <div class="prog-kpi"><span>✅</span><b>${T.done}</b><em>Task done</em></div>
+        <div class="prog-kpi"><span>📌</span><b>${T.ptDone}/${T.ptTotal}</b><em>Project task done</em></div>
         <div class="prog-kpi"><span>🎯</span><b>${G.msDone}/${G.msTotal}</b><em>Milestone</em></div>
         <div class="prog-kpi"><span>⭐</span><b>${H.earned}</b><em>Poin kebiasaan</em></div>
       </div>
@@ -200,17 +213,8 @@ function renderProgressView() {
       </section>
 
       <section class="panel" style="padding:14px 16px">
-        <div class="prog-card-head"><h3>Kebiasaan ${MONTHS_S[activeMonth]}</h3><span class="prog-card-sub">${H.done}/${H.total} slot · ${H.count} habit</span></div>
+        <div class="prog-card-head"><h3>Kebiasaan ${MONTHS[activeMonth]}</h3><span class="prog-card-sub">${H.done}/${H.total} slot · ${H.count} habit</span></div>
         ${habitCatRows}
-      </section>
-
-      <section class="panel" style="padding:14px 16px">
-        <div class="prog-card-head"><h3>Waktu & Prioritas Task</h3><span class="prog-card-sub">${T.done} task selesai</span></div>
-        <div class="prog-two">
-          <div class="prog-mini"><b>${T.estMin >= 60 ? (T.estMin / 60).toFixed(1) + ' jam' : T.estMin + ' mnt'}</b><span>Estimasi</span></div>
-          <div class="prog-mini"><b>${T.actMin >= 60 ? (T.actMin / 60).toFixed(1) + ' jam' : T.actMin + ' mnt'}</b><span>Aktual</span></div>
-        </div>
-        <div class="prog-legend" style="margin-top:8px">${prioTotal ? prioRows : ''}</div>
       </section>
     </div>`;
 }

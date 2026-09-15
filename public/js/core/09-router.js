@@ -85,7 +85,7 @@ function renderShell() {
   }
 
   if (activeView === 'progress') {
-    dom.pageTitle.textContent = 'Progress';
+    dom.pageTitle.textContent = 'Goals and Habit Progress';
     dom.pageSubtitle.textContent = 'Statistik kebiasaan, task & goals';
     dom.content.innerHTML = renderProgressView();
     return;
@@ -195,7 +195,7 @@ function renderShell() {
 const PLACEHOLDER_VIEWS = {
   jadwal: { title: 'Jadwal', subtitle: 'Rencana waktu harian & mingguan', emoji: '🗓️', hint: 'Atur agenda dan rutinitas harianmu.' },
   goals: { title: 'Goals', subtitle: 'Target jangka pendek & panjang', emoji: '🎯', hint: 'Pasang target besar dan pecah jadi kebiasaan kecil.' },
-  progress: { title: 'Progress', subtitle: 'Grafik perkembangan dirimu', emoji: '📈', hint: 'Pantau konsistensi dan pertumbuhan dari waktu ke waktu.' },
+  progress: { title: 'Goals and Habit Progress', subtitle: 'Grafik perkembangan dirimu', emoji: '📈', hint: 'Pantau konsistensi dan pertumbuhan dari waktu ke waktu.' },
   project: { title: 'Project', subtitle: 'Proyek & target besar', emoji: '🧩', hint: 'Kelompokkan task dan catatan ke dalam proyek.' },
   catatan: { title: 'Catatan', subtitle: 'Ide, journal, dan memo cepat', emoji: '📝', hint: 'Tangkap pikiran sebelum hilang.' },
   transaksi: { title: 'Transaksi', subtitle: 'Pemasukan & pengeluaran harian', emoji: '💸', hint: 'Catat uang masuk dan keluar dengan cepat.' },
