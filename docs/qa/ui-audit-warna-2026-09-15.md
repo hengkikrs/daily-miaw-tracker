@@ -1,7 +1,7 @@
 # Audit Sistem Warna & Tema — Miaw Tracker
 
-**Tanggal**: 2026-09-15 · **Cakupan**: seluruh `public/**` (SPA) · **Metode**: inventaris token, pemindaian hex literal, pengukuran `getComputedStyle` di 12 view (light + dark), perhitungan kontras WCAG 2.1.
-**Kesimpulan singkat**: tema dasar (hangat) sudah kuat dan mayoritas komponen baru sudah memakai token, tetapi **masih ada 2 sistem warna hidup berdampingan** — palet "dingin" lama (`styles.css :root`) dan palet hangat (`theme.css`) — sehingga 345 pemakaian warna literal di luar token membuat beberapa bagian tampak tidak satu tema.
+**Tanggal**: 2026-09-15 · **Cakupan**: seluruh `public/**` (SPA) · **Metode**: inventaris token, pemindaian hex literal (`python3 scripts/dev/audit-theme.py`), pengukuran `getComputedStyle` di 12 view (light + dark), perhitungan kontras WCAG 2.1.
+**Kesimpulan singkat**: tema dasar (hangat) sudah kuat dan mayoritas komponen baru sudah memakai token, tetapi **masih ada 2 sistem warna hidup berdampingan** — palet "dingin" lama (`styles.css :root`) dan palet hangat (`theme.css`) — sehingga 332 pemakaian warna literal di luar token membuat beberapa bagian tampak tidak satu tema.
 
 ---
 
@@ -11,9 +11,9 @@
 |---|---|
 | Token light (styles.css + theme.css) | 33 definisi; 42 hex unik sebagai nilai token |
 | Token dark | 26 definisi |
-| Pemakaian hex literal (di luar blok token) | **474** (styles.css 309 · theme.css 45 · js 120) |
-| Hex unik di luar palet token | **118** (345 pemakaian) |
-| Di antaranya bernuansa **dingin** (biru/hijau/ungu) | **50 warna / 102 pemakaian** |
+| Pemakaian hex literal (di luar blok token, tanpa aset brand Google) | **332** (styles.css ±300 · js ±120) |
+| Hex unik di luar palet token | **109** |
+| Di antaranya bernuansa **dingin** (biru/hijau/ungu) | **44 warna / 95 pemakaian** |
 | Hex hardcode tanpa pasangan khusus dark | 22 dari 27 sampel |
 
 **Akar masalah**: `styles.css :root` mendefinisikan palet dingin (`--bg #f6f8fb`, `--text #101828`, `--teal #0f766e`, `--blue #2563eb`, `--cyan #0891b2`, `--violet #7c3aed`, `--rose #e11d48`), lalu `theme.css` (tema "Hangat") menimpanya (`--bg #faf6ef`, `--text #26201a`, `--teal #e85d4f` coral, dst). Setiap rule yang menulis hex langsung — atau memakai `var(--token, #fallback-dingin)` — tetap dingin dan tidak mengikuti tema.
@@ -111,5 +111,5 @@ Aksen dipakai sebagai **teks kecil** (mis. `.dash-mod-cta` 12px, `.lap-card-head
 
 ## 5. Lampiran — data mentah
 
-- Pemindaian hex: 474 pemakaian; daftar lengkap per warna + lokasi tersimpan di `/tmp/audit_off.json` (dibuat ulang dengan `python3 /tmp/audit_ui2.py`).
+- Pemindaian hex diulang kapan saja dengan `python3 scripts/dev/audit-theme.py` (opsi `--json` untuk data mentah).
 - Pengukuran live (contoh): bar goal `linear-gradient(90deg, rgb(63,157,99), rgb(88,181,122))`; `.green` budget `rgb(46,125,91)`; bar tabungan soft `rgb(157,185,216)→rgb(111,151,196)`; legend laporan `.lg-in rgb(127,181,160)`; persen bulan 1–3 `rgb(94,234,212)`, `rgb(252,211,77)`, `rgb(196,181,253)` — identik di light & dark (bukti tidak adaptif).
