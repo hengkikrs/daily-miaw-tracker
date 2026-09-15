@@ -178,7 +178,7 @@ function txCalendarHtml(month) {
   const isCur = month === txMonthNow();
   return `<div class="panel tx-cal-card">
     <div class="tx-cal-head">
-      <h3>📊 Kalender PnL</h3>
+      <h3>📊 Kalender Cashflow</h3>
       <div class="tx-cal-nav">
         <button type="button" class="btn tiny" data-tx-mprev aria-label="Bulan sebelumnya">‹</button>
         <b>${txMonthLabel(month)}</b>
@@ -189,8 +189,8 @@ function txCalendarHtml(month) {
     <div class="tx-cal-dow">${['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((d) => `<span>${d}</span>`).join('')}</div>
     <div class="tx-cal-grid">${cells}</div>
     <div class="tx-cal-foot">
-      <div class="tx-legend"><span class="tx-lg bad3"></span><span class="tx-lg bad2"></span><span class="tx-lg bad1"></span><span class="rugi">Rugi</span><span class="tx-lg zero"></span><span class="tx-lg ok1"></span><span class="tx-lg ok2"></span><span class="tx-lg ok3"></span><span class="profit">Profit</span></div>
-      <div class="tx-cal-sum">${profitDays} hari profit · ${lossDays} hari rugi${best && best[1] > 0 ? ` · terbaik ${txGroupLabel(best[0])} <b class="pos">+${txCompact(best[1])}</b>` : ''}${worst && worst[1] < 0 ? ` · terburuk ${txGroupLabel(worst[0])} <b class="neg">−${txCompact(worst[1])}</b>` : ''}</div>
+      <div class="tx-legend"><span class="tx-lg bad3"></span><span class="tx-lg bad2"></span><span class="tx-lg bad1"></span><span class="rugi">Keluar</span><span class="tx-lg zero"></span><span class="tx-lg ok1"></span><span class="tx-lg ok2"></span><span class="tx-lg ok3"></span><span class="profit">Masuk</span></div>
+      <div class="tx-cal-sum">${profitDays} hari masuk · ${lossDays} hari keluar${best && best[1] > 0 ? ` · terbesar ${txGroupLabel(best[0])} <b class="pos">+${txCompact(best[1])}</b>` : ''}${worst && worst[1] < 0 ? ` · terbesar ${txGroupLabel(worst[0])} <b class="neg">−${txCompact(worst[1])}</b>` : ''}</div>
       ${txDaySel ? `<button type="button" class="btn tiny" data-tx-dayclear>✕ Lepas pilihan hari (${txGroupLabel(txDaySel)})</button>` : ''}
     </div>
   </div>`;

@@ -124,7 +124,7 @@ function docOpen(d) {
 function docsEmptyHtml(hasAny) {
   return `<div class="doc-empty"><span>🗂️</span><b>${hasAny ? 'Tidak ada hasil' : 'Belum ada dokumen'}</b>
     <p>${hasAny ? 'Coba kata kunci lain atau ubah filter.' : 'Simpan berkas & tautan penting di satu tempat — mulai dari sini.'}</p>
-    <div class="doc-empty-cta"><button type="button" class="btn primary" data-doc-new>+ Tambah Dokumen</button><button type="button" class="btn" data-doc-link>🔗 Tambah Link</button></div></div>`;
+    <div class="doc-empty-cta"><button type="button" class="btn primary" data-doc-new>＋ Tambah Dokumen</button><button type="button" class="btn" data-doc-link>🔗 Tambah Link</button></div></div>`;
 }
 
 function docsStatsHtml() {
@@ -159,7 +159,7 @@ function renderDocListPage() {
   const sheet = docMenuId ? docActionSheet(docFind(docMenuId)) : '';
   const modal = docModal ? renderDocModal() : '';
   return `<div class="docs-page">
-    <div class="doc-toolbar"><button type="button" class="btn primary" data-doc-new>+ Tambah Dokumen</button></div>
+    <div class="doc-toolbar"><button type="button" class="btn primary" data-doc-new>＋ Tambah Dokumen</button></div>
     ${docsStatsHtml()}
     <div class="doc-actions">
       <button type="button" class="doc-qact" data-doc-upload><span>📤</span>Upload File</button>
@@ -169,7 +169,7 @@ function renderDocListPage() {
     </div>
     <label class="task-search doc-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input type="search" data-doc-search placeholder="Cari nama, deskripsi, kategori, tag…" value="${escapeHtml(docSearch)}" autocomplete="off" /></label>
-    <div class="doc-tabs">${tabs}<button type="button" class="doc-tab doc-addcat" data-doc-addcat aria-label="Buat kategori baru">+ Kategori</button></div>
+    <div class="doc-tabs">${tabs}<button type="button" class="goal-chip doc-tab doc-addcat" data-doc-addcat aria-label="Buat kategori baru" title="Buat kategori baru">＋ Kategori</button></div>
     <div class="doc-filterrow">
       <select data-doc-ftype aria-label="Filter tipe"><option value="all"${docType === 'all' ? ' selected' : ''}>Semua tipe</option><option value="file"${docType === 'file' ? ' selected' : ''}>Berkas</option><option value="link"${docType === 'link' ? ' selected' : ''}>Tautan</option></select>
       <select data-doc-sort aria-label="Urutkan">${[['terbaru', 'Terbaru diperbarui'], ['lama', 'Terlama dibuat'], ['nama', 'Nama A-Z']].map(([k, l]) => `<option value="${k}"${docSort === k ? ' selected' : ''}>${l}</option>`).join('')}</select>

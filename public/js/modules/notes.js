@@ -280,7 +280,7 @@ function renderNoteEditorPage() {
   const n = noteFind(loadNotes(), noteId);
   if (!n) { notePage = 'list'; noteId = null; return renderNoteListPage(); }
   const cats = NOTE_CATS.filter((c) => c !== 'Arsip').map((c) => `<button type="button" class="goal-chip${n.category === c ? ' on' : ''}" data-note-cat="${c}">${c}</button>`).join('');
-  const tb = (cmd, label, arg) => `<button type="button" class="note-tb-btn" data-note-cmd="${cmd}"${arg ? ` data-note-cmd-arg="${arg}"` : ''} aria-label="${label}">${label}</button>`;
+  const tb = (cmd, glyph, name, arg) => `<button type="button" class="note-tb-btn" data-note-cmd="${cmd}"${arg ? ` data-note-cmd-arg="${arg}"` : ''} aria-label="${name}" title="${name}">${glyph}</button>`;
   return `<div class="notes-page note-editor-wrap">
       <div class="task-detail-top">
         <button type="button" class="task-back" data-note-back aria-label="Kembali">←</button>
@@ -290,7 +290,7 @@ function renderNoteEditorPage() {
         <button type="button" class="icon-button proj-menu-btn${n.favorite ? ' on' : ''}" data-note-efav="${n.id}" aria-label="Favorit">⭐</button>
       </div>
       <input class="note-e-title" id="noteETitle" data-note-title placeholder="Judul catatan…" value="${escapeHtml(n.title)}" maxlength="120" autocomplete="off" />
-      <div class="note-toolbar" role="toolbar">${tb('bold', '<b>B</b>')}${tb('italic', '<i>I</i>')}${tb('h3', '<span class="nb">H</span>')}${tb('insertUnorderedList', '•≡')}${tb('insertOrderedList', '1≡')}${tb('checklist', '☑')}${tb('formatBlock', '❝', 'blockquote')}${tb('link', '🔗')}<span class="note-tb-sep"></span>${tb('undo', '↩')}${tb('redo', '↪')}</div>
+      <div class="note-toolbar" role="toolbar">${tb('bold', '<b>B</b>', 'Tebal')}${tb('italic', '<i>I</i>', 'Miring')}${tb('h3', '<span class="nb">H</span>', 'Judul')}<span class="note-tb-sep"></span>${tb('insertUnorderedList', '•≡', 'Daftar butir')}${tb('insertOrderedList', '1≡', 'Daftar nomor')}${tb('checklist', '☑', 'Checklist')}<span class="note-tb-sep"></span>${tb('formatBlock', '❝', 'Kutipan', 'blockquote')}${tb('link', '🔗', 'Tautan')}<span class="note-tb-sep"></span>${tb('undo', '↩', 'Batal')}${tb('redo', '↪', 'Ulangi')}</div>
       <div class="goal-detail-card note-editor" id="noteEBody" contenteditable="true" data-note-body data-placeholder="Tulis catatan…">${n.body || ''}</div>
       <div class="note-e-meta">
         <div class="goal-chips">${cats}</div>
@@ -393,7 +393,44 @@ function noteExecCmd(cmd, arg) {
   }
   document.execCommand(cmd, false, arg || null);
   noteEditorSave({ body: sanitizeNoteHtml(body.innerHTML) });
+  noteSyncTb();
 }
+
+// Sinkronkan tombol toolbar (B/I/H/list/kutip/link) dengan gaya di posisi kursor.
+function noteSyncTb() {
+  const bar = document.querySelector('.note-toolbar');
+  const body = document.getElementById('noteEBody');
+  if (!bar) return;
+  const inside = !!body && document.activeElement === body;
+  let blk = '';
+  let link = false;
+  if (inside) {
+    try { blk = String(document.queryCommandValue('formatBlock')).toLowerCase(); } catch (e) { blk = ''; }
+    try { link = document.queryCommandState('createLink'); } catch (e) { link = false; }
+  }
+  bar.querySelectorAll('[data-note-cmd]').forEach((b) => {
+    const c = b.dataset.noteCmd;
+    const a = b.dataset.noteCmdArg || '';
+    let on = false;
+    if (inside) {
+      try {
+        if (c === 'h3') on = blk === 'h3';
+        else if (c === 'formatBlock') on = blk === a;
+        else if (c === 'link') on = link;
+        else if (c === 'checklist' || c === 'undo' || c === 'redo') on = false;
+        else on = document.queryCommandState(c);
+      } catch (e) { on = false; }
+    }
+    b.classList.toggle('on', !!on);
+  });
+}
+let noteTbTimer = null;
+document.addEventListener('selectionchange', () => {
+  const body = document.getElementById('noteEBody');
+  if (!body || document.activeElement !== body) return;
+  clearTimeout(noteTbTimer);
+  noteTbTimer = setTimeout(noteSyncTb, 120);
+});
 
 function handleNoteInput(el) {
   if (el.matches('[data-note-search]')) {

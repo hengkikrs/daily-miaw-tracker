@@ -130,7 +130,7 @@ function renderShell() {
   if (activeView === 'transaksi') {
     ensureTxStore();
     dom.pageTitle.textContent = 'Transaksi';
-    dom.pageSubtitle.textContent = 'Catat uang masuk & keluar, lihat pola lewat kalender PnL.';
+    dom.pageSubtitle.textContent = 'Catat uang masuk & keluar, lihat pola lewat kalender cashflow.';
     dom.content.innerHTML = renderTxView();
     return;
   }
