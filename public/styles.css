@@ -2643,6 +2643,27 @@ svg {
   font-size: 13.5px;
 }
 
+/* --- Aksen warna per seksi menu (selaras dengan warna modul di dashboard) --- */
+.nav-group[data-group="activity"] { --sec: var(--sec-activity); }
+.nav-group[data-group="goals"] { --sec: var(--sec-goals); }
+.nav-group[data-group="organization"] { --sec: var(--sec-org); }
+.nav-group[data-group="keuangan"] { --sec: var(--sec-finance); }
+
+.nav-group-toggle .nav-icon { color: var(--sec, inherit); transition: color 0.18s ease; }
+.nav-group-toggle:hover { background: color-mix(in srgb, var(--sec, #ffffff) 15%, var(--sidebar-soft, rgba(255, 255, 255, 0.07))); }
+
+.nav-group.open > .nav-group-toggle .nav-icon,
+.nav-group.active > .nav-group-toggle .nav-icon { filter: drop-shadow(0 2px 7px color-mix(in srgb, var(--sec, #ffffff) 45%, transparent)); }
+
+.nav-group .nav-group-items .nav-item.sub.active {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--sec, var(--teal)) 34%, transparent), color-mix(in srgb, var(--sec, var(--cyan)) 15%, transparent));
+  box-shadow: inset 3px 0 0 var(--sec, var(--cyan)), 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+}
+
+.nav-group .nav-group-items .nav-item.sub:not(.active):hover {
+  background: color-mix(in srgb, var(--sec, #ffffff) 12%, transparent);
+}
+
 
 /* --- Halaman placeholder menu baru --- */
 .placeholder-panel {
@@ -5061,29 +5082,50 @@ body.auth-required .auth-screen.landing {
 }
 
 /* ============ DASHBOARD BARU (statistik lintas modul) ============ */
+/* Warna identitas tiap seksi (senada dengan tema hangat):
+   Activity = hijau, Goals and Habit = pink, Organization = ungu, Finance = oranye. */
+:root {
+  --sec-activity: var(--green);
+  --sec-goals: var(--pink);
+  --sec-org: var(--violet);
+  --sec-finance: var(--orange);
+}
+
 .dash-page { display: grid; gap: 16px; }
 .dash-hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); box-shadow: var(--shadow); flex-wrap: wrap; }
 .dash-hero-main { display: grid; gap: 8px; min-width: 0; }
 .dash-hero-main h2 { margin: 0; font-size: 20px; }
 .dash-hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .dash-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--panel-soft); border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; color: var(--text); }
+.dash-chip[data-sec] { background: color-mix(in srgb, var(--sec, var(--panel-soft)) 13%, var(--panel-soft)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sec) 22%, transparent); }
+.dash-chip[data-sec="activity"] { --sec: var(--sec-activity); }
+.dash-chip[data-sec="goals"] { --sec: var(--sec-goals); }
+.dash-chip[data-sec="org"] { --sec: var(--sec-org); }
+.dash-chip[data-sec="finance"] { --sec: var(--sec-finance); }
 .dash-chip.bad { color: var(--danger); }
-.dash-hero-ring { width: 128px; flex: 0 0 auto; }
-.dash-ring { width: 128px; height: 128px; display: block; }
-.dash-ring-num { font-size: 22px; font-weight: 800; fill: var(--text); }
-.dash-ring-sub { font-size: 8.5px; fill: var(--muted); }
+
+/* Ring skor gabungan: tanpa kotak latar, teks tajam, busur gradasi */
+.dash-hero-ring { width: 148px; flex: 0 0 auto; display: grid; gap: 8px; justify-items: center; background: none; border: 0; box-shadow: none; }
+.dash-ring-wrap { position: relative; width: 148px; height: 148px; display: grid; place-items: center; }
+.dash-ring { width: 148px; height: 148px; display: block; }
+.dash-ring-arc { filter: drop-shadow(0 3px 8px color-mix(in srgb, currentColor 34%, transparent)); }
+.dash-ring-copy { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 2px; pointer-events: none; }
+.dash-ring-num { font-size: 34px; line-height: 1; font-weight: 800; color: currentColor; letter-spacing: -0.02em; }
+.dash-ring-num small { font-size: 15px; font-weight: 800; }
+.dash-ring-sub { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: lowercase; }
+.dash-ring-note { margin: 0; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); max-width: 22ch; }
 .dash-hero-ring.score-great { color: var(--green); }
-.dash-hero-ring.score-good { color: #4a9fd4; }
+.dash-hero-ring.score-good { color: var(--blue); }
 .dash-hero-ring.score-watch { color: var(--orange); }
 .dash-hero-ring.score-low { color: var(--danger); }
 .dash-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .dash-mod { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); padding: 15px; display: grid; gap: 10px; align-content: start; border-top: 3px solid var(--tone, var(--text)); }
-.dash-mod.tone-teal { --tone: #2f8f7b; }
-.dash-mod.tone-rose { --tone: #d96a8b; }
-.dash-mod.tone-violet { --tone: #8b5cf6; }
-.dash-mod.tone-amber { --tone: #ea8a2f; }
+.dash-mod.tone-activity { --tone: var(--sec-activity); }
+.dash-mod.tone-goals { --tone: var(--sec-goals); }
+.dash-mod.tone-org { --tone: var(--sec-org); }
+.dash-mod.tone-finance { --tone: var(--sec-finance); }
 .dash-mod-head { display: flex; align-items: center; gap: 9px; }
-.dash-mod-ico { width: 34px; height: 34px; border-radius: 10px; background: var(--panel-soft); display: grid; place-items: center; font-size: 17px; }
+.dash-mod-ico { width: 34px; height: 34px; border-radius: 10px; background: color-mix(in srgb, var(--tone, var(--text)) 14%, var(--panel-soft)); display: grid; place-items: center; font-size: 17px; }
 .dash-mod-head h3 { margin: 0; font-size: 14px; flex: 1; }
 .dash-mod-pct { font-size: 17px; font-weight: 800; color: var(--tone); }
 .dash-mod-pct small { font-size: 10.5px; font-weight: 700; }

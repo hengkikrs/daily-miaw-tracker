@@ -103,7 +103,7 @@ function renderDashboard(year) {
 
   // ===== kartu modul (ringkas) =====
   const activityCard = dashCard({
-    icon: '⚡', title: 'Activity', pct: d.activityPct, tone: 'teal', view: 'task', cta: 'Buka Daily Task',
+    icon: '⚡', title: 'Activity', pct: d.activityPct, tone: 'activity', view: 'task', cta: 'Buka Daily Task',
     stats: `
       <div class="dash-stat"><span>Task hari ini</span><b>${d.doneToday}/${d.tasksToday.length}</b></div>
       <div class="dash-stat"><span>Rutinitas</span><b>${d.rtDone}/${d.rt.length}</b></div>
@@ -111,7 +111,7 @@ function renderDashboard(year) {
       <div class="dash-stat"><span>Agenda hari ini</span><b>${d.schedToday.length}</b></div>`,
   });
   const goalsCard = dashCard({
-    icon: '🎯', title: 'Goals & Habit', pct: Math.round((d.avgGoal + d.habitAvg) / 2), tone: 'rose', view: 'goals', cta: 'Buka Goals',
+    icon: '🎯', title: 'Goals & Habit', pct: Math.round((d.avgGoal + d.habitAvg) / 2), tone: 'goals', view: 'goals', cta: 'Buka Goals',
     stats: `
       <div class="dash-stat"><span>Goals (rata-rata)</span><b>${d.avgGoal}%</b></div>
       <div class="dash-stat"><span>Habit ${MONTHS[activeMonth].slice(0, 3)}</span><b>${d.habitAvg}%</b></div>
@@ -119,7 +119,7 @@ function renderDashboard(year) {
       <div class="dash-stat"><span>Project aktif</span><b>${d.projActive}</b></div>`,
   });
   const orgCard = dashCard({
-    icon: '🗂️', title: 'Organization', pct: clamp(Math.round(((d.notes.length + d.docs.length) / 30) * 100), 0, 100), tone: 'violet', view: 'catatan', cta: 'Buka Catatan',
+    icon: '🗂️', title: 'Organization', pct: clamp(Math.round(((d.notes.length + d.docs.length) / 30) * 100), 0, 100), tone: 'org', view: 'catatan', cta: 'Buka Catatan',
     stats: `
       <div class="dash-stat"><span>Catatan aktif</span><b>${d.notes.length}</b></div>
       <div class="dash-stat"><span>Dokumen</span><b>${d.docs.length}</b></div>
@@ -127,8 +127,10 @@ function renderDashboard(year) {
       <div class="dash-stat"><span>Dokumen baru</span><b>${d.docsThis}</b></div>`,
   });
   const financePct = d.fCur.inc > 0 ? clamp(Math.round((d.fCur.net / d.fCur.inc) * 100), 0, 100) : 0;
+  // skor gabungan: rata-rata activity, habit, dan separuh (goals + kas)
+  const score = clamp(Math.round((d.activityPct + d.habitAvg + Math.round((d.avgGoal + financePct) / 2)) / 3), 0, 100);
   const financeCard = dashCard({
-    icon: '💰', title: 'Finance', pct: financePct, tone: 'amber', view: 'laporan-keuangan', cta: 'Buka Laporan Keuangan',
+    icon: '💰', title: 'Finance', pct: financePct, tone: 'finance', view: 'laporan-keuangan', cta: 'Buka Laporan Keuangan',
     stats: `
       <div class="dash-stat"><span>Arus kas bersih</span><b class="${d.fCur.net >= 0 ? 'green' : 'coral'}">${dashCompact(d.fCur.net)}</b></div>
       <div class="dash-stat"><span>Saldo kas</span><b>${dashCompact(d.balance)}</b></div>
@@ -187,22 +189,33 @@ function renderDashboard(year) {
           <span class="kicker">Ringkasan ${MONTHS[activeMonth]} ${year}</span>
           <h2>Pantau semuanya dari satu tempat</h2>
           <div class="dash-hero-chips">
-            <span class="dash-chip">✅ ${d.doneToday}/${d.tasksToday.length} task hari ini</span>
-            <span class="dash-chip">🔥 ${d.rtDone}/${d.rt.length} rutinitas</span>
-            <span class="dash-chip">🎯 ${d.avgGoal}% goals</span>
-            <span class="dash-chip">💚 ${d.habitAvg}% habit</span>
-            <span class="dash-chip ${d.fCur.net >= 0 ? '' : 'bad'}">💰 ${d.fCur.net >= 0 ? '+' : '−'}${dashCompact(Math.abs(d.fCur.net))} kas</span>
+            <span class="dash-chip" data-sec="activity">✅ ${d.doneToday}/${d.tasksToday.length} task hari ini</span>
+            <span class="dash-chip" data-sec="activity">🔥 ${d.rtDone}/${d.rt.length} rutinitas</span>
+            <span class="dash-chip" data-sec="goals">🎯 ${d.avgGoal}% goals</span>
+            <span class="dash-chip" data-sec="goals">💚 ${d.habitAvg}% habit</span>
+            <span class="dash-chip ${d.fCur.net >= 0 ? '' : 'bad'}" data-sec="finance">💰 ${d.fCur.net >= 0 ? '+' : '−'}${dashCompact(Math.abs(d.fCur.net))} kas</span>
           </div>
         </div>
-        <aside class="dash-hero-ring ${scoreClass((d.activityPct + d.habitAvg + Math.round((d.avgGoal + financePct) / 2)) / 3)}">
-          <svg viewBox="0 0 120 120" class="dash-ring">
-            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--panel-soft)" stroke-width="12"/>
-            <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"
-              stroke-dasharray="${(((d.activityPct + d.habitAvg + Math.round((d.avgGoal + financePct) / 2)) / 3) / 100 * 314).toFixed(1)} 314"
-              transform="rotate(-90 60 60)"/>
-            <text x="60" y="58" text-anchor="middle" class="dash-ring-num">${Math.round((d.activityPct + d.habitAvg + Math.round((d.avgGoal + financePct) / 2)) / 3)}%</text>
-            <text x="60" y="74" text-anchor="middle" class="dash-ring-sub">skor gabungan</text>
-          </svg>
+        <aside class="dash-hero-ring ${scoreClass(score)}" role="img" aria-label="Skor gabungan ${score} persen">
+          <div class="dash-ring-wrap">
+            <svg viewBox="0 0 120 120" class="dash-ring" aria-hidden="true">
+              <defs>
+                <linearGradient id="dashRingGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="currentColor" stop-opacity="0.72"/>
+                  <stop offset="100%" stop-color="currentColor" stop-opacity="1"/>
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--line)" stroke-width="13"/>
+              <circle class="dash-ring-arc" cx="60" cy="60" r="50" fill="none" stroke="url(#dashRingGrad)" stroke-width="13" stroke-linecap="round"
+                stroke-dasharray="${(score / 100 * 314).toFixed(1)} 314"
+                transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="dash-ring-copy">
+              <b class="dash-ring-num">${score}<small>%</small></b>
+              <span class="dash-ring-sub">skor gabungan</span>
+            </div>
+          </div>
+          <p class="dash-ring-note">Activity ${d.activityPct}% · Goals ${d.avgGoal}% · Habit ${d.habitAvg}% · Kas ${financePct}%</p>
         </aside>
       </section>
 

@@ -89,6 +89,8 @@ function syncNavGroups() {
     const key = group.dataset.group;
     const isOpen = openNavGroups.has(key);
     group.classList.toggle('open', isOpen);
+    // tandai grup yang sedang aktif → aksen warna seksi menyala (lihat CSS --sec-*)
+    group.classList.toggle('active', NAV_GROUP_OF[activeView] === key);
     const toggle = group.querySelector('.nav-group-toggle');
     if (toggle) toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   });
