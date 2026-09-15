@@ -54,3 +54,11 @@ Render → `renderProgressView`; aksi → `handleProgressAction`; helper → `pr
 
 ## Known risks
 Read-only terhadap modul lain (tidak menulis store). `in` hanya 2 → paling aman dipindah lebih awal.
+
+## ui53 — perbaikan halaman Progress (2026-09-15)
+- Streak harian: sumber = centang slot `habit.slots` di habit store (sama dgn toggleSlot UI). Bug lama: (1) habit nonaktif ikut diminta tercentang → streak tak pernah jalan; (2) hari ini belum lengkap memutus streak → selalu '—'. Fix: hanya habit AKTIF; hari berjalan boleh belum lengkap (hitung mulai kemarin).
+- Baris "Mingguan" kartu Kebiasaan: dulu hanya kategori `weekly`; kebiasaan `specificWeekly` tidak terhitung sehingga tampak 0 walau sudah dicentang. Kini `weekly + specificWeekly` digabung.
+- KPI: "Task done" → "Project task done" (jumlah task project selesai/total, sumber projTasks per project).
+- Judul bar halaman: "Progress" → "Goals and Habit Progress" (09-router.js, 2 tempat).
+- Kartu "Waktu & Prioritas Task" DIHAPUS (permintaan user); estMin/actMin/prio dihapus dari progTaskStats.
+- Label kartu: "Kebiasaan Sep" → "Kebiasaan September" (pakai MONTHS penuh).

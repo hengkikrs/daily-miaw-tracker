@@ -141,3 +141,7 @@ Perbaikan: pemisah kolom dipindah ke `.task-info-cell:nth-child(even)` (hanya ko
 ## ui50–52 — kerapian select form Project + ikon prioritas (2026-09-15, commits `d23f340`,`8c0bb30`,`ui52`)
 
 Select "Goals" (tambah/edit project) dan "Prioritas" (edit Project Task) jatuh ke gaya default browser karena tidak pernah tercakup aturan field. Diseragamkan: `.goal-field select` ikut grup input; `.pt-edit-form select` disamakan dengan `.proj-inline input` + `min-height:46px`; `appearance:none` + panah SVG. Opsi prioritas + meta task diberi ikon 🔴/🟡/🟢 via helper `ptBadge(p)` (menggantikan penanda lama "⚡ Tinggi" yang hanya muncul untuk prioritas tinggi). Verifikasi produksi 390px: tinggi select == input (47px goals, 46px prioritas vs date), 0 error JS.
+
+### ui53 — Progress: streak, mingguan, KPI project task done, judul bar, hapus Waktu & Prioritas
+- File: js/modules/progress.js (streak sumber centang aktif-only, byCat Mingguan +specificWeekly, progTaskStats ptDone/ptTotal, kartu prio dihapus), js/core/09-router.js (judul).
+- Verifikasi lokal+produksi browser_exec: streak dihitung dari slots habit store; KPI Project task done 2/7; kartu Kebiasaan September; 0 error JS.
