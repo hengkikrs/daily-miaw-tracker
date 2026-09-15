@@ -137,3 +137,7 @@ Keluhan lanjutan dari ui46–48: "Umum" belum rapi — harus persis di bawah "Ta
 Diagnosis terukur (getBoundingClientRect, viewport 390px): sel Kategori di kolom kiri baris kedua mendapat `border-left + padding-left:16px + margin-left:16px` karena selektor pemisah lama `.task-info-cell + .task-info-cell` juga cocok dengan sel ke-3 ⇒ x=51 (Tanggal: 35), lebar 144 (Tanggal: 160).
 
 Perbaikan: pemisah kolom dipindah ke `.task-info-cell:nth-child(even)` (hanya kolom kanan). Verifikasi lokal & produksi: x Kategori = x Tanggal = 35 (label & nilai), lebar kolom sama 160px, pemisah kolom kanan tetap 1px, baris kedua sejajar, 0 error JS.
+
+## ui50–52 — kerapian select form Project + ikon prioritas (2026-09-15, commits `d23f340`,`8c0bb30`,`ui52`)
+
+Select "Goals" (tambah/edit project) dan "Prioritas" (edit Project Task) jatuh ke gaya default browser karena tidak pernah tercakup aturan field. Diseragamkan: `.goal-field select` ikut grup input; `.pt-edit-form select` disamakan dengan `.proj-inline input` + `min-height:46px`; `appearance:none` + panah SVG. Opsi prioritas + meta task diberi ikon 🔴/🟡/🟢 via helper `ptBadge(p)` (menggantikan penanda lama "⚡ Tinggi" yang hanya muncul untuk prioritas tinggi). Verifikasi produksi 390px: tinggi select == input (47px goals, 46px prioritas vs date), 0 error JS.
