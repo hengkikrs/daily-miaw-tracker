@@ -32,10 +32,127 @@ function refreshUsernamePreview(name) {
   if (el) el.textContent = authPendingUsername ? `@${authPendingUsername}` : '—';
 }
 
+// Halaman depan (landing) yang tampil sebelum login: ringkasan isi tracker,
+// ajakan mulai, dan tombol menuju daftar/masuk.
+function authLandingHtml() {
+  const fitur = [
+    { icon: '📅', nama: 'Kebiasaan', teks: 'Centang slot harian, mingguan, sampai bulanan. Streak dan skor konsistensi dihitung otomatis tiap bulan.' },
+    { icon: '✅', nama: 'Task & Jadwal', teks: 'Kegiatan rutin maupun sekali jalan, lengkap dengan jam, kategori, dan sesi fokus.' },
+    { icon: '🎯', nama: 'Goals & Project', teks: 'Pecah target besar menjadi project dan task kecil yang bisa dicentang satu per satu.' },
+    { icon: '📝', nama: 'Catatan', teks: 'Editor ringan dengan autosave, kategori, pin, dan bintang untuk ide yang sering dibuka.' },
+    { icon: '🗂️', nama: 'Dokumen', teks: 'Simpan berkas dan tautan penting, kelompokkan per kategori, temukan lagi dalam sekali ketik.' },
+    { icon: '💰', nama: 'Finance', teks: 'Catat uang masuk & keluar, susun budget bulanan, dan pantau tabungan lewat kalender cashflow.' },
+    { icon: '📊', nama: 'Laporan', teks: 'Grafik spending per kategori, tren bulanan, sampai ringkasan progress kebiasaanmu.' },
+    { icon: '🤖', nama: 'Miaw AI', teks: 'Asisten yang membantu menyusun rencana dan merangkum data yang sudah kamu catat.' },
+  ];
+  const langkah = [
+    { no: '01', judul: 'Daftar dengan email', teks: 'Cukup nama, email, dan password. Setelah kode OTP diverifikasi, tracker kosongmu langsung siap diisi.' },
+    { no: '02', judul: 'Susun kebiasaan & target', teks: 'Pakai daftar bawaan atau tulis kebiasaanmu sendiri — lengkap dengan jadwal harian, mingguan, atau bulanan.' },
+    { no: '03', judul: 'Centang, dan biarkan tercatat', teks: 'Setiap centang membentuk streak, skor bulanan, dan laporan yang bisa kamu tengok kembali kapan saja.' },
+  ];
+
+  return `
+    <div class="auth-hero hero-landing">
+      <div class="auth-brand">
+        <img src="cat-logo.svg" alt="" aria-hidden="true" />
+        <div>
+          <span>Miaw Tracker</span>
+          <strong>Pelacak kebiasaan pribadi</strong>
+        </div>
+      </div>
+
+      <section class="land-split">
+        <div class="land-copy">
+          <span class="land-badge">✦ Rapi, hangat, dan milikmu sendiri</span>
+          <h1>Semua rutinitas, target, dan uangmu dalam satu tempat yang tenang.</h1>
+          <p>Miaw Tracker menyatukan kebiasaan harian, agenda, project, catatan, dokumen, dan keuanganmu. Centang satu slot, lalu lihat bagaimana minggu dan bulanmu terbentuk — tanpa aplikasi yang bikin ribet.</p>
+          <div class="land-cta-row">
+            <button class="auth-primary land-btn" type="button" data-auth-action="start-signup">Mulai sekarang — gratis</button>
+            <button class="land-btn-ghost" type="button" data-auth-action="start-login">Masuk ke akun</button>
+          </div>
+          <p class="auth-hint">Tersimpan otomatis di perangkatmu · Sinkron ke akun pribadi · Tanpa kartu kredit</p>
+          <ul class="land-badges">
+            <li>🔥 Streak harian</li>
+            <li>📊 Laporan bulanan</li>
+            <li>🔒 Data pribadi</li>
+          </ul>
+        </div>
+
+        <div class="land-art" aria-hidden="true">
+          <article class="land-card">
+            <header>
+              <span>Skor bulan ini</span>
+              <strong>82</strong>
+            </header>
+            <div class="land-bar"><span style="width:82%"></span></div>
+            <ul class="land-rows">
+              <li><i class="on">✓</i><span>Olahraga pagi</span><em>21 hari</em></li>
+              <li><i class="on">✓</i><span>Baca 20 halaman</span><em>18 hari</em></li>
+              <li><i>○</i><span>Jurnal malam</span><em>12 hari</em></li>
+            </ul>
+            <footer>
+              <span>Uang masuk</span><strong>Rp4.150.000</strong>
+              <span>Keluar</span><strong>Rp1.980.000</strong>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="land-section">
+        <h2>Yang bisa kamu kerjakan di dalamnya</h2>
+        <p class="land-sub">Delapan ruang kerja dengan satu alur yang sama: catat hari ini, rapikan minggu ini, rencanakan bulan ini.</p>
+        <div class="land-grid">
+          ${fitur.map((f) => `
+            <article class="land-feature">
+              <span class="land-ico">${f.icon}</span>
+              <strong>${f.nama}</strong>
+              <p>${f.teks}</p>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+
+      <section class="land-section">
+        <h2>Mulai dalam tiga langkah</h2>
+        <p class="land-sub">Tidak ada setup panjang, tidak ada impor data yang wajib. Kamu bisa mengisi semuanya sambil jalan.</p>
+        <div class="land-steps">
+          ${langkah.map((s) => `
+            <article class="land-step">
+              <span class="land-no">${s.no}</span>
+              <strong>${s.judul}</strong>
+              <p>${s.teks}</p>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+
+      <section class="land-final">
+        <h2>Hari pertama selalu terasa paling berat — biar tracker yang mengingat.</h2>
+        <p>Buat akun gratis, susun kebiasaan pertamamu, dan biarkan streaknya tumbuh dari hari ini.</p>
+        <div class="land-cta-row">
+          <button class="auth-primary land-btn" type="button" data-auth-action="start-signup">Daftar dan mulai</button>
+          <button class="land-btn-ghost" type="button" data-auth-action="start-login">Masuk ke akun</button>
+        </div>
+        <p class="auth-hint">Butuh akun? Cukup email aktif untuk verifikasi OTP, atau lanjut cepat dengan Google.</p>
+      </section>
+
+      <p class="land-foot">Miaw Tracker — tracker pribadi untuk kebiasaan, tugas, catatan, dan keuangan. Data disimpan di perangkatmu, dengan sinkronisasi opsional ke akunmu sendiri.</p>
+    </div>
+  `;
+}
+
 function renderAuthScreen() {
   if (!dom.authScreen) return;
 
   document.body.classList.add('auth-required');
+
+  if (authMode === 'landing') {
+    dom.authScreen.classList.add('landing');
+    dom.authScreen.innerHTML = authLandingHtml();
+    return;
+  }
+
+  dom.authScreen.classList.remove('landing');
 
   const isSignup = authMode === 'signup';
   const isVerify = isSignup && authOtpEmail;
@@ -112,6 +229,7 @@ function renderAuthScreen() {
         <button class="auth-switch" type="button" data-auth-action="switch-mode">
           ${isSignup ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}
         </button>
+        <button class="auth-text-button land-back" type="button" data-auth-action="to-landing">← Kembali ke halaman depan</button>
         ${!isSignup && remoteEnabled ? `
           <div class="auth-divider"><span>atau</span></div>
           <button class="auth-google" type="button" data-auth-action="google" ${authIsBusy ? 'disabled' : ''}>
@@ -517,6 +635,7 @@ async function logoutAuth() {
   activeMonth = new Date().getMonth();
   ensureYear(activeYear);
   saveState();
+  authMode = 'landing';
   renderShell();
   authIsBusy = false;
   showToast('Kamu sudah keluar. Mode lokal aktif.');

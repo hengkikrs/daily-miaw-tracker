@@ -103,7 +103,7 @@ let isApplyingRemoteState = false;
 let remoteSaveInFlight = false;
 let remoteSaveQueued = false;
 let remoteSaveRevision = 0;
-let authMode = 'login';
+let authMode = 'landing';
 let authOtpEmail = '';
 
 let authPendingName = '';

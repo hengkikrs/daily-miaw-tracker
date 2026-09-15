@@ -63,6 +63,29 @@ function bindEvents() {
       return;
     }
 
+    if (button.dataset.authAction === 'start-signup' || button.dataset.authAction === 'start-login') {
+      authMode = button.dataset.authAction === 'start-signup' ? 'signup' : 'login';
+      authOtpEmail = '';
+      authPendingPassword = '';
+      authPendingName = '';
+      authPendingUsername = '';
+      authPwVisible = false;
+      authPwChecks = { len: false, upper: false, other: false };
+      authOtpResendAt = 0;
+      renderAuthScreen();
+      return;
+    }
+
+    if (button.dataset.authAction === 'to-landing') {
+      authMode = 'landing';
+      authOtpEmail = '';
+      authPendingPassword = '';
+      authPwVisible = false;
+      authOtpResendAt = 0;
+      renderAuthScreen();
+      return;
+    }
+
     if (button.dataset.authAction === 'switch-mode') {
       authMode = authMode === 'login' ? 'signup' : 'login';
       authOtpEmail = '';
