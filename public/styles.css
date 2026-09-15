@@ -3798,7 +3798,7 @@ svg {
   color: var(--muted);
   margin-bottom: 6px;
 }
-.goal-field input, .goal-field textarea {
+.goal-field input, .goal-field textarea, .goal-field select {
   width: 100%;
   border: 1.5px solid var(--line);
   border-radius: 14px;
@@ -3809,6 +3809,34 @@ svg {
   font-weight: 600;
   padding: 12px 14px;
 }
+/* Select (Goals di form tambah/edit project, Prioritas di form Project Task, dsb.)
+   disamakan dengan input: tinggi, border, radius, panah kustom. */
+.goal-field select,
+.pt-edit-form select {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a7c6d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+}
+.pt-edit-form { align-items: stretch; }
+.pt-edit-form select {
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background-color: var(--panel-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 34px 12px 14px;
+}
+.goal-field select:focus,
+.pt-edit-form select:focus { outline: none; border-color: var(--blue, #2f8fbf); }
+:root[data-theme="dark"] .goal-field select,
+:root[data-theme="dark"] .pt-edit-form select { color-scheme: dark; }
 .goal-field textarea { resize: vertical; min-height: 76px; }
 :root[data-theme="dark"] .goal-field input[type="date"] { color-scheme: dark; }
 .goal-cat-row { display: flex; flex-wrap: wrap; gap: 8px; }

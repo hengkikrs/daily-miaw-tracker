@@ -279,7 +279,7 @@ function renderProjectDetailPage() {
         <button type="button" class="goal-chip${projTaskFilter === 'done' ? ' on' : ''}" data-proj-tfilter="done">Selesai (${ts.filter((t) => t.done).length})</button>
       </div>`;
     const rows = flt.length
-      ? flt.map((t) => `<div class="pt-row">${t.id === projTaskEditId ? ptEditFormHtml(t) : `<label class="proj-task${t.done ? ' done' : ''}"><input type="checkbox" data-proj-task="${t.id}"${t.done ? ' checked' : ''} /><span class="proj-task-main"><span class="proj-task-title">${escapeHtml(t.title)}</span><span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${t.priority === 'high' ? ' · ⚡ Tinggi' : ''}</span></span></label><span class="dt-row-tools">${ptToolsHtml(t.id)}</span>`}</div>`).join('')
+      ? flt.map((t) => `<div class="pt-row">${t.id === projTaskEditId ? ptEditFormHtml(t) : `<label class="proj-task${t.done ? ' done' : ''}"><input type="checkbox" data-proj-task="${t.id}"${t.done ? ' checked' : ''} /><span class="proj-task-main"><span class="proj-task-title">${escapeHtml(t.title)}</span><span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${ptBadge(t.priority)}</span></span></label><span class="dt-row-tools">${ptToolsHtml(t.id)}</span>`}</div>`).join('')
       : `<p class="proj-hint">${ts.length ? 'Tidak ada task pada filter ini.' : 'Belum ada task yang terhubung ke project ini.'}</p>`;
     const add = projTaskAdding
       ? `<form class="proj-inline" id="projTaskForm"><input name="title" placeholder="Judul task baru" required maxlength="90" /><input name="date" type="date" value="${taskTodayIso()}" /><button type="submit" class="proj-inline-go">Tambah</button></form>`
@@ -383,7 +383,7 @@ function renderProjectTaskView() {
       <input type="checkbox" data-task-toggle="${t.id}"${t.done ? ' checked' : ''} />
       <span class="proj-task-main">
         <span class="proj-task-title">${escapeHtml(t.title)}</span>
-        <span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${t.time ? ` · ⏱ ${escapeHtml(t.time)}` : ''}${t.priority === 'high' ? ' · ⚡ Tinggi' : ''}</span>
+        <span class="proj-task-meta">${escapeHtml(taskDateRead(t.date || ''))}${t.time ? ` · ⏱ ${escapeHtml(t.time)}` : ''}${ptBadge(t.priority)}</span>
       </span>
     </label>
     <span class="dt-row-tools">${ptToolsHtml(t.id)}</span>
@@ -441,14 +441,19 @@ function ptToolsHtml(id) {
   return `<button class="dt-tool edit" type="button" data-pt-edit="${id}" aria-label="Ubah task" title="Ubah task">✎</button><button class="dt-tool" type="button" data-pt-del="${id}" aria-label="Hapus task" title="Hapus task">✕</button>`;
 }
 
+function ptBadge(p) {
+  const map = { high: ' · 🔴 Tinggi', med: ' · 🟡 Sedang', low: ' · 🟢 Rendah' };
+  return map[p] || '';
+}
+
 function ptEditFormHtml(t) {
   return `<form class="proj-inline pt-edit-form" id="ptEditForm" data-pt-edit-id="${t.id}">
       <input name="title" value="${escapeHtml(t.title)}" maxlength="90" required placeholder="Judul task" />
       <input name="date" type="date" value="${escapeHtml(t.date || taskTodayIso())}" />
-      <select name="priority">
-        <option value="low"${(t.priority || 'med') === 'low' ? ' selected' : ''}>Rendah</option>
-        <option value="med"${(t.priority || 'med') === 'med' ? ' selected' : ''}>Sedang</option>
-        <option value="high"${t.priority === 'high' ? ' selected' : ''}>Tinggi</option>
+      <select name="priority" aria-label="Prioritas">
+        <option value="low"${(t.priority || 'med') === 'low' ? ' selected' : ''}>🟢 Rendah</option>
+        <option value="med"${(t.priority || 'med') === 'med' ? ' selected' : ''}>🟡 Sedang</option>
+        <option value="high"${t.priority === 'high' ? ' selected' : ''}>🔴 Tinggi</option>
       </select>
       <input name="time" type="time" value="${escapeHtml(t.time || '')}" />
       <div class="pt-edit-btns"><button type="submit" class="proj-inline-go">Simpan</button><button type="button" class="secondary-button" data-pt-edit-cancel>Batal</button></div>
