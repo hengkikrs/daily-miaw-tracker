@@ -18,7 +18,7 @@ let jadwalAdding = false;
 let jadwalEditingId = null;
 
 function jadwalCatColor(cat) {
-  return JADWAL_COLORS[String(cat || '').toLowerCase()] || '#a9885f';
+  return JADWAL_COLORS[String(cat || '').toLowerCase()] || '#94A3B8';
 }
 
 function loadJadwalEvents() {

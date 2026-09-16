@@ -190,7 +190,7 @@ function renderProgressView() {
 
       <section class="panel" style="padding:14px 16px">
         <div class="prog-card-head"><h3>Tren 6 Bulan</h3><span class="prog-card-sub">total penyelesaian</span></div>
-        ${progBars(months, '#7d685c')}
+        ${progBars(months, '#475569')}
       </section>
 
       <section class="panel" style="padding:14px 16px">

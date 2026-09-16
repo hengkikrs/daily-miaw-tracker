@@ -1,215 +1,234 @@
 /* ============================================================
-   Miaw Tracker — tema "Hangat" v3 (redesign 2026-09-10)
-   Layer desain penuh: palet, tipografi, bentuk, kedalaman.
-   Dimuat SETELAH styles.css; mengubah design tokens + lapisan
-   visual, membiarkan struktur layout yang sudah teruji.
+   Miaw Tracker — Design System "Minimal Green" v4 (2026-09-16)
+   Satu bahasa visual: hijau primer + slate netral, Inter,
+   permukaan putih, border tipis, shadow halus. Dimuat SETELAH
+   styles.css; menimpa design tokens + lapisan visual tanpa
+   mengubah struktur/layout yang sudah teruji.
    ============================================================ */
 
 /* ---------- Tokens: Light ---------- */
 :root {
   color-scheme: light;
 
-  --font-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* permukaan hangat */
-  --bg: #faf6ef;
-  --panel: #fffdf9;
-  --panel-soft: #f5efe4;
-  --panel-raised: #ffffff;
+  /* permukaan netral */
+  --bg: #F8FAFC;
+  --panel: #FFFFFF;
+  --panel-soft: #F1F5F9;
+  --panel-raised: #FFFFFF;
 
-  --text: #26201a;
-  --muted: #776b5e;
-  --line: #e8dfd0;
-  --line-strong: #cfc2ac;
+  --text: #0F172A;
+  --muted: #64748B;
+  --line: #E2E8F0;
+  --line-strong: #CBD5E1;
 
-  --sidebar: #241f1a;
-  --sidebar-soft: rgba(255, 255, 255, 0.07);
-  --sidebar-text: #f4ecdf;
+  --sidebar: #FFFFFF;
+  --sidebar-soft: #F1F5F9;
+  --sidebar-text: #0F172A;
 
-  /* aksen koral — identitas baru */
-  --teal: #e85d4f;
-  --teal-strong: #d3483a;
-  --blue: #3e7b8c;
-  --cyan: #e8934f;
-  --violet: #7c5cbf;
-  --amber: #d98324;
-  --orange: #e0682f;
-  --rose: #d64468;
-  --pink: #d05792;
-  --lime: #679a3c;
-  --green: #3d9a5f;
-  --danger: #c93c30;
+  /* primer hijau — satu aksen utama */
+  --teal: #16A34A;
+  --teal-strong: #15803D;
+  --cyan: #22C55E;
+  --green: #16A34A;
 
-  --focus: 0 0 0 3px rgba(232, 93, 79, 0.28);
+  /* netral untuk status yang dulu berwarna-warni */
+  --blue: #475569;
+  --violet: #475569;
+  --rose: #64748B;
+  --pink: #64748B;
+  --lime: #22C55E;
 
-  /* kedalaman lembut */
-  --shadow: 0 1px 2px rgba(58, 42, 24, 0.05), 0 10px 30px -12px rgba(58, 42, 24, 0.14);
-  --shadow-lift: 0 2px 4px rgba(58, 42, 24, 0.06), 0 18px 40px -14px rgba(58, 42, 24, 0.22);
-  --radius: 14px;
+  /* semantik terkendali */
+  --orange: #D97706;   /* hanya peringatan/subtle */
+  --amber: #D97706;
+  --danger: #DC2626;   /* hanya error nyata */
 
-  /* --- Lapisan semantik (audit warna 2026-09-15) --- */
-  --green-strong: #2a6b4a;   /* teks hijau kecil, aman AA di panel terang */
-  --green-soft: #cfe6d8;
-  --blue-strong: #2f6f8f;    /* teks biru kecil (pengganti #1d5fbf) */
-  --violet-soft: #ded3f2;
-  --rose-strong: #a8314a;
+  --focus: 0 0 0 3px rgba(22, 163, 74, 0.22);
 
-  /* warna kategori goal (chip & dot) */
-  --cat-karier: #3e7b8c;
-  --cat-keuangan: #d98324;
-  --cat-kesehatan: #3d9a5f;
-  --cat-pendidikan: #7c5cbf;
-  --cat-personal: #d05792;
-  --cat-lainnya: #8a7a68;
+  /* kedalaman sangat halus */
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-lift: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --radius: 12px;
+
+  /* --- Lapisan semantik --- */
+  --green-strong: #15803D;
+  --green-soft: #DCFCE7;
+  --blue-strong: #334155;
+  --violet-soft: #E2E8F0;
+  --rose-strong: #B91C1C;
+  --amber-strong: #B45309;
+  --amber-soft: #FEF3C7;
+  --orange-strong: #B45309;
+  --danger-soft: #FEE2E2;
+  --accent-strong: #15803D;
+  --brown: #475569;
+  --coral: #B45309;
+
+  /* kategori goal — ramp hijau/slate/amber yang tenang */
+  --cat-karier: #16A34A;
+  --cat-keuangan: #D97706;
+  --cat-kesehatan: #22C55E;
+  --cat-pendidikan: #475569;
+  --cat-personal: #64748B;
+  --cat-lainnya: #94A3B8;
 
   /* status project */
-  --st-planning: #7c6a9a;
-  --st-active: #3d9a5f;
-  --st-onhold: #d98324;
-  --st-completed: #3e7b8c;
-  --st-archived: #8a7a68;
+  --st-planning: #94A3B8;
+  --st-active: #16A34A;
+  --st-onhold: #D97706;
+  --st-completed: #475569;
+  --st-archived: #CBD5E1;
 
   /* kategori agenda */
-  --jv-kantor: #3e7b8c;
-  --jv-sales: #d98324;
-  --jv-marketing: #7c5cbf;
-  --jv-konten: #d05792;
-  --jv-keuangan: #3d9a5f;
-  --jv-pribadi: #e0682f;
-  --jv-belajar: #8a6f47;
+  --jv-kantor: #16A34A;
+  --jv-sales: #D97706;
+  --jv-marketing: #475569;
+  --jv-konten: #64748B;
+  --jv-keuangan: #22C55E;
+  --jv-pribadi: #94A3B8;
+  --jv-belajar: #CBD5E1;
 
-  /* palet chart (legend, donut, bar) */
-  --chart-1: #d98324;
-  --chart-2: #6f9a7f;
-  --chart-3: #3e7b8c;
-  --chart-4: #b0557a;
-  --chart-5: #7c5cbf;
-  --chart-6: #c2402f;
-  --chart-7: #8a7a68;
-  --chart-8: #e0682f;
-  --chart-9: #a9885f;
+  /* palet chart — monokrom hijau + slate + satu amber */
+  --chart-1: #16A34A;
+  --chart-2: #22C55E;
+  --chart-3: #475569;
+  --chart-4: #94A3B8;
+  --chart-5: #D97706;
+  --chart-6: #15803D;
+  --chart-7: #64748B;
+  --chart-8: #CBD5E1;
+  --chart-9: #86EFAC;
 
-  /* aksen hangat (tombol utama) — sebelumnya hex mentah */
-  --accent-1: #6a564a;
-  --accent-2: #57443a;
-  --accent-3: #7d685c;
-  --accent-ghost: #6a564a;
-  --on-accent: #fdf7ee;
+  /* aksen tombol utama */
+  --accent-1: #16A34A;
+  --accent-2: #15803D;
+  --accent-3: #22C55E;
+  --accent-ghost: #16A34A;
+  --on-accent: #FFFFFF;
 
-  /* status angka & bar */
-  --amber-strong: #9a6b0f;
-  --amber-soft: #eecb72;
-  --orange-strong: #c2410c;
-  --danger-soft: #ef9184;
+  /* aksen per seksi disatukan ke primer (satu bahasa visual) */
+  --sec-activity: var(--teal);
+  --sec-goals: var(--teal);
+  --sec-org: var(--teal);
+  --sec-finance: var(--teal);
 
   /* panel Miaw AI */
-  --miaw-surface: #f3ead9;
-  --miaw-bubble: #fffdf8;
-  --miaw-you: #6f5b3e;
-  --miaw-ink: #3d3327;
-  --miaw-ink-soft: #8a775c;
-  --miaw-border: #5d4e38;
-  --miaw-dot: #a08a68;
-  --miaw-avatar: #8a714d;
+  --miaw-surface: #F8FAFC;
+  --miaw-bubble: #FFFFFF;
+  --miaw-you: #16A34A;
+  --miaw-ink: #0F172A;
+  --miaw-ink-soft: #64748B;
+  --miaw-border: #E2E8F0;
+  --miaw-dot: #94A3B8;
+  --miaw-avatar: #16A34A;
 }
 
 /* ---------- Tokens: Dark ---------- */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #16130f;
-  --panel: #211d17;
-  --panel-soft: #1a1712;
-  --panel-raised: #28231c;
+  --bg: #0B1220;
+  --panel: #111827;
+  --panel-soft: #0F172A;
+  --panel-raised: #1E293B;
 
-  --text: #f3ede3;
-  --muted: #a89b88;
-  --line: #362f26;
-  --line-strong: #4d4335;
+  --text: #F1F5F9;
+  --muted: #94A3B8;
+  --line: #1F2937;
+  --line-strong: #334155;
 
-  --sidebar: #0e0c09;
+  --sidebar: #0F172A;
   --sidebar-soft: rgba(255, 255, 255, 0.06);
-  --sidebar-text: #f4ecdf;
+  --sidebar-text: #E2E8F0;
 
-  --teal: #ef7263;
-  --teal-strong: #e85d4f;
-  --blue: #6aa7b8;
-  --cyan: #efa967;
-  --violet: #a487e0;
-  --amber: #e9a83f;
-  --orange: #ef8148;
-  --rose: #e5678a;
-  --pink: #e077ab;
-  --lime: #93c257;
-  --green: #5cb87e;
-  --danger: #e05a4d;
+  --teal: #22C55E;
+  --teal-strong: #16A34A;
+  --cyan: #4ADE80;
+  --green: #22C55E;
 
-  --focus: 0 0 0 3px rgba(239, 114, 99, 0.3);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 34px -12px rgba(0, 0, 0, 0.55);
-  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 22px 48px -16px rgba(0, 0, 0, 0.65);
+  --blue: #94A3B8;
+  --violet: #94A3B8;
+  --rose: #94A3B8;
+  --pink: #94A3B8;
+  --lime: #4ADE80;
 
-  /* --- Lapisan semantik (versi gelap, dinaikkan agar tetap AA) --- */
-  --green-strong: #7cc79a;
-  --green-soft: #2c4a38;
-  --blue-strong: #7fb8cf;
-  --violet-soft: #3a3153;
-  --rose-strong: #ef8a9e;
+  --orange: #FBBF24;
+  --amber: #FBBF24;
+  --danger: #F87171;
 
-  --cat-karier: #6aa7b8;
-  --cat-keuangan: #e9a83f;
-  --cat-kesehatan: #5cb87e;
-  --cat-pendidikan: #a487e0;
-  --cat-personal: #e077ab;
-  --cat-lainnya: #a89b88;
+  --focus: 0 0 0 3px rgba(34, 197, 94, 0.32);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.35);
 
-  --st-planning: #a487e0;
-  --st-active: #5cb87e;
-  --st-onhold: #e9a83f;
-  --st-completed: #6aa7b8;
-  --st-archived: #a89b88;
+  --green-strong: #86EFAC;
+  --green-soft: #14532D;
+  --blue-strong: #CBD5E1;
+  --violet-soft: #1E293B;
+  --rose-strong: #FCA5A5;
+  --amber-strong: #FCD34D;
+  --amber-soft: #451A03;
+  --orange-strong: #FCD34D;
+  --danger-soft: #7F1D1D;
+  --accent-strong: #86EFAC;
+  --brown: #CBD5E1;
+  --coral: #FCD34D;
 
-  --jv-kantor: #6aa7b8;
-  --jv-sales: #e9a83f;
-  --jv-marketing: #a487e0;
-  --jv-konten: #e077ab;
-  --jv-keuangan: #5cb87e;
-  --jv-pribadi: #ef8148;
-  --jv-belajar: #c2a37a;
+  --cat-karier: #22C55E;
+  --cat-keuangan: #FBBF24;
+  --cat-kesehatan: #4ADE80;
+  --cat-pendidikan: #94A3B8;
+  --cat-personal: #CBD5E1;
+  --cat-lainnya: #64748B;
 
-  --chart-1: #e9a83f;
-  --chart-2: #8fb79a;
-  --chart-3: #6aa7b8;
-  --chart-4: #d98aa6;
-  --chart-5: #a487e0;
-  --chart-6: #d9705f;
-  --chart-7: #a89b88;
-  --chart-8: #ef8148;
-  --chart-9: #c2a37a;
+  --st-planning: #94A3B8;
+  --st-active: #22C55E;
+  --st-onhold: #FBBF24;
+  --st-completed: #CBD5E1;
+  --st-archived: #475569;
 
-  /* aksen hangat: versi gelap sedikit lebih terang agar tombol tetap terbaca */
-  --accent-1: #8a7263;
-  --accent-2: #6f5a4d;
-  --accent-3: #a08773;
-  --accent-ghost: #d8c4b2;
-  --on-accent: #fff9f2;
+  --jv-kantor: #22C55E;
+  --jv-sales: #FBBF24;
+  --jv-marketing: #94A3B8;
+  --jv-konten: #CBD5E1;
+  --jv-keuangan: #4ADE80;
+  --jv-pribadi: #64748B;
+  --jv-belajar: #475569;
 
-  --amber-strong: #e9a83f;
-  --amber-soft: #6b4f1a;
-  --orange-strong: #ef8148;
-  --danger-soft: #6b2b24;
+  --chart-1: #22C55E;
+  --chart-2: #4ADE80;
+  --chart-3: #94A3B8;
+  --chart-4: #CBD5E1;
+  --chart-5: #FBBF24;
+  --chart-6: #16A34A;
+  --chart-7: #64748B;
+  --chart-8: #475569;
+  --chart-9: #86EFAC;
 
-  --miaw-surface: #2a231b;
-  --miaw-bubble: #211d17;
-  --miaw-you: #8a7263;
-  --miaw-ink: #f3ede3;
-  --miaw-ink-soft: #a89b88;
-  --miaw-border: #4d4335;
-  --miaw-dot: #a89b88;
-  --miaw-avatar: #8a7263;
+  --accent-1: #22C55E;
+  --accent-2: #16A34A;
+  --accent-3: #4ADE80;
+  --accent-ghost: #22C55E;
+  --on-accent: #FFFFFF;
+
+  --sec-activity: var(--teal);
+  --sec-goals: var(--teal);
+  --sec-org: var(--teal);
+  --sec-finance: var(--teal);
+
+  --miaw-surface: #0F172A;
+  --miaw-bubble: #111827;
+  --miaw-you: #16A34A;
+  --miaw-ink: #F1F5F9;
+  --miaw-ink-soft: #94A3B8;
+  --miaw-border: #1F2937;
+  --miaw-dot: #64748B;
+  --miaw-avatar: #22C55E;
 }
 
-/* ---------- Tipografi dasar ---------- */
+/* ---------- Tipografi ---------- */
 html {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -226,7 +245,7 @@ textarea {
 
 h1, h2, h3,
 .brand-copy h1,
-.title-group h2,
+.title-group h1,
 .section-heading h3,
 .metric-card strong,
 .day-score strong,
@@ -237,7 +256,7 @@ h1, h2, h3,
 .auth-copy h1,
 .auth-card strong {
   font-family: var(--font-display);
-  letter-spacing: -0.018em;
+  letter-spacing: -0.02em;
 }
 
 .kicker,
@@ -247,245 +266,132 @@ h1, h2, h3,
 .category-card span,
 .auth-kicker,
 .habit-meta {
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-/* ---------- Latar & permukaan ---------- */
+/* ---------- Latar & permukaan (datar, tenang) ---------- */
 body {
-  background:
-    radial-gradient(900px 480px at 88% -8%, color-mix(in srgb, var(--cyan) 10%, transparent), transparent 60%),
-    radial-gradient(760px 420px at -10% 20%, color-mix(in srgb, var(--teal) 7%, transparent), transparent 55%),
-    radial-gradient(680px 500px at 40% 110%, color-mix(in srgb, var(--violet) 5%, transparent), transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .panel {
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  background: var(--panel);
 }
 
-/* topbar glass */
+/* ---------- Topbar: solid + border (tanpa glass) ---------- */
 .topbar {
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  backdrop-filter: blur(14px) saturate(1.4);
-  border-bottom-color: color-mix(in srgb, var(--line) 70%, transparent);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-/* ---------- Sidebar ---------- */
+/* ---------- Sidebar: permukaan bersih ---------- */
 .sidebar {
-  background:
-    linear-gradient(165deg, color-mix(in srgb, var(--teal) 16%, transparent), transparent 30%),
-    linear-gradient(20deg, color-mix(in srgb, var(--cyan) 10%, transparent), transparent 46%),
-    var(--sidebar);
-  border-right: 1px solid color-mix(in srgb, var(--sidebar-text) 7%, transparent);
-  box-shadow: 18px 0 44px rgba(20, 12, 6, 0.22);
+  background: var(--sidebar);
+  border-right: 1px solid var(--line);
+  box-shadow: none;
 }
 
-.brand {
-  padding-bottom: 4px;
-}
-
-.brand-copy h1 {
-  font-size: 1.35rem;
-  font-weight: 700;
-}
-
-.brand-copy p {
-  color: color-mix(in srgb, var(--sidebar-text) 55%, transparent);
-}
+.brand-copy h1 { color: var(--text); }
+.brand-copy p { color: var(--muted); }
+.nav-label { color: var(--muted); }
 
 .nav-icon svg,
 .icon-button svg,
 .icon-action svg {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.9;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .nav-item {
-  border-radius: 12px;
-  transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+  color: var(--text);
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.nav-item:hover {
-  background: var(--sidebar-soft);
-}
+.nav-item:hover { background: var(--sidebar-soft); }
 
+/* active = soft green */
 .nav-item.active {
-  background: linear-gradient(120deg, color-mix(in srgb, var(--teal) 30%, transparent), color-mix(in srgb, var(--cyan) 18%, transparent));
-  box-shadow: inset 3px 0 0 var(--cyan), 0 6px 18px -8px rgba(0, 0, 0, 0.5);
-  color: #fff;
-  font-weight: 800;
+  background: color-mix(in srgb, var(--teal) 12%, transparent);
+  color: var(--teal-strong);
+  font-weight: 600;
+  box-shadow: none;
 }
+.nav-item.active .nav-icon { color: var(--teal); }
 
-.month-link {
-  border-radius: 12px;
-}
+.nav-item.sub { color: var(--muted); }
+.nav-item.sub.active { color: var(--teal-strong); }
 
-.month-link.active {
-  background: linear-gradient(120deg, color-mix(in srgb, var(--teal) 34%, transparent), color-mix(in srgb, var(--cyan) 20%, transparent));
-  box-shadow: inset 3px 0 0 var(--cyan);
-}
+.nav-group-toggle { color: var(--muted); }
+.nav-group-toggle[aria-expanded="true"],
+.nav-group-toggle.active { color: var(--text); }
+/* ikon menu seragam (monokrom); hijau hanya saat aktif */
+.nav-group .nav-icon { color: inherit; }
 
-.year-select {
-  border-radius: 12px;
-}
-
-/* ---------- Kartu metrik ---------- */
+/* ---------- Kartu metrik: border seragam ---------- */
 .metric-card {
   border: 1px solid var(--line);
-  border-left-width: 4px;
-  border-radius: var(--radius);
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  border-left-width: 1px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.16s ease;
 }
+.metric-card:hover { transform: none; box-shadow: var(--shadow-lift); }
+.metric-card strong { font-weight: 700; }
 
-.metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
-}
-
-.metric-card strong {
-  font-size: clamp(1.6rem, 3.4vw, 2.1rem);
-  font-weight: 700;
-}
-
-/* ---------- Kartu kategori & skor ---------- */
-.category-card,
-.month-score-card,
-.sheet-tile,
-.label-tile,
-.cat-card,
-.day-score,
-.point-day {
-  border-radius: var(--radius);
-}
-
-.month-score-card {
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
-}
-
-.month-score-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
-}
-
-.category-track,
-.progress-bar,
-.mini-bar {
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.category-track span,
-.progress-bar span,
-.mini-bar span {
-  border-radius: 999px;
-}
-
-/* ---------- Tabel kebiasaan ---------- */
-.habit-table th,
-.habit-table td {
-  transition: background 0.15s ease;
-}
-
-.habit-table .habit-col {
-  box-shadow: 1px 0 0 var(--line);
-}
-
-.habit-table thead th {
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
-}
-
-.slot-check {
-  border-radius: 10px;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-}
-
-.slot-check:hover {
-  border-color: var(--teal);
-}
-
-.slot-check:active {
-  transform: scale(0.92);
-}
-
-.slot-check:checked {
-  background: linear-gradient(135deg, var(--teal), var(--cyan));
-  border-color: transparent;
-}
-
-.slot-check.tone-teal:checked {
-  background: linear-gradient(135deg, var(--teal), var(--orange));
-}
-
-.slot-check.tone-blue:checked {
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-}
-
-.slot-check.tone-amber:checked {
-  background: linear-gradient(135deg, var(--amber), var(--orange));
-}
-
-.slot-check.tone-rose:checked {
-  background: linear-gradient(135deg, var(--rose), var(--pink));
-}
-
-/* titik kalender poin */
-.point-day {
-  border-radius: 10px;
-}
-
-/* ---------- Tombol ---------- */
+/* ---------- Tombol utama: hijau solid, bukan gradient 3-stop ---------- */
 .primary-button,
 .auth-primary {
   border: 0;
-  background: linear-gradient(125deg, var(--teal) 0%, var(--teal-strong) 55%, var(--orange) 130%);
-  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--teal) 60%, transparent);
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+  background: var(--teal);
+  color: var(--on-accent);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  font-weight: 600;
+  letter-spacing: 0;
+  transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
 }
-
 .primary-button:hover:not(:disabled),
 .auth-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: saturate(1.12);
-  box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--teal) 65%, transparent);
+  background: var(--teal-strong);
+  transform: none;
+  filter: none;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
 }
-
 .primary-button:active:not(:disabled),
 .auth-primary:active:not(:disabled) {
-  transform: translateY(0) scale(0.99);
+  transform: scale(0.99);
 }
 
+.secondary-button {
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+}
+.secondary-button:hover { background: var(--panel-soft); }
+
+/* ghost / icon */
 .small-button,
 .icon-button,
 .icon-action,
 .auth-button {
-  border-radius: 12px;
-  transition: background 0.15s ease, transform 0.12s ease, border-color 0.15s ease;
+  border-radius: 10px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-
 .small-button:hover,
 .icon-button:hover,
-.icon-action:hover {
-  transform: translateY(-1px);
-}
+.icon-action:hover { transform: none; background: var(--panel-soft); }
 
-.icon-button,
-.icon-action,
-.small-button,
-.mobile-section-toggle {
-  min-width: 40px;
-}
-
-/* ---------- Form ---------- */
+/* ---------- Form: fokus hijau ---------- */
 input,
 select,
 textarea,
@@ -493,9 +399,14 @@ textarea,
 .habit-form select,
 .account-form input,
 .auth-page-form input {
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
 }
-
+input:focus,
+select:focus,
+textarea:focus,
 .habit-form input:focus,
 .habit-form select:focus,
 .account-form input:focus,
@@ -503,66 +414,48 @@ textarea,
 .year-select:focus {
   border-color: var(--teal);
   box-shadow: var(--focus);
+  outline: none;
 }
 
 /* ---------- Auth ---------- */
-.auth-screen {
-  background:
-    radial-gradient(700px 480px at 80% 0%, color-mix(in srgb, var(--teal) 12%, transparent), transparent 60%),
-    radial-gradient(640px 420px at 12% 100%, color-mix(in srgb, var(--violet) 9%, transparent), transparent 55%),
-    var(--bg);
-}
-
-.auth-card,
-.auth-hero {
-  border-radius: 20px;
-}
-
-.auth-card {
-  box-shadow: var(--shadow-lift);
-}
-
-.auth-primary {
-  border-radius: 12px;
-}
+.auth-screen { background: var(--bg); }
+.auth-card { box-shadow: var(--shadow-lift); border: 1px solid var(--line); }
+.auth-hero { background: var(--panel); }
+.auth-card, .auth-hero { border-radius: 16px; }
 
 /* ---------- Toast ---------- */
 .toast {
-  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 10px;
   box-shadow: var(--shadow-lift);
-  font-weight: 700;
+  font-weight: 500;
 }
 
-/* ---------- Ringkasan & chip ---------- */
-.section-chip,
-.points-pill,
-.mobile-focus-chip,
-.cat-badge {
-  border-radius: 999px;
-  font-weight: 800;
+/* ---------- Habit: centang hijau solid ---------- */
+.slot-check:checked {
+  background: var(--teal);
+  border-color: var(--teal);
 }
-
-.summary-table tbody tr:hover {
-  background: color-mix(in srgb, var(--teal) 5%, transparent);
-}
-
-.summary-table tbody tr.is-focus-month {
-  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+.slot-check.tone-teal:checked,
+.slot-check.tone-blue:checked,
+.slot-check.tone-amber:checked,
+.slot-check.tone-rose:checked {
+  background: var(--teal);
+  border-color: var(--teal);
 }
 
 /* ---------- Grafik tren ---------- */
-.trend-chart {
-  border-radius: var(--radius);
-}
+.chart-line { stroke: var(--teal); stroke-width: 2.5; }
+.chart-point circle { fill: var(--panel); stroke: var(--teal); }
 
-.chart-line {
-  stroke: var(--teal);
-  stroke-width: 3;
-}
-
-.chart-point circle {
-  fill: var(--panel-raised);
-  stroke: var(--teal);
+/* ---------- Tab aktif: hijau, bukan warna per-seksi ---------- */
+.jadwal-seg-btn.active,
+.goal-chip.on,
+.task-chip.on {
+  background: color-mix(in srgb, var(--teal) 12%, transparent);
+  color: var(--teal-strong);
+  border-color: color-mix(in srgb, var(--teal) 40%, var(--line));
 }
 
 /* ---------- Reduced motion ---------- */

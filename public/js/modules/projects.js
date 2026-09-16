@@ -17,11 +17,11 @@ const PROJ_STATUS = {
 };
 const PROJ_ICONS = ['🧩', '🚀', '🏗️', '💻', '📣', '🎨', '📚', '🏠', '💼', '🌱'];
 // Palet warna project (disimpan per project) — keluarga warna hangat.
-const PROJ_COLORS = ['#6a564a', '#3d9a5f', '#d98324', '#3e7b8c', '#7c5cbf', '#d05792', '#e0682f', '#8a7a68'];
+const PROJ_COLORS = ['#16A34A', '#475569', '#D97706', '#22C55E', '#64748B', '#94A3B8', '#15803D', '#CBD5E1'];
 // Warna lama (pra ui61) dipetakan ke palet baru agar data tersimpan tetap senada.
 const PROJ_COLOR_LEGACY = {
-  '#3f9d63': '#3d9a5f', '#ea8a2f': '#d98324', '#2f8fbf': '#3e7b8c', '#8b7bb8': '#7c5cbf',
-  '#d4576b': '#d05792', '#3f9a8f': '#3e7b8c', '#9a8452': '#8a7a68', '#9a917f': '#8a7a68',
+  '#3f9d63': '#16A34A', '#ea8a2f': '#D97706', '#2f8fbf': '#475569', '#8b7bb8': '#64748B',
+  '#d4576b': '#64748B', '#3f9a8f': '#22C55E', '#9a8452': '#94A3B8', '#9a917f': '#94A3B8',
 };
 function projColor(project) {
   const c = (project && project.color) || PROJ_COLORS[0];
@@ -47,7 +47,7 @@ let projTab = 'overview';
 let projTaskFilter = 'all';
 let projMenuOpen = false;
 let projFormId = null;         // null = tambah baru, id = edit
-let projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' };
+let projFormSel = { status: 'active', icon: '🧩', color: '#16A34A' };
 let projFormSelId = null;      // project yang sedang diinisialisasi pilihan form-nya
 let projTaskEditId = null;     // id project task yang sedang diubah inline
 let projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' };
@@ -62,7 +62,7 @@ function projSeed() {
   const m = today.slice(5, 7);
   const day = (n) => `${y}-${m}-${String(n).padStart(2, '0')}`;
   return [
-    { id: 'p1', name: 'Marketing Batu Bata', icon: '📣', color: '#d98324', category: 'Bisnis', status: 'active', goalId: 'g1',
+    { id: 'p1', name: 'Marketing Batu Bata', icon: '📣', color: '#D97706', category: 'Bisnis', status: 'active', goalId: 'g1',
       start: day(1), deadline: day(20), createdAt: day(1),
       description: 'Kampanye pemasaran digital untuk toko batu bata: landing page, iklan, dan follow-up pelanggan.',
       milestones: [
@@ -80,7 +80,7 @@ function projSeed() {
         { id: 'pf2', name: 'Desain banner (Figma)', url: 'https://figma.com/file/batu-bata-banner' },
       ],
       activity: [] },
-    { id: 'p2', name: 'Website Toko Online', icon: '💻', color: '#3e7b8c', category: 'Teknis', status: 'active', goalId: 'g1',
+    { id: 'p2', name: 'Website Toko Online', icon: '💻', color: '#475569', category: 'Teknis', status: 'active', goalId: 'g1',
       start: day(5), deadline: day(28), createdAt: day(5),
       description: 'Bangun website toko online lengkap dengan katalog, keranjang, dan pembayaran.',
       milestones: [
@@ -91,7 +91,7 @@ function projSeed() {
       notes: [{ id: 'pn3', text: 'Pakai domain .co.id, hosting di VPS lama.', at: Date.now() - 86400000 }],
       files: [{ id: 'pf3', name: 'Arsitektur sistem.md', url: 'https://example.com/arsitektur.md' }],
       activity: [] },
-    { id: 'p3', name: 'Renovasi Dapur', icon: '🏠', color: '#6a564a', category: 'Rumah', status: 'onhold', goalId: 'g3',
+    { id: 'p3', name: 'Renovasi Dapur', icon: '🏠', color: '#16A34A', category: 'Rumah', status: 'onhold', goalId: 'g3',
       start: day(2), deadline: `${y}-${m}-25`, createdAt: day(2),
       description: 'Perbaikan kabinet, keramik, dan sirkulasi udara dapur.',
       milestones: [
@@ -99,7 +99,7 @@ function projSeed() {
         { id: 'pm9', text: 'Bongkar kabinet lama', done: false },
       ],
       notes: [], files: [], activity: [] },
-    { id: 'p4', name: 'Skripsi Data Science', icon: '📚', color: '#7c5cbf', category: 'Pendidikan', status: 'planning', goalId: 'g2',
+    { id: 'p4', name: 'Skripsi Data Science', icon: '📚', color: '#94A3B8', category: 'Pendidikan', status: 'planning', goalId: 'g2',
       start: day(15), deadline: `${y}-12-15`, createdAt: today,
       description: 'Penelitian prediksi harga komoditas dengan machine learning.',
       milestones: [
@@ -108,7 +108,7 @@ function projSeed() {
       ],
       notes: [{ id: 'pn4', text: 'Konsultasi dosen pembimbing tiap Selasa.', at: Date.now() - 3 * 86400000 }],
       files: [], activity: [] },
-    { id: 'p5', name: 'Otomasi Laporan Bulanan', icon: '🤖', color: '#3d9a5f', category: 'Produktivitas', status: 'completed', goalId: 'g2',
+    { id: 'p5', name: 'Otomasi Laporan Bulanan', icon: '🤖', color: '#22C55E', category: 'Produktivitas', status: 'completed', goalId: 'g2',
       start: day(1), deadline: day(8), createdAt: day(1),
       description: 'Script Python yang menyusun laporan penjualan otomatis tiap awal bulan.',
       milestones: [
@@ -117,7 +117,7 @@ function projSeed() {
         { id: 'pm14', text: 'Jadwal cron jalan', done: true },
       ],
       notes: [], files: [{ id: 'pf4', name: 'repo: laporan-bot', url: 'https://github.com/contoh/laporan-bot' }], activity: [] },
-    { id: 'p6', name: 'Event Workshop 2025', icon: '🎨', color: '#8a7a68', category: 'Acara', status: 'archived', goalId: 'g4',
+    { id: 'p6', name: 'Event Workshop 2025', icon: '🎨', color: '#64748B', category: 'Acara', status: 'archived', goalId: 'g4',
       start: `${y}-06-01`, deadline: `${y}-07-30`, createdAt: today,
       description: 'Workshop desain untuk komunitas lokal (sudah selesai,arsip).',
       milestones: [], notes: [], files: [], activity: [] },
@@ -354,7 +354,7 @@ function renderProjectFormPage() {
   // hanya inisialisasi sekali per project: kalau tidak, pilihan status/ikon/warna yang
   // baru diklik akan ter-reset setiap render (sebab status tidak bisa diubah).
   if (editing && projFormSelId !== editing.id) {
-    projFormSel = { status: editing.status, icon: editing.icon || '🧩', color: editing.color || '#6a564a' };
+    projFormSel = { status: editing.status, icon: editing.icon || '🧩', color: editing.color || '#16A34A' };
     projFormSelId = editing.id;
   }
   const d = editing ? { name: editing.name, description: editing.description || '', category: editing.category || '', start: editing.start || '', deadline: editing.deadline || '', goalId: editing.goalId || '', err: '' } : projFormDraft;
@@ -415,7 +415,7 @@ function renderProjectTaskView() {
     const gt = goalTitleOf(g.p.goalId);
     return `<section class="proj-blk goal-detail-card pt-group">
       <header class="pt-group-head">
-        <span class="pt-group-icon" style="background:${escapeHtml(g.p.color || '#6a564a')}">${g.p.icon || '🧩'}</span>
+        <span class="pt-group-icon" style="background:${escapeHtml(g.p.color || '#16A34A')}">${g.p.icon || '🧩'}</span>
         <div class="pt-group-title">
           <strong>${escapeHtml(g.p.name)}</strong>
           <span class="pt-group-sub">${gt ? `🎯 ${escapeHtml(gt)} · ` : ''}${g.done}/${g.ts.length} selesai · ${pct}%</span>
@@ -514,7 +514,7 @@ function submitProjectForm(form) {
 }
 
 function handleProjectAction(btn) {
-  if (btn.matches('[data-proj-add]')) { projFormId = null; projFormSelId = null; projTaskEditId = null; projFormDraft = { name: '', description: '', category: '', start: taskTodayIso(), deadline: '', goalId: '', err: '' }; projFormSel = { status: 'active', icon: '🧩', color: '#6a564a' }; projPage = 'form'; renderShell(); setTimeout(() => document.querySelector('#projForm [name=name]')?.focus(), 30); return true; }
+  if (btn.matches('[data-proj-add]')) { projFormId = null; projFormSelId = null; projTaskEditId = null; projFormDraft = { name: '', description: '', category: '', start: taskTodayIso(), deadline: '', goalId: '', err: '' }; projFormSel = { status: 'active', icon: '🧩', color: '#16A34A' }; projPage = 'form'; renderShell(); setTimeout(() => document.querySelector('#projForm [name=name]')?.focus(), 30); return true; }
   if (btn.matches('[data-proj-form-back]')) { projPage = projFormId ? 'detail' : 'list'; renderShell(); return true; }
   if (btn.matches('[data-proj-filter]')) { projFilter = btn.dataset.projFilter; renderShell(); return true; }
   if (btn.matches('[data-proj-open]')) { projDetailId = btn.dataset.projOpen; projPage = 'detail'; projTab = 'overview'; projMenuOpen = false; projTaskAdding = projNoteAdding = projFileAdding = false; activeView = 'project'; state.selectedView = 'project'; renderShell(); return true; }
@@ -528,7 +528,7 @@ function handleProjectAction(btn) {
   if (btn.matches('[data-proj-edit]')) {
     const pj = loadProjects().find((x) => x.id === btn.dataset.projEdit);
     // inisialisasi pilihan form dari project sekali saja; render berikutnya (klik chip) tidak boleh menimpanya
-    if (pj) projFormSel = { status: pj.status, icon: pj.icon || '🧩', color: pj.color || '#6a564a' };
+    if (pj) projFormSel = { status: pj.status, icon: pj.icon || '🧩', color: pj.color || '#16A34A' };
     projFormSelId = btn.dataset.projEdit;
     projFormId = btn.dataset.projEdit;
     projFormDraft = { name: '', description: '', category: '', start: '', deadline: '', goalId: '', err: '' };

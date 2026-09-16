@@ -13,11 +13,12 @@ const SAVE_CATS = [
 ];
 const SAVE_ICONS = ['🐱', '🏠', '🚗', '✈️', '🎓', '💻', '📷', '🎸', '🚑', '💍', '🛟', '🌱'];
 // Palet warna tabungan (disimpan per item) — keluarga warna hangat.
-const SAVE_COLORS = ['#3d9a5f', '#7d685c', '#d98324', '#3e7b8c', '#b0557a', '#7c5cbf'];
+const SAVE_COLORS = ['#16A34A', '#475569', '#D97706', '#22C55E', '#64748B', '#94A3B8'];
 // Warna lama (pra ui61) dipetakan ke palet baru agar data tersimpan tetap senada.
 const SAVE_COLOR_LEGACY = {
-  '#2e7d5b': '#3d9a5f', '#4a7fb5': '#3e7b8c', '#d99a2b': '#d98324', '#b5567d': '#b0557a',
-  '#6a5acd': '#7c5cbf', '#2e7d4f': '#3d9a5f', '#2c6e63': '#3d9a5f',
+  '#2e7d5b': '#16A34A', '#4a7fb5': '#475569', '#d99a2b': '#D97706', '#b5567d': '#64748B',
+  '#6a5acd': '#94A3B8', '#2e7d4f': '#16A34A', '#2c6e63': '#22C55E', '#3d9a5f': '#16A34A',
+  '#3e7b8c': '#475569', '#7d685c': '#64748B', '#b0557a': '#94A3B8', '#7c5cbf': '#94A3B8',
 };
 function saveColorOf(item) {
   const c = (item && item.color) || SAVE_COLORS[0];
@@ -45,11 +46,11 @@ function seedSavingsDemo() {
   const d = (n) => { const t = new Date(); t.setDate(t.getDate() + n); return txIso(t); };
   const now = Date.now();
   state.savings = [
-    { id: uid('sv'), name: 'Dana Darurat 6 Bulan', desc: '3x pengeluaran bulanan, untuk PHK/sakit/mendesak.', target: 15000000, balance: 6200000, deadline: d(120), cat: 'Dana Darurat', icon: '🛟', color: '#3d9a5f', archived: false, createdAt: now - 86400000 * 60 },
-    { id: uid('sv'), name: 'Laptop Kerja Baru', desc: 'Upgrade buat rendering & coding, cicil tiap gajian.', target: 12000000, balance: 9450000, deadline: d(45), cat: 'Keuangan Pribadi', icon: '💻', color: '#3e7b8c', archived: false, createdAt: now - 86400000 * 90 },
-    { id: uid('sv'), name: 'Liburan ke Bali', desc: '4 hari 3 malam buat dua orang, termasuk motor sewaan.', target: 5000000, balance: 1800000, deadline: d(150), cat: 'Liburan', icon: '✈️', color: '#d98324', archived: false, createdAt: now - 86400000 * 30 },
-    { id: uid('sv'), name: 'DP Motor', desc: 'Target 30% harga unit, cash biar ringan cicilan.', target: 4200000, balance: 4200000, deadline: '', cat: 'Kendaraan', icon: '🏍️', color: '#b0557a', archived: false, createdAt: now - 86400000 * 200 },
-    { id: uid('sv'), name: 'Kursus Data Science', desc: 'Beasiswa gagal, bayar sendiri. Sudah selesai ✓', target: 2500000, balance: 2500000, deadline: '', cat: 'Pendidikan', icon: '🎓', color: '#7c5cbf', archived: true, createdAt: now - 86400000 * 300 },
+    { id: uid('sv'), name: 'Dana Darurat 6 Bulan', desc: '3x pengeluaran bulanan, untuk PHK/sakit/mendesak.', target: 15000000, balance: 6200000, deadline: d(120), cat: 'Dana Darurat', icon: '🛟', color: '#16A34A', archived: false, createdAt: now - 86400000 * 60 },
+    { id: uid('sv'), name: 'Laptop Kerja Baru', desc: 'Upgrade buat rendering & coding, cicil tiap gajian.', target: 12000000, balance: 9450000, deadline: d(45), cat: 'Keuangan Pribadi', icon: '💻', color: '#475569', archived: false, createdAt: now - 86400000 * 90 },
+    { id: uid('sv'), name: 'Liburan ke Bali', desc: '4 hari 3 malam buat dua orang, termasuk motor sewaan.', target: 5000000, balance: 1800000, deadline: d(150), cat: 'Liburan', icon: '✈️', color: '#D97706', archived: false, createdAt: now - 86400000 * 30 },
+    { id: uid('sv'), name: 'DP Motor', desc: 'Target 30% harga unit, cash biar ringan cicilan.', target: 4200000, balance: 4200000, deadline: '', cat: 'Kendaraan', icon: '🏍️', color: '#64748B', archived: false, createdAt: now - 86400000 * 200 },
+    { id: uid('sv'), name: 'Kursus Data Science', desc: 'Beasiswa gagal, bayar sendiri. Sudah selesai ✓', target: 2500000, balance: 2500000, deadline: '', cat: 'Pendidikan', icon: '🎓', color: '#94A3B8', archived: true, createdAt: now - 86400000 * 300 },
   ];
   const sv = state.savings;
   const mk = (si, kind, amt, note, daysAgo, srcTxt) => ({ id: uid('stx'), svId: sv[si].id, kind, amount: amt, note, date: txIso(new Date(now - 86400000 * daysAgo)), source: srcTxt || 'Transfer bank', ts: now - 86400000 * daysAgo * 1000 });

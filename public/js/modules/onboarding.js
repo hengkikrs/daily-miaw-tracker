@@ -194,8 +194,8 @@ function renderOnboarding() {
       </div>
 
       <footer class="ob-foot">
-        <div class="ob-nav">
-          <button type="button" class="ob-btn ghost" data-ob-action="prev" ${obStep === 0 ? 'disabled' : ''}>← Kembali</button>
+        <div class="ob-nav${obStep === 0 ? ' single' : ''}">
+          ${obStep === 0 ? '' : '<button type="button" class="ob-btn ghost" data-ob-action="prev">← Kembali</button>'}
           ${isLast
             ? '<button type="button" class="ob-btn primary" data-ob-action="done">Mulai pakai tracker</button>'
             : '<button type="button" class="ob-btn primary" data-ob-action="next">Lanjut →</button>'}

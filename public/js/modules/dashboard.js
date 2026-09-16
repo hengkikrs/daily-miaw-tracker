@@ -201,7 +201,7 @@ function renderDashboard(year) {
     <section class="dash-today">
       <div class="dash-today-head">
         <div>
-          <span class="kicker">Fokus hari ini</span>
+          <span class="kicker">Agenda &amp; target</span>
           <h3>Hari Ini</h3>
         </div>
         <span class="dash-today-sub">${todayDone}/${todayRows.length} selesai${overdue.length ? ` · <b class="bad">${overdue.length} terlambat</b>` : ''}</span>
