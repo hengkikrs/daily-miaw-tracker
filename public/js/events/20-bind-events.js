@@ -238,6 +238,7 @@ function bindEvents() {
     if (action === 'account-delete-cancel') { accountDeleteOpen = false; renderShell(); return; }
     if (action === 'account-delete-confirm') confirmAccountDeletion();
     if (action === 'account-password-page') { accountPage = 'password'; acctNewPwVisible = false; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
+    if (action === 'replay-onboarding') { openOnboarding(0); return; }
     if (action === 'account-back') { accountPage = 'main'; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
     if (action === 'acct-eye-on' || action === 'acct-eye-off') {
       const form = dom.content.querySelector('#accountPasswordForm');

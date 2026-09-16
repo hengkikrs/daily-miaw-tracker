@@ -13,6 +13,8 @@ async function init() {
   bindEvents();
   renderShell();
   await hydrateRemoteState();
+  // Tutorial pop-up: muncul sekali per akun (lihat js/modules/onboarding.js)
+  maybeStartOnboarding();
 }
 
 /* ============ MODUL LAPORAN (laporan lintas modul: preview + PDF + DOC + AI) ============ */

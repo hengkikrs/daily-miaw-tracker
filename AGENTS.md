@@ -74,6 +74,7 @@ Supabase Auth: PKCE + Google OAuth, OTP, password login, refresh token, logout, 
 ```bash
 node scripts/dev/check-syntax.js      # kompilasi 34 file + duplikat deklarasi top-level (exit 1 bila gagal)
 node scripts/dev/check-theme.js       # guardrail warna: hex literal di luar token tema (exit 1 bila ada)
+python3 scripts/dev/screenshot-cdp.py shot.png 1180 860   # screenshot via CDP langsung (bila capture harness timeout)
 python3 scripts/dev/coverage_check.py # bukti tidak ada baris kode hilang/duplikat antar file
 node scripts/dev/gen-symbol-index.js  # regenerasi docs/symbol-index.md setelah memindah kode
 node --check public/app.js            # cek sintaks satu file

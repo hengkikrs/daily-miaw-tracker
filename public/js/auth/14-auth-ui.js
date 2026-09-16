@@ -364,6 +364,16 @@ function renderAccountTab() {
         <button class="primary-button" type="button" data-action="account-password-page">Ubah Password</button>
       </section>
 
+      <section class="panel account-panel">
+        <div class="section-heading">
+          <div>
+            <h3>Tutorial</h3>
+            <p>Panduan singkat cara mengisi tracker: kebiasaan, task, goals, catatan, keuangan, sampai laporan.</p>
+          </div>
+        </div>
+        <button class="primary-button" type="button" data-action="replay-onboarding">Putar Ulang Tutorial</button>
+      </section>
+
       <section class="panel account-panel danger-zone">
         <div class="section-heading">
           <div>
@@ -436,6 +446,7 @@ async function loginWithPassword(form) {
     await hydrateRemoteState();
     renderShell();
     showToast('Miaw-velous! Kamu sudah masuk.');
+    maybeStartOnboarding();
   } catch (error) {
     console.warn(error);
     showToast('Email atau password salah, atau akun belum diverifikasi.');
@@ -576,6 +587,7 @@ async function verifyAuthOtp(form) {
     await hydrateRemoteState();
     renderShell();
     showToast('Miaw-velous! Email terverifikasi.');
+    maybeStartOnboarding();
   } catch (error) {
     console.warn(error);
     showToast('Kode OTP tidak valid atau sudah kedaluwarsa.');
