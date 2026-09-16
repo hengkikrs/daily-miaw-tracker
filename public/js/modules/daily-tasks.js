@@ -390,8 +390,8 @@ function renderDailyTaskView() {
           <option value="high" ${draft.priority === 'high' ? 'selected' : ''}>Tinggi</option>
         </select></label>
         <label><span>Jenis</span><select name="kind" ${dailyEditingRoutineId || dailyEditingTaskId ? 'disabled' : ''}>
-          <option value="rutin" ${(draft.kind || 'rutin') === 'rutin' ? 'selected' : ''}>Rutinitas (berulang)</option>
-          <option value="sekali" ${draft.kind === 'sekali' ? 'selected' : ''}>Sekali (hari ini)</option>
+          <option value="rutin" ${(draft.kind || 'rutin') === 'rutin' ? 'selected' : ''}>Rutinitas</option>
+          <option value="sekali" ${draft.kind === 'sekali' ? 'selected' : ''}>Sekali</option>
         </select></label>
         <label><span>Jadwal</span><select name="days" ${dailyEditingRoutineId || dailyEditingTaskId ? 'disabled' : ''}>
           ${DAILY_ROUTINE_DAYS.map(([v, label]) => `<option value="${v}" ${(draft.days || 'everyday') === v ? 'selected' : ''}>${label}</option>`).join('')}
