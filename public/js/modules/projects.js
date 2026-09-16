@@ -366,7 +366,7 @@ function renderProjectFormPage() {
   const statuses = Object.entries(PROJ_STATUS).map(([k, s]) => `<button type="button" class="goal-cat-chip${projFormSel.status === k ? ' on' : ''}" data-proj-status="${k}"><span class="goal-cat-dot" style="background:${s.color}"></span>${s.label}</button>`).join('');
   return `<div class="goals-page"><button type="button" class="goal-back-btn" data-proj-form-back>← Kembali</button>
     <div class="goal-add-card">
-      <h3>${editing ? 'Edit Project' : 'Tambah Project'}</h3>
+      <h2>${editing ? 'Edit Project' : 'Tambah Project'}</h2>
       ${d.err ? `<p class="proj-err">${escapeHtml(d.err)}</p>` : ''}
       <form id="projForm" novalidate>
         ${goals.length ? '<label class="goal-field"><span>Goals *</span><select name="goalId" required><option value="">— Pilih goal —</option>' + goalOptions + '</select></label>' : '<p class="proj-err">Belum ada Goals. Project tidak bisa dibuat tanpa goal — buat goal dulu di menu Goals.</p>'}

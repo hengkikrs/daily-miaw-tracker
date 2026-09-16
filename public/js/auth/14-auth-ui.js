@@ -257,7 +257,7 @@ function renderAccountPasswordPage() {
       <section class="panel account-panel">
         <div class="section-heading">
           <div>
-            <h3>Ganti Password</h3>
+            <h2>Ganti Password</h2>
             <p>Buat password baru. Semua kriteria di bawah harus lolos sebelum password bisa disimpan.</p>
           </div>
           <button class="ghost-button" type="button" data-action="account-back">← Kembali</button>
@@ -321,7 +321,7 @@ function renderAccountTab() {
       <section class="panel account-panel">
         <div class="section-heading">
           <div>
-            <h3>Profil Akun</h3>
+            <h2>Profil Akun</h2>
             <p>Data yang dipakai untuk masuk dan tampil di aplikasi.</p>
           </div>
         </div>
@@ -349,7 +349,7 @@ function renderAccountTab() {
       <section class="panel account-panel">
         <div class="section-heading">
           <div>
-            <h3>Keamanan</h3>
+            <h2>Keamanan</h2>
             <p>Password digunakan untuk masuk ke akun ini.</p>
           </div>
         </div>
@@ -359,7 +359,7 @@ function renderAccountTab() {
       <section class="panel account-panel">
         <div class="section-heading">
           <div>
-            <h3>Tutorial</h3>
+            <h2>Tutorial</h2>
             <p>Panduan singkat cara mengisi tracker: kebiasaan, task, goals, catatan, keuangan, sampai laporan.</p>
           </div>
         </div>
@@ -369,7 +369,7 @@ function renderAccountTab() {
       <section class="panel account-panel danger-zone">
         <div class="section-heading">
           <div>
-            <h3>Hapus Akun</h3>
+            <h2>Hapus Akun</h2>
             <p>Menghapus akun akan menghapus semua data tracker dari perangkat dan database website. Penghapusan identitas akan otomatis berlangsung 24 jam sejak akun dihapus.</p>
           </div>
         </div>

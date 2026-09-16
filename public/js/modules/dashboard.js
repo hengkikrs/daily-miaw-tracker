@@ -83,7 +83,7 @@ function dashCard({ icon, title, pct, tone, stats, cta, view }) {
     <article class="dash-mod tone-${tone}">
       <header class="dash-mod-head">
         <span class="dash-mod-ico">${icon}</span>
-        <h3>${title}</h3>
+        <h2>${title}</h2>
         <span class="dash-mod-pct">${pct}<small>%</small></span>
       </header>
       <div class="dash-mod-bar"><span style="width:${clamp(pct, 0, 100)}%"></span></div>
@@ -202,7 +202,7 @@ function renderDashboard(year) {
       <div class="dash-today-head">
         <div>
           <span class="kicker">Agenda &amp; target</span>
-          <h3>Hari Ini</h3>
+          <h2>Hari Ini</h2>
         </div>
         <span class="dash-today-sub">${todayDone}/${todayRows.length} selesai${overdue.length ? ` · <b class="bad">${overdue.length} terlambat</b>` : ''}</span>
       </div>
@@ -271,11 +271,11 @@ function renderDashboard(year) {
 
       <div class="dash-two">
         <section class="panel dash-chart-card">
-          <div class="rep-card-head"><h3>Tren Habit ${year}</h3><small>rata-rata poin per bulan</small></div>
+          <div class="rep-card-head"><h2>Tren Habit ${year}</h2><small>rata-rata poin per bulan</small></div>
           ${trend}
         </section>
         <section class="panel dash-chart-card">
-          <div class="rep-card-head"><h3>Kasflow 6 Bulan</h3><span class="rep-legend"><i class="lg-in"></i>Masuk <i class="lg-out"></i>Keluar</span></div>
+          <div class="rep-card-head"><h2>Kasflow 6 Bulan</h2><span class="rep-legend"><i class="lg-in"></i>Masuk <i class="lg-out"></i>Keluar</span></div>
           ${financeChart}
           <div class="rep-flow-nums">${d.flows.map((f) => `<div><span>${repMonthLabel(f.m)}</span><b class="${f.net >= 0 ? 'green' : 'coral'}">${f.net >= 0 ? '+' : '−'}${dashCompact(Math.abs(f.net))}</b></div>`).join('')}</div>
         </section>
@@ -283,19 +283,19 @@ function renderDashboard(year) {
 
       <div class="dash-two">
         <section class="panel dash-chart-card">
-          <div class="rep-card-head"><h3>Habit per Kategori</h3><small>${MONTHS[activeMonth]} ${year}</small></div>
+          <div class="rep-card-head"><h2>Habit per Kategori</h2><small>${MONTHS[activeMonth]} ${year}</small></div>
           <div class="dash-cats">${catRows || '<p class="task-empty">Belum ada habit aktif.</p>'}</div>
           <div class="dash-strip-wrap">${renderDailyPercentStrip(focusDailyRates, year, activeMonth)}</div>
         </section>
         <section class="panel dash-chart-card">
-          <div class="rep-card-head"><h3>Pengeluaran per Kategori</h3><small>${repMonthLabel(d.monthKey)}</small></div>
+          <div class="rep-card-head"><h2>Pengeluaran per Kategori</h2><small>${repMonthLabel(d.monthKey)}</small></div>
           ${cats.length ? `<div class="rep-donut-wrap">${repDonutSvg(cats, catTotal)}<div class="rep-legend-list">${catLegend}</div></div>` : '<p class="task-empty">Belum ada pengeluaran bulan ini.</p>'}
         </section>
       </div>
 
       <div class="dash-two">
         <section class="panel dash-chart-card">
-          <div class="rep-card-head"><h3>Goals Teratas</h3><small>${d.goals.length} goals</small></div>
+          <div class="rep-card-head"><h2>Goals Teratas</h2><small>${d.goals.length} goals</small></div>
           <div class="dash-goals">${topGoals || '<p class="task-empty">Belum ada goals.</p>'}</div>
           <div class="dash-mini-kpis">
             <div><span>Project aktif</span><b>${d.projActive}</b></div>
@@ -305,9 +305,9 @@ function renderDashboard(year) {
           </div>
         </section>
         <section class="panel dash-chart-card">
-          <div class="rep-card-head"><h3>Agenda Hari Ini</h3><small>${agenda.length ? `${agenda.length} jadwal` : 'kosong'}</small></div>
+          <div class="rep-card-head"><h2>Agenda Hari Ini</h2><small>${agenda.length ? `${agenda.length} jadwal` : 'kosong'}</small></div>
           <div class="dash-agenda">${agendaRows || '<p class="task-empty">Tidak ada jadwal hari ini.</p>'}</div>
-          <div class="rep-card-head" style="margin-top:10px"><h3>Tugas Mendatang</h3></div>
+          <div class="rep-card-head" style="margin-top:10px"><h2>Tugas Mendatang</h2></div>
           ${upcoming.length ? `<div class="dash-agenda">${upcoming.map((t) => `
             <div class="dash-agenda-row" data-dash-go="task" role="button" tabindex="0">
               <span class="task-prio p-${t.priority || 'low'}"></span>
@@ -319,7 +319,7 @@ function renderDashboard(year) {
       </div>
 
       <section class="panel dash-chart-card">
-        <div class="rep-card-head"><h3>Detail Bulan ${MONTHS[activeMonth]}</h3><small>ringkasan habit</small></div>
+        <div class="rep-card-head"><h2>Detail Bulan ${MONTHS[activeMonth]}</h2><small>ringkasan habit</small></div>
         <div class="dash-mini-kpis">
           <div><span>Habit aktif</span><b>${d.monthStats.totalHabits}</b></div>
           <div><span>Slot terisi</span><b>${d.monthStats.checkedSlots}/${d.monthStats.totalSlots}</b></div>

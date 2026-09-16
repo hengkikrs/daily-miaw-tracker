@@ -149,19 +149,19 @@ function renderReportView() {
     </div>
 
     <div class="panel rep-card">
-      <div class="rep-card-head"><h3>Cashflow 6 Bulan</h3><span class="rep-legend"><i class="lg-in"></i>Masuk <i class="lg-out"></i>Keluar <i class="lg-net"></i>Selisih</span></div>
+      <div class="rep-card-head"><h2>Cashflow 6 Bulan</h2><span class="rep-legend"><i class="lg-in"></i>Masuk <i class="lg-out"></i>Keluar <i class="lg-net"></i>Selisih</span></div>
       ${repBarChartSvg(flows, 640, 210)}
       <div class="rep-flow-nums">${flows.map((f) => `<div><span>${repMonthLabel(f.m)}</span><b class="${f.net >= 0 ? 'green' : 'coral'}">${f.net >= 0 ? '+' : '−'}${saveCompact(Math.abs(f.net))}</b></div>`).join('')}</div>
     </div>
 
     <div class="rep-two">
       <div class="panel rep-card">
-        <div class="rep-card-head"><h3>Spending per Kategori</h3><small>${repMonthLabel(cur)}</small></div>
+        <div class="rep-card-head"><h2>Spending per Kategori</h2><small>${repMonthLabel(cur)}</small></div>
         ${cats.length === 0 ? '<p class="muted rep-empty-line">Belum ada pengeluaran bulan ini.</p>' : `<div class="rep-donut-wrap">${repDonutSvg(cats, catTotal)}
           <div class="rep-legend-list">${cats.slice(0, 6).map((it, i) => { const COL = chartPalette(9); const share = catTotal ? (it.amt / catTotal) * 100 : 0; return `<div class="rep-lg"><i style="background:${COL[i % COL.length]}"></i><b>${escapeHtml(it.cat)}</b><small>${share.toFixed(0)}%</small><span>${txRp(it.amt)}</span></div>`; }).join('')}</div></div>`}
       </div>
       <div class="panel rep-card">
-        <div class="rep-card-head"><h3>🔭 Outlook</h3><small>proyeksi bulan depan</small></div>
+        <div class="rep-card-head"><h2>🔭 Outlook</h2><small>proyeksi bulan depan</small></div>
         <div class="rep-out">
           <div><span>Perkiraan pengeluaran</span><b>${txRp(Math.round(avgExp / 1000) * 1000)}</b><small>rata-rata ${recent3.length || 1} bln terakhir</small></div>
           ${nextBudgetGap == null ? '' : `<div><span>Pos anggaran tersisa</span><b class="${nextBudgetGap >= 0 ? 'green' : 'coral'}">${txRp(nextBudgetGap)}</b><small>dari pagu ${txRp(budSum)}</small></div>`}
@@ -173,7 +173,7 @@ function renderReportView() {
     </div>
 
     <div class="panel rep-card">
-      <div class="rep-card-head"><h3>🧾 Rekap Budget ${repMonthLabel(cur)}</h3><small>${buds.length} pos · pagu ${txRp(budSum)}</small></div>
+      <div class="rep-card-head"><h2>🧾 Rekap Budget ${repMonthLabel(cur)}</h2><small>${buds.length} pos · pagu ${txRp(budSum)}</small></div>
       ${budRows.length === 0 ? '<p class="muted rep-empty-line">Belum ada budget untuk bulan ini — buat di halaman Budget.</p>' : budRows.map(({ b, c }) => {
         const cls = c.status === 'over' ? 'over' : c.status === 'warn' ? 'warn' : 'ok';
         return `<div class="rep-row">
@@ -185,7 +185,7 @@ function renderReportView() {
     </div>
 
     <div class="panel rep-card">
-      <div class="rep-card-head"><h3>🪙 Rekap Tabungan</h3><small>${svActive.length + svDone.length} target aktif/selesai · ${svDone.length} tercapai</small></div>
+      <div class="rep-card-head"><h2>🪙 Rekap Tabungan</h2><small>${svActive.length + svDone.length} target aktif/selesai · ${svDone.length} tercapai</small></div>
       ${saveList().length === 0 ? '<p class="muted rep-empty-line">Belum ada target tabungan.</p>' : saveList().map((s) => {
         const c = saveCalc(s);
         return `<div class="rep-row">
@@ -197,7 +197,7 @@ function renderReportView() {
     </div>
 
     <div class="panel rep-card">
-      <div class="rep-card-head"><h3>Transaksi Terbaru</h3><small>5 terakhir dari kas</small></div>
+      <div class="rep-card-head"><h2>Transaksi Terbaru</h2><small>5 terakhir dari kas</small></div>
       ${txList().length === 0 ? '<p class="muted rep-empty-line">Belum ada transaksi.</p>' : [...txList()].sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.ts || 0) - (a.ts || 0)).slice(0, 5).map((t) => `<div class="rep-txline">
         <span class="rep-tx-ic">${t.type === 'in' ? '↑' : '↓'}</span>
         <div><b>${escapeHtml(t.note || t.cat || 'Transaksi')}</b><small>${budGroupDate(t.date)} · ${escapeHtml(t.cat || 'Umum')}</small></div>

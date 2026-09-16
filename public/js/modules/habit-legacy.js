@@ -85,7 +85,7 @@ function renderHabitSection(categoryKey, monthData, year, monthIndex, dailyRates
     <section class="panel tracker-section tone-${config.color} ${isCollapsed ? 'mobile-collapsed' : ''}" aria-labelledby="${sectionId}" data-category="${categoryKey}">
       <div class="section-heading">
         <div>
-          <h3 id="${sectionId}">${config.label}</h3>
+          <h2 id="${sectionId}">${config.label}</h2>
           <p>${config.description}</p>
         </div>
         <div class="section-head-actions">
@@ -244,7 +244,7 @@ function renderLeaderboard(kicker, title, rows, type) {
       <div class="section-heading">
         <div>
           <span class="kicker">${escapeHtml(kicker)}</span>
-          <h3>${escapeHtml(title)}</h3>
+          <h2>${escapeHtml(title)}</h2>
           <p>${type === 'top' ? 'Persentase penyelesaian harian tertinggi.' : 'Persentase penyelesaian harian terendah. Tetap miaw-langkah maju.'}</p>
         </div>
       </div>

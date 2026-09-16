@@ -32,7 +32,7 @@
   --teal: #16A34A;
   --teal-strong: #15803D;
   --teal-deep: #166534;
-  --accent-ink: #15803D;
+  --accent-ink: #146C36;
   --nav-ink: #0F172A;
   --nav-ink-soft: #475569;
   --nav-ink-active: #15803D;
@@ -65,32 +65,32 @@
   --blue-strong: #334155;
   --violet-soft: #E2E8F0;
   --rose-strong: #B91C1C;
-  --amber-strong: #B45309;
+  --amber-strong: #92400E;
   --amber-soft: #FEF3C7;
-  --orange-strong: #B45309;
+  --orange-strong: #92400E;
   --danger-soft: #FEE2E2;
   --accent-strong: #15803D;
   --brown: #475569;
-  --coral: #B45309;
+  --coral: #92400E;
 
   /* kategori goal — ramp hijau/slate/amber yang tenang */
-  --cat-karier: #15803D;
-  --cat-keuangan: #B45309;
+  --cat-karier: #146C36;
+  --cat-keuangan: #92400E;
   --cat-kesehatan: #047857;
   --cat-pendidikan: #475569;
   --cat-personal: #334155;
   --cat-lainnya: #52525B;
 
   /* status project */
-  --st-planning: #94A3B8;
-  --st-active: #15803D;
-  --st-onhold: #B45309;
+  --st-planning: #52525B;
+  --st-active: #146C36;
+  --st-onhold: #92400E;
   --st-completed: #475569;
   --st-archived: #52525B;
 
   /* kategori agenda */
   --jv-kantor: #15803D;
-  --jv-sales: #B45309;
+  --jv-sales: #92400E;
   --jv-marketing: #475569;
   --jv-konten: #334155;
   --jv-keuangan: #047857;
@@ -193,7 +193,7 @@
   --cat-kesehatan: #4ADE80;
   --cat-pendidikan: #94A3B8;
   --cat-personal: #CBD5E1;
-  --cat-lainnya: #64748B;
+  --cat-lainnya: #94A3B8;
 
   --st-planning: #94A3B8;
   --st-active: #22C55E;
@@ -286,6 +286,34 @@ h1, h2, h3,
 }
 
 /* ---------- Latar & permukaan (datar, tenang) ---------- */
+
+/* ---------- Skala design system (P2) ---------- */
+:root {
+  --fs-2xs: 11.5px;
+  --fs-xs: 12.5px;
+  --fs-sm: 13.5px;
+  --fs-md: 14.5px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+  --fs-4xl: 36px;
+  --fs-5xl: 44px;
+  --r-xs: 8px;
+  --r-sm: 10px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 24px;
+  --r-pill: 999px;
+  --r-full: 50%;
+  --sh-1: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --sh-2: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --sh-3: 0 8px 24px rgba(15, 23, 42, 0.10);
+  --sh-4: 0 16px 40px rgba(15, 23, 42, 0.16);
+}
+
 body {
   background: var(--bg);
   color: var(--text);

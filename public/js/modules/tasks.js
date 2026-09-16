@@ -304,23 +304,23 @@ function renderTaskDetail() {
     </div>
     ${t.notes ? `
     <section class="task-card task-detail-sec">
-      <h3>Deskripsi</h3>
+      <h2>Deskripsi</h2>
       ${desc}
     </section>` : ''}
     <section class="task-card task-detail-sec">
       <div class="task-sec-head">
-        <h3>Checklist</h3>
+        <h2>Checklist</h2>
         ${cl.length ? `<span class="task-sec-meta">${clDone} / ${cl.length} selesai</span>` : ''}
       </div>
       ${cl.length ? `<div class="task-bar slim"><span style="width:${clPct}%"></span></div>` : ''}
       <div class="task-sub-list">${clItems}</div>
     </section>
     <section class="task-card task-detail-sec">
-      <h3>Catatan</h3>
+      <h2>Catatan</h2>
       <p class="task-detail-desc">${t.memo ? escapeHtml(t.memo) : 'Belum ada catatan tambahan.'}</p>
     </section>
     <section class="task-card task-detail-sec">
-      <h3>Attachment</h3>
+      <h2>Attachment</h2>
       <div class="task-attach-list">
         ${atts.length ? atts.map((a) => `<span class="task-chip att">📎 ${escapeHtml(String(a))}</span>`).join('') : '<p class="task-empty">Belum ada lampiran.</p>'}
       </div>
@@ -338,7 +338,7 @@ function renderTaskDetail() {
     : `<button class="primary-button task-focus-btn" type="button" data-task-focus="${t.id}">Mulai Fokus</button>`}
     </div>
     <section class="task-card task-detail-sec">
-      <h3>Activity</h3>
+      <h2>Activity</h2>
       <ul class="task-activity">
         ${acts.length ? acts.map((a) => `<li><span>${escapeHtml(a.text)}</span><time>${taskRelTime(a.at)}</time></li>`).join('') : '<li class="task-empty">Belum ada aktivitas.</li>'}
       </ul>
@@ -410,14 +410,14 @@ function renderTaskView() {
     <div class="task-pills" role="tablist">${pills}</div>
     ${composer}
     <section class="task-card task-section">
-      <h3>Fokus Hari Ini</h3>
+      <h2>Fokus Hari Ini</h2>
       <div class="task-list">
         ${active.length ? active.map(row).join('') : '<p class="task-empty">Belum ada task di sini. Tambah satu lewat tombol +.</p>'}
       </div>
     </section>
     ${done.length ? `
     <section class="task-card task-section">
-      <h3>Selesai</h3>
+      <h2>Selesai</h2>
       <div class="task-list">${done.map(row).join('')}</div>
     </section>` : ''}
     <button class="task-fab" type="button" data-task-add aria-label="Tambah task baru">+</button>

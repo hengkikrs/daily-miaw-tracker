@@ -123,7 +123,7 @@ function renderBudgetView() {
 
     ${filtered.length === 0 ? `<div class="panel bud-empty">
       <div class="bud-empty-ic">🗂️</div>
-      <h3>${items.length === 0 ? `Belum ada budget untuk ${budMonthLabel(period)}` : 'Tidak ada budget pada filter ini'}</h3>
+      <h2>${items.length === 0 ? `Belum ada budget untuk ${budMonthLabel(period)}` : 'Tidak ada budget pada filter ini'}</h2>
       <p>Atur batas belanja per kategori, lalu pantau dari sini — angka terpakai dihitung otomatis dari Transaksi kas.</p>
       <div><button type="button" class="btn primary" data-bud-new>+ Tambah Budget</button>${items.length === 0 && budFilter !== 'all' ? '<button type="button" class="btn" data-bud-filter="all">Lihat Semua</button>' : ''}</div>
     </div>` : `<div class="bud-grid">${filtered.map(({ b, c }) => `
@@ -135,7 +135,7 @@ function renderBudgetView() {
       </button>`).join('')}</div>`}
 
     ${recentTx.length ? `<div class="panel bud-recent">
-      <h3>⚡ Transaksi Terbaru <small>yang memengaruhi budget</small></h3>
+      <h2>⚡ Transaksi Terbaru <small>yang memengaruhi budget</small></h2>
       ${recentTx.map((t) => `<div class="bud-rtx"><span class="bud-ic sm">${budIcon(BUD_TX_MAP[t.cat])}</span><div><b>${escapeHtml(t.note || t.cat)}</b><small>${budGroupDate(t.date)} · ${t.cat}</small></div><span class="coral">−${txRp(t.amount)}</span></div>`).join('')}
       <button type="button" class="btn tiny" data-bud-gotx>Lihat Semua Transaksi →</button>
     </div>` : ''}
@@ -175,7 +175,7 @@ function renderBudDetail(b) {
       </div>
     </div>
     <div class="panel bud-det-tx">
-      <h3>Transaksi Terkait <small>kategori ${b.cat} · ${budMonthLabel(b.period)}</small></h3>
+      <h2>Transaksi Terkait <small>kategori ${b.cat} · ${budMonthLabel(b.period)}</small></h2>
       ${txs.length === 0 ? '<p class="muted">Belum ada transaksi kas yang tercatat untuk kategori ini. Tambahkan lewat menu Transaksi.</p>' : txs.map((t) => `<div class="bud-rtx"><span class="bud-ic sm">↓</span><div><b>${escapeHtml(t.note || t.cat)}</b><small>${budGroupDate(t.date)} · ${t.cat}</small></div><span class="coral">−${txRp(t.amount)}</span></div>`).join('')}
     </div>
   </div>`;
@@ -185,7 +185,7 @@ function renderBudForm() {
   const editing = budEditingId ? budFind(budEditingId) : null;
   const d = budDraft || (editing ? { name: editing.name, cat: editing.cat, amount: String(editing.amount), note: editing.note || '' } : { name: '', cat: BUD_CATS[0].name, amount: '', note: '' });
   return `<form id="budForm" class="panel bud-form" novalidate>
-    <h3>${editing ? '✏️ Edit Budget' : '➕ Tambah Budget'}</h3>
+    <h2>${editing ? '✏️ Edit Budget' : '➕ Tambah Budget'}</h2>
     <div class="tx-form-grid">
       <label class="field"><span>Nama Budget</span><input name="budName" value="${escapeHtml(d.name)}" placeholder="mis. Makan harian" maxlength="60" required></label>
       <label class="field"><span>Kategori</span><select name="budCat">${BUD_CATS.map((x) => `<option value="${x.name}" ${x.name === d.cat ? 'selected' : ''}>${x.icon} ${x.name}</option>`).join('')}</select></label>
@@ -270,7 +270,7 @@ function budTxFormHtml() {
   const cats = BUD_CATS.filter((c) => budList().some((b) => b.cat === c.name && b.period === budPeriod()));
   const list = cats.length ? cats : BUD_CATS.slice(0, 5);
   return `<form id="budTxForm" class="panel bud-form" novalidate>
-    <h3>➕ Tambah Transaksi Keluar <small>langsung masuk ke anggaran kategori</small></h3>
+    <h2>➕ Tambah Transaksi Keluar <small>langsung masuk ke anggaran kategori</small></h2>
     <div class="tx-form-grid">
       <label class="field"><span>Keterangan</span><input name="qtxNote" placeholder="mis. belanja sayur" maxlength="80"></label>
       <label class="field"><span>Jumlah (Rp)</span><input name="qtxAmount" inputmode="numeric" placeholder="mis. 35rb" required></label>

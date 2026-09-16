@@ -313,7 +313,7 @@ function renderDailyTaskView() {
   } else if (dailyTab === 'selesai') {
     const doneRows = allTasks.filter((t) => t.done).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 30);
     body = `<section class="task-card task-section">
-      <h3>Riwayat selesai</h3>
+      <h2>Riwayat selesai</h2>
       <div class="task-list">
         ${doneRows.length ? doneRows.map((t) => `
           <div class="task-row done" data-daily-id="${t.id}">
@@ -350,12 +350,12 @@ function renderDailyTaskView() {
     const later = allTasks.filter((t) => t.date > todayIso && !t.done).sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(0, 6);
     body = `
       <section class="task-card task-section">
-        <div class="task-sec-head"><h3>Agenda hari ini</h3><span class="task-sec-meta">${routinesDone}/${routinesToday.length} rutinitas</span></div>
+        <div class="task-sec-head"><h2>Agenda hari ini</h2><span class="task-sec-meta">${routinesDone}/${routinesToday.length} rutinitas</span></div>
         <div class="task-list">${agenda.length ? agendaRows : '<p class="task-empty">Tidak ada agenda. Tenang sebentar.</p>'}</div>
       </section>
       ${later.length ? `
       <section class="task-card task-section">
-        <h3>Mendatang</h3>
+        <h2>Mendatang</h2>
         <div class="task-list">${later.map((t) => `
           <div class="task-row" data-daily-id="${t.id}">
             ${prioDot(t.priority)}
@@ -536,7 +536,7 @@ function dailyFocusActionHtml(kind, id, item) {
 function dailyActivityHtml(item) {
   const acts = Array.isArray(item.activity) ? [...item.activity].sort((a, b) => b.at - a.at) : [];
   return `<section class="task-card task-detail-sec">
-      <h3>Activity</h3>
+      <h2>Activity</h2>
       <ul class="task-activity">
         ${acts.length ? acts.map((a) => `<li><span>${escapeHtml(a.text)}</span><time>${taskRelTime(a.at)}</time></li>`).join('') : '<li class="task-empty">Belum ada aktivitas.</li>'}
       </ul>

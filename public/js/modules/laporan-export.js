@@ -379,7 +379,7 @@ function renderLaporanView() {
   const sectionsHtml = model.sections.map((sec) => `
     <section class="panel lap-card">
       <div class="lap-card-head">
-        <h3><span class="lap-dot"></span>${escapeHtml(sec.title)}</h3>
+        <h2><span class="lap-dot"></span>${escapeHtml(sec.title)}</h2>
         <small>${sec.blocks.length} blok data</small>
       </div>
       ${lapBlocksHtml(sec.blocks)}
@@ -408,7 +408,7 @@ function renderLaporanView() {
 
       <section class="panel lap-card lap-ai">
         <div class="lap-card-head">
-          <h3><span class="lap-dot ai"></span>Analisis AI</h3>
+          <h2><span class="lap-dot ai"></span>Analisis AI</h2>
           <div class="lap-ai-tools">
             <select id="lapAiModel" class="lap-select" aria-label="Model AI">${modelOpts}</select>
             <button type="button" class="lap-btn small" data-lap-ai="1" ${lapAiBusy ? 'disabled' : ''}>${lapAiBusy ? 'Menyusun…' : (lapAiText.trim() ? '🔄 Perbarui analisis' : '✨ Buat analisis AI')}</button>
@@ -716,7 +716,7 @@ function lapDocHtml(model) {
     ${sec.blocks.map((b) => {
       if (b.type === 'kpi') return kpiHtml(b.items);
       if (b.type === 'table') return tableHtml(b);
-      if (b.type === 'h') return `<h3 style="font-size:11pt;color:#8a6f5c;margin:10px 0 4px">${esc(b.text)}</h3>`;
+      if (b.type === 'h') return `<h2 style="font-size:11pt;color:#8a6f5c;margin:10px 0 4px">${esc(b.text)}</h2>`;
       if (b.type === 'para') return `<p style="font-size:10pt;line-height:1.55;margin:4px 0 10px">${esc(b.text)}</p>`;
       if (b.type === 'list') return `${b.title ? `<p style="font-size:10pt;font-weight:bold;color:#8a6f5c;margin:8px 0 2px">${esc(b.title)}</p>` : ''}<ul style="margin:2px 0 12px;padding-left:18px">${b.items.map((t) => `<li style="font-size:10pt;line-height:1.5">${esc(t)}</li>`).join('')}</ul>`;
       return '';

@@ -132,7 +132,7 @@ function txFormHtml() {
   const editing = txEditingId ? txFind(txEditingId) : null;
   const cats = txFormType === 'in' ? TX_CATS_IN : TX_CATS_OUT;
   return `<div class="panel tx-form-card">
-    <div class="tx-form-head"><h3>${editing ? '✏️ Edit Transaksi' : '➕ Catat Transaksi'}</h3>
+    <div class="tx-form-head"><h2>${editing ? '✏️ Edit Transaksi' : '➕ Catat Transaksi'}</h2>
       ${editing ? '<button type="button" class="btn tiny" data-tx-canceledit>Batal</button>' : ''}</div>
     <form id="txForm" class="tx-form">
       <div class="tx-type-toggle" role="group">
@@ -178,7 +178,7 @@ function txCalendarHtml(month) {
   const isCur = month === txMonthNow();
   return `<div class="panel tx-cal-card">
     <div class="tx-cal-head">
-      <h3>📊 Kalender Cashflow</h3>
+      <h2>📊 Kalender Cashflow</h2>
       <div class="tx-cal-nav">
         <button type="button" class="btn tiny" data-tx-mprev aria-label="Bulan sebelumnya">‹</button>
         <b>${txMonthLabel(month)}</b>
@@ -200,7 +200,7 @@ function txListHtml() {
   const rows = txFiltered();
   const tabs = [['all', 'Semua'], ['in', '↑ Masuk'], ['out', '↓ Keluar']];
   if (!rows.length) {
-    return `<div class="panel tx-list-card"><div class="tx-list-head"><h3>🧾 Riwayat Transaksi</h3><div class="tx-tabs">${tabs.map(([k, l]) => `<button type="button" class="tx-tab ${txFilter === k ? 'on' : ''}" data-tx-ftype="${k}">${l}</button>`).join('')}</div></div>
+    return `<div class="panel tx-list-card"><div class="tx-list-head"><h2>🧾 Riwayat Transaksi</h2><div class="tx-tabs">${tabs.map(([k, l]) => `<button type="button" class="tx-tab ${txFilter === k ? 'on' : ''}" data-tx-ftype="${k}">${l}</button>`).join('')}</div></div>
       <div class="tx-empty"><span>💸</span><b>${txList().length ? 'Tidak ada hasil' : 'Belum ada transaksi'}</b>
       <p>${txList().length ? 'Ubah filter atau pilih hari lain di kalender.' : 'Mulai catat uang masuk & keluar pertamamu.'}</p>
       <button type="button" class="btn primary" data-tx-focus>+ Tambah Data</button></div></div>`;
@@ -224,7 +224,7 @@ function txListHtml() {
         <button type="button" class="tx-icobtn danger" data-tx-del="${t.id}" title="Hapus">🗑</button>
       </div></div>`;
   });
-  return `<div class="panel tx-list-card"><div class="tx-list-head"><h3>🧾 Riwayat Transaksi</h3><div class="tx-tabs">${tabs.map(([k, l]) => `<button type="button" class="tx-tab ${txFilter === k ? 'on' : ''}" data-tx-ftype="${k}">${l}</button>`).join('')}</div></div>${html}</div>`;
+  return `<div class="panel tx-list-card"><div class="tx-list-head"><h2>🧾 Riwayat Transaksi</h2><div class="tx-tabs">${tabs.map(([k, l]) => `<button type="button" class="tx-tab ${txFilter === k ? 'on' : ''}" data-tx-ftype="${k}">${l}</button>`).join('')}</div></div>${html}</div>`;
 }
 
 function renderTxView() {

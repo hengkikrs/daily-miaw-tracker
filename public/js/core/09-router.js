@@ -203,7 +203,7 @@ function renderPlaceholderView(viewName) {
     <section class="panel placeholder-panel">
       <div class="placeholder-stage">
         <div class="placeholder-emoji" aria-hidden="true">${info.emoji}</div>
-        <h3 class="placeholder-title">${escapeHtml(info.title)}</h3>
+        <h2 class="placeholder-title">${escapeHtml(info.title)}</h2>
         <p class="placeholder-hint">${escapeHtml(info.hint)}</p>
         <span class="placeholder-chip">Segera hadir</span>
       </div>

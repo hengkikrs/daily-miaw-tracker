@@ -37,7 +37,7 @@ function habitPeriodStripHtml() {
       <div class="habit-period-head">
         <div>
           <span class="kicker">Riwayat kebiasaan</span>
-          <h3>${MONTHS[period.monthIndex]} ${period.year}</h3>
+          <h2>${MONTHS[period.monthIndex]} ${period.year}</h2>
           <p>Pilih bulan untuk melihat riwayat centang. Bulan berjalan dipakai sebagai default.</p>
         </div>
         <label class="habit-period-year">
@@ -241,7 +241,7 @@ function renderPointCalendar(dailyRates, year, monthIndex, focusDayIndex = focus
       <section class="panel point-calendar-panel">
         <div class="section-heading">
           <div>
-            <h3>Kalender Poin ${MONTHS[monthIndex]}</h3>
+            <h2>Kalender Poin ${MONTHS[monthIndex]}</h2>
             <p>Belum ada kebiasaan harian aktif untuk bulan ini.</p>
           </div>
         </div>
@@ -258,7 +258,7 @@ function renderPointCalendar(dailyRates, year, monthIndex, focusDayIndex = focus
     <section class="panel point-calendar-panel" aria-label="Kalender poin harian ${MONTHS[monthIndex]} ${year}">
       <div class="section-heading">
         <div>
-          <h3>Kalender Poin ${MONTHS[monthIndex]}</h3>
+          <h2>Kalender Poin ${MONTHS[monthIndex]}</h2>
           <p>Setiap tanggal menunjukkan poin harian yang didapat dari kebiasaan harian aktif.</p>
         </div>
       </div>
@@ -343,7 +343,7 @@ function renderHabitsTab(year, monthIndex) {
   const emptyState = totalHabits === 0
     ? `<section class="panel habit-empty"><div class="empty-state">
         <div class="empty-ico" aria-hidden="true">🌱</div>
-        <h3>Belum ada kebiasaan di ${MONTHS[monthIndex]} ${year}</h3>
+        <h2>Belum ada kebiasaan di ${MONTHS[monthIndex]} ${year}</h2>
         <p>Tambahkan kebiasaan pertamamu lewat form di bawah — harian, mingguan, atau bulanan.</p>
       </div></section>`
     : '';

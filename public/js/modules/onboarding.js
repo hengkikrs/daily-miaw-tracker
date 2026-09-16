@@ -188,7 +188,7 @@ function renderOnboarding() {
 
       <div class="ob-body">
         <span class="ob-ico">${st.ico}</span>
-        <h3 class="ob-title" id="obTitle">${st.title}</h3>
+        <h2 class="ob-title" id="obTitle">${st.title}</h2>
         <p class="ob-text">${st.text}</p>
         <ul class="ob-list">${st.list.map((li) => `<li>${li}</li>`).join('')}</ul>
       </div>

@@ -184,17 +184,17 @@ function renderProgressView() {
       </div>
 
       <section class="panel" style="padding:14px 16px">
-        <div class="prog-card-head"><h3>Aktivitas 7 Hari</h3><span class="prog-card-sub">kebiasaan ✓ + task selesai</span></div>
+        <div class="prog-card-head"><h2>Aktivitas 7 Hari</h2><span class="prog-card-sub">kebiasaan ✓ + task selesai</span></div>
         ${progBars(days, 'var(--green)')}
       </section>
 
       <section class="panel" style="padding:14px 16px">
-        <div class="prog-card-head"><h3>Tren 6 Bulan</h3><span class="prog-card-sub">total penyelesaian</span></div>
+        <div class="prog-card-head"><h2>Tren 6 Bulan</h2><span class="prog-card-sub">total penyelesaian</span></div>
         ${progBars(months, '#475569')}
       </section>
 
       <section class="panel" style="padding:14px 16px">
-        <div class="prog-card-head"><h3>Goal per Kategori</h3><span class="prog-card-sub">${G.count} goal</span></div>
+        <div class="prog-card-head"><h2>Goal per Kategori</h2><span class="prog-card-sub">${G.count} goal</span></div>
         <div class="prog-donut-row">
           ${progDonut(catSegs.length ? catSegs : [{ color: 'var(--line)', value: 1 }], 120)}
           <div class="prog-legend">${legend || '<div class="prog-legend-row">Belum ada goal</div>'}</div>
@@ -207,7 +207,7 @@ function renderProgressView() {
       </section>
 
       <section class="panel" style="padding:14px 16px">
-        <div class="prog-card-head"><h3>Kebiasaan ${MONTHS[activeMonth]}</h3><span class="prog-card-sub">${H.done}/${H.total} slot · ${H.count} habit</span></div>
+        <div class="prog-card-head"><h2>Kebiasaan ${MONTHS[activeMonth]}</h2><span class="prog-card-sub">${H.done}/${H.total} slot · ${H.count} habit</span></div>
         ${habitCatRows}
       </section>
     </div>`;

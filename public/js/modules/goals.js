@@ -191,7 +191,7 @@ function renderGoalsView() {
   const sec = (key) => {
     const items = shown.filter((g) => goalTermOf(g) === key);
     if (!items.length) return '';
-    return `<div class="goal-term-sec"><h3 class="goal-term-head" style="--tc:${GOAL_TERMS[key].color}">${GOAL_TERMS[key].label}<span class="goal-term-hint">${GOAL_TERMS[key].hint} · ${items.length} goal</span></h3>${items.map(goalCardHtml).join('')}</div>`;
+    return `<div class="goal-term-sec"><h2 class="goal-term-head" style="--tc:${GOAL_TERMS[key].color}">${GOAL_TERMS[key].label}<span class="goal-term-hint">${GOAL_TERMS[key].hint} · ${items.length} goal</span></h2>${items.map(goalCardHtml).join('')}</div>`;
   };
   const grouped = ['pendek', 'menengah', 'panjang'].map(sec).join('') || '<p class="task-empty">Tidak ada goal pada filter ini.</p>';
   return `<div class="goals-page">
@@ -262,7 +262,7 @@ function renderGoalAddPage() {
   const terms = Object.entries(GOAL_TERMS).map(([k, t]) => `<button type="button" class="goal-cat-chip${goalsAddTerm === k ? ' on' : ''}" data-goal-term="${k}"><span class="goal-cat-dot" style="background:${t.color}"></span>${t.label}<em class="goal-term-mini">${t.hint}</em></button>`).join('');
   return `<div class="goals-page">
       <form class="goal-add-card" id="goalAddForm">
-        <h3 class="goal-form-title">${editing ? 'Edit Goal' : 'Tambah Goal'}</h3>
+        <h2 class="goal-form-title">${editing ? 'Edit Goal' : 'Tambah Goal'}</h2>
         <label class="goal-field"><span>Judul</span><input name="title" type="text" maxlength="90" placeholder="Raih tujuan besar…" required value="${escapeHtml(goalsAddDraft.title)}" /></label>
         <label class="goal-field"><span>Deskripsi</span><textarea name="description" rows="3" maxlength="240" placeholder="Ceritakan goal ini…">${escapeHtml(goalsAddDraft.description)}</textarea></label>
         <div class="goal-field"><span>Jangka Waktu</span><div class="goal-cat-row">${terms}</div></div>
@@ -319,7 +319,7 @@ function renderGoalCalendarPage() {
         <div class="jadwal-week">${['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((w) => `<span>${w}</span>`).join('')}</div>
         <div class="jadwal-grid">${grid}</div>
       </div>
-      <h3 class="jadwal-day-title">${jadwalDayTitle(selIso)}</h3>
+      <h2 class="jadwal-day-title">${jadwalDayTitle(selIso)}</h2>
       <div class="jadwal-card jadwal-list">
         ${dayItems.length ? dayItems.map((x) => `<div class="jadwal-row"><span class="jadwal-dot" style="background:${x.color}"></span><span class="jadwal-info"><span class="jadwal-title">${escapeHtml(x.text)}</span><span class="jadwal-sub">${x.kind === '1deadline' ? 'Deadline goal' : 'Target milestone'}</span></span></div>`).join('') : '<p class="task-empty">Tidak ada deadline/milestone pada tanggal ini.</p>'}
       </div>

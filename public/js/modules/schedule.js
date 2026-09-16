@@ -158,7 +158,7 @@ function renderJadwalView() {
         <div class="jadwal-week">${week.map((w) => `<span>${w}</span>`).join('')}</div>
         <div class="jadwal-grid">${grid}</div>
       </div>
-      <h3 class="jadwal-day-title">${jadwalDayTitle(jadwalSelIso)}</h3>
+      <h2 class="jadwal-day-title">${jadwalDayTitle(jadwalSelIso)}</h2>
       <div class="jadwal-card jadwal-list">
         ${jadwalItems(jadwalSelIso).length ? jadwalItems(jadwalSelIso).map(jadwalRowHtml).join('') : '<p class="task-empty">Tidak ada jadwal pada hari ini.</p>'}
       </div>`;

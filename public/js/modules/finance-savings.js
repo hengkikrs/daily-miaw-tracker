@@ -155,7 +155,7 @@ function renderSavingsView() {
 
     ${filtered.length === 0 ? `<div class="panel sv-empty">
       <div class="sv-empty-ic">🐾</div>
-      <h3>${all.length === 0 ? 'Belum ada target tabungan' : 'Kosong di filter ini'}</h3>
+      <h2>${all.length === 0 ? 'Belum ada target tabungan' : 'Kosong di filter ini'}</h2>
       <p>${all.length === 0 ? 'Buat target pertama — dana darurat, laptop baru, atau liburan. Setoran kecil rutin yang dihitung otomatis.' : 'Coba filter lain atau buat target baru.'}</p>
       <div><button type="button" class="btn primary" data-sv-new>+ Tambah Tabungan</button>${all.length > 0 ? '<button type="button" class="btn" data-sv-filter="all">Lihat Semua</button>' : ''}</div>
     </div>` : `<div class="sv-grid">${filtered.map((s) => {
@@ -218,7 +218,7 @@ function renderSaveDetail(s) {
     </div>
     ${saveTxOpen ? renderSvTxForm() : ''}
     <div class="panel sv-det-stats">
-      <h3>Statistik Setoran</h3>
+      <h2>Statistik Setoran</h2>
       <div class="sv-nums">
         <div><span>Total Setor</span><b class="green">${txRp(sumDep)}</b></div>
         <div><span>Total Tarik</span><b class="coral">${txRp(withdraws.reduce((a, t) => a + t.amount, 0))}</b></div>
@@ -227,7 +227,7 @@ function renderSaveDetail(s) {
       </div>
     </div>
     <div class="panel sv-det-tx">
-      <h3>Riwayat Transaksi <small>${txs.length} catatan</small></h3>
+      <h2>Riwayat Transaksi <small>${txs.length} catatan</small></h2>
       ${txs.length === 0 ? '<p class="muted">Belum ada setoran. Mulai dengan nominal kecil — yang penting rutin.</p>' : txs.map((t) => `<div class="sv-rtx">
         <span class="sv-ic sm">${t.kind === 'deposit' ? '⬇️' : '⬆️'}</span>
         <div><b>${escapeHtml(t.note || (t.kind === 'deposit' ? 'Setoran' : 'Penarikan'))}</b><small>${budGroupDate(t.date)} · ${escapeHtml(t.source || '—')}</small></div>
@@ -245,7 +245,7 @@ function renderSvForm() {
     deadline: editing.deadline || '', cat: editing.cat || SAVE_CATS[0].name, icon: editing.icon || '', color: editing.color || SAVE_COLORS[0],
   } : { name: '', desc: '', target: '', balance: '', deadline: '', cat: SAVE_CATS[0].name, icon: SAVE_ICONS[0], color: SAVE_COLORS[0] });
   return `<form id="svForm" class="panel sv-form" novalidate>
-    <h3>${editing ? '✏️ Edit Tabungan' : '➕ Tambah Tabungan'}</h3>
+    <h2>${editing ? '✏️ Edit Tabungan' : '➕ Tambah Tabungan'}</h2>
     <div class="tx-form-grid">
       <label class="field"><span>Nama Target</span><input name="svName" value="${escapeHtml(d.name)}" placeholder="mis. Dana Darurat" maxlength="60" required></label>
       <label class="field"><span>Kategori</span><select name="svCat">${SAVE_CATS.map((x) => `<option value="${x.name}" ${x.name === d.cat ? 'selected' : ''}>${x.icon} ${x.name}</option>`).join('')}</select></label>
@@ -301,7 +301,7 @@ function renderSvTxForm() {
   const d = saveTxDraft || { svId: (list.find((s) => s.id === saveTxPreset) || list[0]).id, kind: 'deposit', amount: '', date: txIso(new Date()), source: 'Transfer bank', note: '' };
   const sv = list.find((x) => x.id === d.svId) || list[0];
   return `<form id="svTxForm" class="panel sv-form" novalidate>
-    <h3>💸 Catat Setoran / Penarikan</h3>
+    <h2>💸 Catat Setoran / Penarikan</h2>
     <div class="tx-form-grid">
       <label class="field"><span>Target Tabungan</span><select name="stxSv">${list.map((x) => `<option value="${x.id}" ${x.id === sv.id ? 'selected' : ''}>${saveCatIcon(x)} ${escapeHtml(x.name)} (${saveCompact(x.balance)}/${saveCompact(x.target)})</option>`).join('')}</select></label>
       <label class="field"><span>Jenis</span><select name="stxKind"><option value="deposit" ${d.kind === 'deposit' ? 'selected' : ''}>⬇️ Setoran</option><option value="withdraw" ${d.kind === 'withdraw' ? 'selected' : ''}>⬆️ Penarikan</option></select></label>
