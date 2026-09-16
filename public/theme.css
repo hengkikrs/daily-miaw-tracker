@@ -20,7 +20,7 @@
   --panel-raised: #FFFFFF;
 
   --text: #0F172A;
-  --muted: #64748B;
+  --muted: #475569;
   --line: #E2E8F0;
   --line-strong: #CBD5E1;
 
@@ -31,6 +31,12 @@
   /* primer hijau — satu aksen utama */
   --teal: #16A34A;
   --teal-strong: #15803D;
+  --teal-deep: #166534;
+  --accent-ink: #15803D;
+  --nav-ink: #0F172A;
+  --nav-ink-soft: #475569;
+  --nav-ink-active: #15803D;
+  --danger-bg: #B91C1C;
   --cyan: #22C55E;
   --green: #16A34A;
 
@@ -44,7 +50,7 @@
   /* semantik terkendali */
   --orange: #D97706;   /* hanya peringatan/subtle */
   --amber: #D97706;
-  --danger: #DC2626;   /* hanya error nyata */
+  --danger: #B91C1C;   /* hanya error nyata (AA di atas putih & panel-soft) */
 
   --focus: 0 0 0 3px rgba(22, 163, 74, 0.22);
 
@@ -68,28 +74,28 @@
   --coral: #B45309;
 
   /* kategori goal — ramp hijau/slate/amber yang tenang */
-  --cat-karier: #16A34A;
-  --cat-keuangan: #D97706;
-  --cat-kesehatan: #22C55E;
+  --cat-karier: #15803D;
+  --cat-keuangan: #B45309;
+  --cat-kesehatan: #047857;
   --cat-pendidikan: #475569;
-  --cat-personal: #64748B;
-  --cat-lainnya: #94A3B8;
+  --cat-personal: #334155;
+  --cat-lainnya: #52525B;
 
   /* status project */
   --st-planning: #94A3B8;
-  --st-active: #16A34A;
-  --st-onhold: #D97706;
+  --st-active: #15803D;
+  --st-onhold: #B45309;
   --st-completed: #475569;
-  --st-archived: #CBD5E1;
+  --st-archived: #52525B;
 
   /* kategori agenda */
-  --jv-kantor: #16A34A;
-  --jv-sales: #D97706;
+  --jv-kantor: #15803D;
+  --jv-sales: #B45309;
   --jv-marketing: #475569;
-  --jv-konten: #64748B;
-  --jv-keuangan: #22C55E;
-  --jv-pribadi: #94A3B8;
-  --jv-belajar: #CBD5E1;
+  --jv-konten: #334155;
+  --jv-keuangan: #047857;
+  --jv-pribadi: #52525B;
+  --jv-belajar: #3F3F46;
 
   /* palet chart — monokrom hijau + slate + satu amber */
   --chart-1: #16A34A;
@@ -120,7 +126,7 @@
   --miaw-bubble: #FFFFFF;
   --miaw-you: #16A34A;
   --miaw-ink: #0F172A;
-  --miaw-ink-soft: #64748B;
+  --miaw-ink-soft: #475569;
   --miaw-border: #E2E8F0;
   --miaw-dot: #94A3B8;
   --miaw-avatar: #16A34A;
@@ -145,7 +151,13 @@
   --sidebar-text: #E2E8F0;
 
   --teal: #22C55E;
-  --teal-strong: #16A34A;
+  --teal-strong: #15803D;
+  --teal-deep: #15803D;
+  --accent-ink: #86EFAC;
+  --nav-ink: #E2E8F0;
+  --nav-ink-soft: #CBD5E1;
+  --nav-ink-active: #86EFAC;
+  --danger-bg: #B91C1C;
   --cyan: #4ADE80;
   --green: #22C55E;
 
@@ -187,7 +199,7 @@
   --st-active: #22C55E;
   --st-onhold: #FBBF24;
   --st-completed: #CBD5E1;
-  --st-archived: #475569;
+  --st-archived: #94A3B8;
 
   --jv-kantor: #22C55E;
   --jv-sales: #FBBF24;
@@ -195,7 +207,7 @@
   --jv-konten: #CBD5E1;
   --jv-keuangan: #4ADE80;
   --jv-pribadi: #64748B;
-  --jv-belajar: #475569;
+  --jv-belajar: #94A3B8;
 
   --chart-1: #22C55E;
   --chart-2: #4ADE80;
@@ -242,6 +254,9 @@ select,
 textarea {
   font-family: var(--font-body);
 }
+
+/* <small> bawaan browser 0,8333em -> bisa < 11,5px; beri lantai eksplisit */
+small { font-size: 11.5px; }
 
 h1, h2, h3,
 .brand-copy h1,
@@ -313,7 +328,7 @@ body {
 }
 
 .nav-item {
-  color: var(--text);
+  color: var(--nav-ink, var(--text));
   border-radius: 10px;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -323,18 +338,35 @@ body {
 /* active = soft green */
 .nav-item.active {
   background: color-mix(in srgb, var(--teal) 12%, transparent);
-  color: var(--teal-strong);
+  color: var(--nav-ink-active, var(--teal-strong));
   font-weight: 600;
   box-shadow: none;
 }
 .nav-item.active .nav-icon { color: var(--teal); }
 
-.nav-item.sub { color: var(--muted); }
-.nav-item.sub.active { color: var(--teal-strong); }
+.nav-item.sub { color: var(--nav-ink-soft, var(--muted)); }
+.nav-item.sub.active { color: var(--nav-ink-active, var(--teal-strong)); }
 
 .nav-group-toggle { color: var(--muted); }
 .nav-group-toggle[aria-expanded="true"],
 .nav-group-toggle.active { color: var(--text); }
+/* ---------- Dark: ink menu sidebar (spesifisitas lebih tinggi agar menang) ---------- */
+/* Beberapa aturan sidebar lawas memakai token light-mode; kunci nilainya di dark. */
+html[data-theme="dark"] .sidebar .nav-item,
+html[data-theme="dark"] .sidebar button.nav-item { color: var(--nav-ink) !important; }
+html[data-theme="dark"] .sidebar .nav-item.sub { color: var(--nav-ink-soft) !important; }
+html[data-theme="dark"] .sidebar .nav-item.active,
+html[data-theme="dark"] .sidebar .nav-item.sub.active { color: var(--nav-ink-active) !important; }
+[data-theme="dark"] .sidebar .nav-item { color: var(--nav-ink); }
+[data-theme="dark"] .sidebar .nav-item.sub { color: var(--nav-ink-soft); }
+[data-theme="dark"] .sidebar .nav-item.active,
+[data-theme="dark"] .sidebar .nav-item.sub.active,
+[data-theme="dark"] .sidebar .nav-group-toggle[aria-expanded="true"],
+[data-theme="dark"] .sidebar .nav-group-toggle.active { color: var(--nav-ink-active); }
+[data-theme="dark"] .sidebar .nav-group-toggle,
+[data-theme="dark"] .sidebar .nav-group-name,
+[data-theme="dark"] .sidebar .nav-label { color: var(--nav-ink-soft); }
+
 /* ikon menu seragam (monokrom); hijau hanya saat aktif */
 .nav-group .nav-icon { color: inherit; }
 
@@ -349,11 +381,11 @@ body {
 .metric-card:hover { transform: none; box-shadow: var(--shadow-lift); }
 .metric-card strong { font-weight: 700; }
 
-/* ---------- Tombol utama: hijau solid, bukan gradient 3-stop ---------- */
+/* ---------- Tombol utama: hijau solid gelap (kontras AA dgn teks putih) ---------- */
 .primary-button,
 .auth-primary {
   border: 0;
-  background: var(--teal);
+  background: var(--teal-strong);
   color: var(--on-accent);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
   font-weight: 600;
@@ -362,7 +394,7 @@ body {
 }
 .primary-button:hover:not(:disabled),
 .auth-primary:hover:not(:disabled) {
-  background: var(--teal-strong);
+  background: var(--teal-deep);
   transform: none;
   filter: none;
   box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
@@ -454,7 +486,7 @@ textarea:focus,
 .goal-chip.on,
 .task-chip.on {
   background: color-mix(in srgb, var(--teal) 12%, transparent);
-  color: var(--teal-strong);
+  color: var(--accent-ink);
   border-color: color-mix(in srgb, var(--teal) 40%, var(--line));
 }
 
