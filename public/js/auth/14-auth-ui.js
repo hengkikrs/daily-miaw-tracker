@@ -32,17 +32,17 @@ function refreshUsernamePreview(name) {
   if (el) el.textContent = authPendingUsername ? `@${authPendingUsername}` : '—';
 }
 
-// Halaman depan (landing) yang tampil sebelum login: versi minimalis —
-// navbar kapsul, headline tenang, satu CTA utama, pratinjau aplikasi, lalu
-// daftar fitur ringkas. Tujuannya: terasa lapang, bukan padat.
+// Halaman depan (landing) sebelum login — profesional & minimalis.
+// Satu headline, satu CTA utama, pratinjau produk datar, dan 6 fitur
+// dengan ikon garis monokrom (tanpa emoji, tanpa elemen dekoratif berlebih).
 function authLandingHtml() {
   const fitur = [
-    { icon: '📅', nama: 'Kebiasaan', teks: 'Streak dan skor bulanan, dihitung otomatis.' },
-    { icon: '✅', nama: 'Task & Jadwal', teks: 'Agenda harian, jam, kategori, sesi fokus.' },
-    { icon: '🎯', nama: 'Goals & Project', teks: 'Target besar dipecah jadi langkah kecil.' },
-    { icon: '📝', nama: 'Catatan & Dokumen', teks: 'Ide dan berkas, rapi dalam kategori.' },
-    { icon: '💰', nama: 'Finance', teks: 'Uang masuk & keluar, budget, tabungan.' },
-    { icon: '📊', nama: 'Laporan & Miaw AI', teks: 'Tren bulanan dan asisten perangkum.' },
+    { nama: 'Kebiasaan', teks: 'Streak dan skor bulanan dihitung otomatis.', icon: '<svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>' },
+    { nama: 'Task & Jadwal', teks: 'Agenda harian dengan jam, kategori, dan sesi fokus.', icon: '<svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
+    { nama: 'Goals & Project', teks: 'Target besar dipecah menjadi langkah yang terukur.', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' },
+    { nama: 'Catatan & Dokumen', teks: 'Ide dan berkas tersimpan rapi dalam kategori.', icon: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>' },
+    { nama: 'Finance', teks: 'Uang masuk dan keluar, budget, serta tabungan.', icon: '<svg viewBox="0 0 24 24"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>' },
+    { nama: 'Laporan & Miaw AI', teks: 'Tren bulanan dan asisten perangkum dalam satu klik.', icon: '<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v4"/><path d="M12 10v9"/><path d="M17 6v13"/></svg>' },
   ];
 
   return `
@@ -53,30 +53,28 @@ function authLandingHtml() {
           <b>Miaw Tracker</b>
         </span>
         <span class="land-nav-links">
-          <a class="land-nav-link" href="#fitur">Fitur</a>
           <button class="land-nav-link" type="button" data-auth-action="start-login">Masuk</button>
-          <button class="land-nav-cta" type="button" data-auth-action="start-signup">Daftar <span aria-hidden="true">→</span></button>
+          <button class="land-nav-cta" type="button" data-auth-action="start-signup">Mulai gratis</button>
         </span>
       </nav>
 
       <header class="land-hero">
-        <h1>Harimu, tertata dengan tenang.</h1>
-        <p>Kebiasaan, tugas, catatan, dan uang dalam satu alur yang sama. Cukup satu centang untuk memulai.</p>
+        <p class="land-kicker">Personal productivity</p>
+        <h1>Semua hal pentingmu, dalam satu tempat.</h1>
+        <p>Lacak kebiasaan, tugas, target, catatan, dan keuangan — dengan antarmuka yang tenang, fokus, dan bebas dari kebisingan.</p>
         <div class="land-cta-row">
           <button class="land-cta" type="button" data-auth-action="start-signup">
             Mulai gratis <span class="land-cta-arrow" aria-hidden="true">→</span>
           </button>
           <button class="land-cta-link" type="button" data-auth-action="start-login">Masuk ke akun</button>
         </div>
-        <p class="land-fine">Tanpa kartu kredit · data tersimpan di perangkatmu</p>
       </header>
 
       <section class="land-preview" aria-hidden="true">
-        <span class="land-glow"></span>
         <article class="land-device">
           <header>
-            <span>Skor bulan ini</span>
-            <strong>82</strong>
+            <span>Kebiasaan hari ini</span>
+            <strong>82%</strong>
           </header>
           <div class="land-bar"><span style="width:82%"></span></div>
           <ul class="land-rows">
@@ -84,13 +82,7 @@ function authLandingHtml() {
             <li><i class="on">✓</i><span>Baca 20 halaman</span><em>18 hari</em></li>
             <li><i>○</i><span>Jurnal malam</span><em>12 hari</em></li>
           </ul>
-          <footer>
-            <span>Masuk</span><strong>Rp4.150.000</strong>
-            <span>Keluar</span><strong>Rp1.980.000</strong>
-          </footer>
         </article>
-        <span class="land-chip">🔥 21 hari beruntun</span>
-        <span class="land-chip land-chip-2">🔒 Sinkron ke akunmu</span>
       </section>
 
       <section class="land-feat" id="fitur">
