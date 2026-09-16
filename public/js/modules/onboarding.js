@@ -1,7 +1,8 @@
 // Tracker Daily — modul onboarding (tutorial pop-up untuk akun baru)
 // Classic script — urutan load: lihat <script> di public/index.html.
-// Tutorial muncul sekali per akun (ditandai state.onboardingDone), bisa
-// dilewati kapan saja lewat tombol "Lewati tutorial" di bagian bawah.
+// Tutorial otomatis HANYA untuk akun yang BARU TERDAFTAR, dan hanya sekali
+// per akun. Akun lama tidak pernah kena. Bisa dilewati kapan saja lewat tombol
+// "Lewati tutorial" di bagian bawah, dan diputar ulang dari menu Akun.
 'use strict';
 
 const ONBOARDING_STEPS = [
@@ -89,21 +90,42 @@ const ONBOARDING_STEPS = [
 
 let obStep = 0;
 let obOpen = false;
+// Jendela waktu: akun dianggap BARU TERDAFTAR bila waktu pembuatan akun
+// ≈ waktu login terakhir (data user dari Supabase).
+const ONBOARDING_NEW_ACCOUNT_WINDOW_MS = 10 * 60 * 1000;
 
 function onboardingDone() {
   return Boolean(state && state.onboardingDone);
 }
 
-// Dipanggil setelah login dan setelah state ter-hidrasi.
+// Akun lama: created_at jauh sebelum last_sign_in_at → tidak pernah kena tutorial otomatis.
+function onboardingFreshlyRegistered() {
+  const user = (typeof authSession !== 'undefined' && authSession && authSession.user) || null;
+  if (!user) return false;
+  const created = Date.parse(user.created_at || user.inserted_at || '');
+  const lastIn = Date.parse(user.last_sign_in_at || '');
+  if (!created || !lastIn) return false;
+  return Math.abs(lastIn - created) < ONBOARDING_NEW_ACCOUNT_WINDOW_MS;
+}
+
+// Tutorial otomatis HANYA untuk akun baru terdaftar, dan hanya sekali per akun:
+// penanda dipasang begitu pop-up dibuka (bukan saat selesai), jadi tidak akan
+// muncul lagi walau pop-up ditutup di tengah jalan.
 function maybeStartOnboarding() {
   if (obOpen || onboardingDone()) return;
   if (typeof isLoggedIn === 'function' && !isLoggedIn()) return;
-  openOnboarding(0);
+  if (!onboardingFreshlyRegistered()) return;
+  openOnboarding(0, true);
 }
 
-function openOnboarding(step) {
+function openOnboarding(step, auto = false) {
   obOpen = true;
   obStep = clamp(step, 0, ONBOARDING_STEPS.length - 1);
+  if (auto && !onboardingDone()) {
+    state.onboardingDone = true;
+    state.onboardingDoneAt = Date.now();
+    saveState();
+  }
   renderOnboarding();
 }
 
@@ -111,7 +133,7 @@ function closeOnboarding(markDone) {
   obOpen = false;
   const wrap = document.getElementById('obWrap');
   if (wrap) wrap.remove();
-  if (markDone) {
+  if (markDone && !onboardingDone()) {
     state.onboardingDone = true;
     state.onboardingDoneAt = Date.now();
     saveState();
