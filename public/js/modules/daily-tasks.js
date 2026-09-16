@@ -54,6 +54,7 @@ function loadDailyTasks() {
     const raw = JSON.parse(localStorage.getItem(scopedKey(DAILY_TASK_STORE_KEY)) || 'null');
     if (Array.isArray(raw)) list = raw;
   } catch { /* seed */ }
+  if (!Array.isArray(list) && !demoSeedEnabled()) list = [];
   if (!Array.isArray(list)) {
     list = [
       { id: 'dt1', title: 'Minum 8 gelas air', icon: '💧', time: '', priority: 'low', date: dailyTodayIso(), done: false, routine: false, activity: [{ text: 'Rutinitas dibuat', at: Date.now() - 86400000 }] },
@@ -101,7 +102,7 @@ function loadDailyRoutines() {
   const store = loadDailyTasks();
   const list = Array.isArray(store.__routines) ? store.__routines : null;
   if (Array.isArray(list)) return list.filter((r) => r && r.id && r.title);
-  return DAILY_ROUTINES;
+  return demoSeedEnabled() ? DAILY_ROUTINES : [];
 }
 
 function saveDailyRoutines(routines) {

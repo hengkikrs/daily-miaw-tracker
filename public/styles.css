@@ -5290,3 +5290,207 @@ body.auth-required .auth-screen.landing {
   .ob-nav { flex-direction: column-reverse; }
   .ob-btn { width: 100%; }
 }
+
+/* ============ A11Y: fokus keyboard terlihat + skip link (ui66) ============ */
+.skip-link {
+  position: absolute;
+  top: -44px;
+  left: 12px;
+  z-index: 200;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--teal);
+  color: var(--on-accent);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 12px; color: var(--on-accent); }
+
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* ============ HABIT: navigasi periode + empty state (ui66, TASK-010) ============ */
+.habit-period-panel { gap: 14px; }
+.habit-period-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.habit-period-head h3 { margin: 2px 0 0; font-size: 1.12rem; }
+.habit-period-head p { margin: 4px 0 0; color: var(--muted); font-size: 0.86rem; }
+.habit-period-year { display: grid; gap: 4px; }
+.habit-period-year span { color: var(--muted); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.habit-period-year select {
+  min-height: 38px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background-color: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+.habit-period-months {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.habit-period-month {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 7px 2px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.habit-period-month em { font-style: normal; font-size: 0.72rem; font-weight: 700; }
+.habit-period-month.on {
+  background: color-mix(in srgb, var(--teal) 14%, var(--panel));
+  border-color: var(--teal);
+  color: var(--text);
+}
+.habit-empty .empty-state { display: grid; justify-items: center; gap: 8px; padding: 18px 12px; text-align: center; }
+.habit-empty .empty-ico { font-size: 30px; }
+.habit-empty h3 { margin: 0; font-size: 1rem; }
+.habit-empty p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+@media (max-width: 560px) {
+  .habit-period-months { grid-template-columns: repeat(4, 1fr); }
+  .habit-period-head { flex-direction: column; }
+}
+
+/* ============ PENCARIAN GLOBAL (ui66, TASK-004) ============ */
+.gs-wrap { position: fixed; inset: 0; z-index: 100; display: grid; place-items: start center; padding: 12vh 16px 16px; }
+.gs-backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--sidebar) 60%, transparent); }
+.gs-card {
+  position: relative;
+  width: min(100%, 620px);
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--panel-raised);
+  box-shadow: var(--shadow-lift, var(--shadow));
+  max-height: 72vh;
+  overflow: auto;
+}
+.gs-inputrow { display: flex; align-items: center; gap: 8px; padding: 2px 10px; border: 1px solid var(--line); border-radius: var(--radius); }
+.gs-inputrow .gs-ico { font-size: 0.95rem; }
+.gs-inputrow input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 0.95rem; padding: 9px 0; outline: none; }
+.gs-inputrow kbd { border: 1px solid var(--line-strong); border-radius: 6px; padding: 2px 7px; font-size: 0.72rem; color: var(--muted); }
+.gs-results { display: grid; gap: 2px; }
+.gs-group-name {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 4px 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.gs-group-name em { font-style: normal; font-weight: 700; }
+.gs-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gs-row:hover, .gs-row:focus-visible { background: var(--panel-soft); }
+.gs-row-ico { font-size: 1.05rem; }
+.gs-row-main { flex: 1; display: grid; min-width: 0; }
+.gs-row-main b { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-row-main small { color: var(--muted); font-size: 0.76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-row-go { color: var(--muted); }
+.gs-empty { color: var(--muted); font-size: 0.86rem; padding: 18px 12px; text-align: center; }
+
+/* ============ DASHBOARD: blok Hari Ini + overdue (ui66, TASK-013) ============ */
+.dash-today { display: grid; gap: 10px; }
+.dash-today-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.dash-today-head h3 { margin: 2px 0 0; font-size: 1.1rem; }
+.dash-today-sub { color: var(--muted); font-size: 0.85rem; }
+.dash-today-sub .bad { color: var(--danger); font-weight: 800; }
+.dash-overdue {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--danger) 42%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+}
+.dash-overdue-title { font-size: 0.78rem; font-weight: 800; color: var(--danger); }
+.dash-today-list { display: grid; gap: 4px; }
+.dash-today-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  cursor: pointer;
+}
+.dash-today-row:hover { background: var(--panel-soft); }
+.dash-today-row.on .dash-today-title { text-decoration: line-through; color: var(--muted); }
+.dash-today-row.late { border-color: color-mix(in srgb, var(--danger) 42%, var(--line)); }
+.dash-today-ico { font-size: 1rem; }
+.dash-today-title { flex: 1; min-width: 0; font-weight: 600; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-today-row small { color: var(--muted); font-size: 0.76rem; white-space: nowrap; }
+.dash-today-state { color: var(--green); font-weight: 900; }
+.dash-today-row:not(.on) .dash-today-state { color: var(--muted); }
+.dash-today-empty { margin: 0; color: var(--muted); font-size: 0.86rem; padding: 6px 2px; }
+.dash-today-empty b { color: var(--text); }
+
+/* Dot deadline goal di kalender (TASK-014) */
+.jadwal-dot.goal { background: transparent; border: 2px dashed var(--jc); }
+
+/* ============ GOAL ↔ TABUNGAN (ui66, TASK-015) ============ */
+.goal-card-sv { display: block; margin-top: 4px; color: var(--muted); font-size: 0.76rem; font-weight: 700; }
+.goal-savings {
+  display: grid;
+  grid-template-columns: 22px 1fr 90px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  cursor: pointer;
+}
+.goal-savings:hover { background: var(--panel); }
+.goal-savings-ico { font-size: 1.05rem; }
+.goal-savings-main { display: grid; min-width: 0; }
+.goal-savings-main b { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.goal-savings-main small { color: var(--muted); font-size: 0.74rem; }
+.goal-savings-bar { display: block; height: 7px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.goal-savings-bar i { display: block; height: 100%; border-radius: 999px; background: var(--green); }
+.goal-savings em { font-style: normal; font-weight: 800; font-size: 0.85rem; color: var(--green-strong, var(--green)); }
+
+@media (max-width: 560px) {
+  .goal-savings { grid-template-columns: 22px 1fr auto; }
+  .goal-savings-bar { display: none; }
+}
+
+/* Legenda + dot deadline goal di kalender (TASK-014) */
+.jadwal-mdot.goal { background: transparent; border: 2px dashed var(--jc); }
+.jadwal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 10px; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+.jadwal-legend span { display: inline-flex; align-items: center; gap: 6px; }

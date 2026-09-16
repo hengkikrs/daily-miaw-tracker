@@ -267,7 +267,8 @@ function renderLeaderboard(kicker, title, rows, type) {
 }
 
 function findHabit(categoryKey, habitId) {
-  const monthData = ensureMonth(activeYear, activeMonth);
+  const hp = habitPeriod();
+  const monthData = ensureMonth(hp.year, hp.monthIndex);
   return monthData.categories[categoryKey].find((habit) => habit.id === habitId);
 }
 
@@ -279,8 +280,9 @@ function addHabit(form) {
 
   if (!CATEGORY_CONFIG[categoryKey] || !name) return;
 
-  const monthData = ensureMonth(activeYear, activeMonth);
-  monthData.categories[categoryKey].push(createHabit(name, categoryKey, activeYear, activeMonth, points));
+  const hp = habitPeriod();
+  const monthData = ensureMonth(hp.year, hp.monthIndex);
+  monthData.categories[categoryKey].push(createHabit(name, categoryKey, hp.year, hp.monthIndex, points));
   form.reset();
   saveState();
   renderShell();
@@ -348,11 +350,12 @@ function toggleActive(categoryKey, habitId) {
 }
 
 function deleteHabit(categoryKey, habitId) {
-  const monthData = ensureMonth(activeYear, activeMonth);
+  const hp = habitPeriod();
+  const monthData = ensureMonth(hp.year, hp.monthIndex);
   const habit = monthData.categories[categoryKey].find((item) => item.id === habitId);
   if (!habit) return;
 
-  if (!confirm(`Hapus "${habit.name}" dari ${MONTHS[activeMonth]} ${activeYear}?`)) return;
+  if (!confirm(`Hapus "${habit.name}" dari ${MONTHS[hp.monthIndex]} ${hp.year}?`)) return;
 
   monthData.categories[categoryKey] = monthData.categories[categoryKey].filter((item) => item.id !== habitId);
   saveState();
@@ -361,8 +364,9 @@ function deleteHabit(categoryKey, habitId) {
 }
 
 function resetMonthChecks() {
-  const monthData = ensureMonth(activeYear, activeMonth);
-  if (!confirm(`Reset semua centang untuk ${MONTHS[activeMonth]} ${activeYear}? Nama kebiasaan tetap disimpan.`)) return;
+  const hp = habitPeriod();
+  const monthData = ensureMonth(hp.year, hp.monthIndex);
+  if (!confirm(`Reset semua centang untuk ${MONTHS[hp.monthIndex]} ${hp.year}? Nama kebiasaan tetap disimpan.`)) return;
 
   CATEGORY_ORDER.forEach((categoryKey) => {
     monthData.categories[categoryKey].forEach((habit) => {

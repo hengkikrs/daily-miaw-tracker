@@ -59,7 +59,10 @@ function noteSeedList() {
 function loadNotes() {
   try {
     const raw = localStorage.getItem(scopedKey(NOTES_STORE_KEY));
-    if (!raw) { const seeded = noteSeedList(); saveNotes(seeded); return seeded; }
+    if (!raw) {
+      if (!demoSeedEnabled()) return [];
+      const seeded = noteSeedList(); saveNotes(seeded); return seeded;
+    }
     const list = JSON.parse(raw);
     return Array.isArray(list) ? list : [];
   } catch { return []; }

@@ -66,7 +66,7 @@ function taskDateOffset(days) {
 
 function loadTasks() {
   if (!state.tasks || !Array.isArray(state.tasks)) {
-    state.tasks = taskSeed();
+    state.tasks = demoSeedEnabled() ? taskSeed() : [];
   }
   // lengkapi field demo yang belum ada pada task lama (id cocok dengan seed)
   const seedById = new Map(taskSeed().map((s) => [s.id, s]));

@@ -19,12 +19,14 @@ function buildYearOptions() {
 }
 
 function renderYearOptions() {
+  if (!dom.yearSelect) return;
   dom.yearSelect.innerHTML = buildYearOptions()
     .map((year) => `<option value="${year}" ${year === activeYear ? 'selected' : ''}>${year}</option>`)
     .join('');
 }
 
 function renderMonthList() {
+  if (!dom.monthList) return;
   dom.monthList.innerHTML = MONTHS.map((month, monthIndex) => {
     const stats = calculateMonthStats(activeYear, monthIndex);
     const activeClass = activeView === 'month' && activeMonth === monthIndex ? 'active' : '';

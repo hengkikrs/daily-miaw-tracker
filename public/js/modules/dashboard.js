@@ -6,11 +6,8 @@
 
 /* ============ DASHBOARD BARU (statistik lintas modul: Activity, Goals & Habit, Organization, Finance) ============ */
 function dashRp(n) { return `Rp ${Math.abs(Math.round(Number(n) || 0)).toLocaleString('id-ID')}`; }
-function goalPctOf(g) {
-  const ms = g.milestones || [];
-  if (ms.length) return Math.round((ms.filter((x) => x.done).length / ms.length) * 100);
-  return g.status === 'selesai' ? 100 : 0;
-}
+// Progres per-goal: delegasi ke sumber kebenaran tunggal di goals.js (goalProgress).
+function goalPctOf(g) { return goalProgress(g).pct; }
 function dashCompact(n) {
   n = Math.round(Math.abs(Number(n) || 0));
   if (n >= 1e9) return `${(n / 1e9).toFixed(1).replace('.', ',')} M`;
@@ -31,21 +28,23 @@ function dashCompute() {
   const todayIso = taskTodayIso();
   const monthKey = txMonthNow();
   const y = activeYear;
-  // ACTIVITY
+  // ACTIVITY — sumber "hari ini" disamakan dgn halaman Daily Task (kegiatan + rutinitas).
   ensureYear(y);
-  const tasks = loadTasks();
-  const tasksToday = tasks.filter((t) => t.date === todayIso);
+  const tasks = loadTasks(); // project task (untuk daftar "akan datang")
+  const dailyItems = loadDailyTasks().filter((t) => t && t.id);
+  const tasksToday = dailyItems.filter((t) => t.date === todayIso);
   const doneToday = tasksToday.filter((t) => t.done).length;
-  const monthTasks = tasks.filter((t) => (t.date || '').slice(0, 7) === monthKey);
+  const monthTasks = dailyItems.filter((t) => (t.date || '').slice(0, 7) === monthKey);
   const doneMonth = monthTasks.filter((t) => t.done).length;
   const schedToday = loadJadwalEvents().filter((e) => e.date === todayIso);
-  // DAILY rutinitas (modul baru)
-  const rt = DAILY_ROUTINES.filter((r) => dailyRoutineApplies(r, todayIso));
+  // Rutinitas aktif dari store (bukan konstanta seed) agar rutinitas kustom ikut terhitung.
+  const rt = loadDailyRoutines().filter((r) => dailyRoutineApplies(r, todayIso));
   const rtDone = rt.filter((r) => dailyIsRoutineDone(r, todayIso)).length;
   const activityPct = tasksToday.length + rt.length ? Math.round(((doneToday + rtDone) / (tasksToday.length + rt.length)) * 100) : 0;
   // GOALS & HABIT
   const goals = loadGoals();
-  const avgGoal = goals.length ? Math.round(goals.reduce((s, g) => s + goalPctOf(g), 0) / goals.length) : 0;
+  // Agregat milestone — sama persis dengan angka di halaman Goals & Progress.
+  const avgGoal = goalProgressAll(goals).pct;
   const projects = loadProjects();
   const projActive = projects.filter((p) => p.status === 'active').length;
   const monthStats = calculateMonthStats(y, activeMonth);
@@ -105,7 +104,7 @@ function renderDashboard(year) {
   const activityCard = dashCard({
     icon: '⚡', title: 'Activity', pct: d.activityPct, tone: 'activity', view: 'task', cta: 'Buka Daily Task',
     stats: `
-      <div class="dash-stat"><span>Task hari ini</span><b>${d.doneToday}/${d.tasksToday.length}</b></div>
+      <div class="dash-stat"><span>Kegiatan hari ini</span><b>${d.doneToday}/${d.tasksToday.length}</b></div>
       <div class="dash-stat"><span>Rutinitas</span><b>${d.rtDone}/${d.rt.length}</b></div>
       <div class="dash-stat"><span>Selesai bulan ini</span><b>${d.doneMonth}/${d.monthTasks.length}</b></div>
       <div class="dash-stat"><span>Agenda hari ini</span><b>${d.schedToday.length}</b></div>`,
@@ -113,8 +112,8 @@ function renderDashboard(year) {
   const goalsCard = dashCard({
     icon: '🎯', title: 'Goals & Habit', pct: Math.round((d.avgGoal + d.habitAvg) / 2), tone: 'goals', view: 'goals', cta: 'Buka Goals',
     stats: `
-      <div class="dash-stat"><span>Goals (rata-rata)</span><b>${d.avgGoal}%</b></div>
-      <div class="dash-stat"><span>Habit ${MONTHS[activeMonth].slice(0, 3)}</span><b>${d.habitAvg}%</b></div>
+      <div class="dash-stat"><span>Progress goals</span><b>${d.avgGoal}%</b></div>
+      <div class="dash-stat"><span>Habit ${MONTHS[activeMonth]}</span><b>${d.habitAvg}%</b></div>
       <div class="dash-stat"><span>Goals aktif</span><b>${d.goals.filter((g) => g.status !== 'selesai').length}</b></div>
       <div class="dash-stat"><span>Project aktif</span><b>${d.projActive}</b></div>`,
   });
@@ -182,6 +181,48 @@ function renderDashboard(year) {
 
   const upcoming = d.tasks.filter((t) => !t.done && t.date > d.todayIso).sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(0, 5);
 
+  // ===== Blok "Hari Ini" (TASK-013): actionable + overdue di paling atas =====
+  const dailyList = loadDailyTasks().filter((t) => t && t.id);
+  const routinesToday = loadDailyRoutines().filter((r) => dailyRoutineApplies(r, d.todayIso));
+  const todayRows = [
+    ...dailyList.filter((t) => t.date === d.todayIso).map((t) => ({
+      title: t.title, icon: t.icon || '✅', done: !!t.done, meta: t.category || 'Kegiatan',
+    })),
+    ...routinesToday.map((r) => ({
+      title: r.title, icon: r.icon || '🔥', done: dailyIsRoutineDone(r, d.todayIso), meta: 'Rutinitas',
+    })),
+  ];
+  const overdue = [
+    ...dailyList.filter((t) => !t.done && t.date && t.date < d.todayIso).map((t) => ({ title: t.title, icon: t.icon || '✅', date: t.date })),
+    ...d.tasks.filter((t) => !t.done && t.date && t.date < d.todayIso).map((t) => ({ title: t.title, icon: '🧩', date: t.date })),
+  ];
+  const todayDone = todayRows.filter((r) => r.done).length;
+  const todayBlock = `
+    <section class="dash-today">
+      <div class="dash-today-head">
+        <div>
+          <span class="kicker">Fokus hari ini</span>
+          <h3>Hari Ini</h3>
+        </div>
+        <span class="dash-today-sub">${todayDone}/${todayRows.length} selesai${overdue.length ? ` · <b class="bad">${overdue.length} terlambat</b>` : ''}</span>
+      </div>
+      ${overdue.length ? `<div class="dash-overdue">
+        <span class="dash-overdue-title">⚠️ Terlambat</span>
+        ${overdue.slice(0, 4).map((o) => `<div class="dash-today-row late" data-dash-go="task" role="button" tabindex="0"><span class="dash-today-ico">${o.icon}</span><span class="dash-today-title">${escapeHtml(o.title)}</span><small>${escapeHtml(o.date)}</small></div>`).join('')}
+      </div>` : ''}
+      <div class="dash-today-list">
+        ${todayRows.length
+          ? todayRows.map((r) => `<div class="dash-today-row${r.done ? ' on' : ''}" data-dash-go="task" role="button" tabindex="0">
+              <span class="dash-today-ico">${r.icon}</span>
+              <span class="dash-today-title">${escapeHtml(r.title)}</span>
+              <small>${escapeHtml(r.meta)}</small>
+              <span class="dash-today-state" aria-hidden="true">${r.done ? '✓' : '○'}</span>
+            </div>`).join('')
+          : `<p class="dash-today-empty">Belum ada kegiatan untuk hari ini. <b>Buka Daily Task →</b></p>`}
+      </div>
+    </section>
+`;
+
   return `
     <div class="dash-page">
       <section class="dash-hero">
@@ -189,7 +230,7 @@ function renderDashboard(year) {
           <span class="kicker">Ringkasan ${MONTHS[activeMonth]} ${year}</span>
           <h2>Pantau semuanya dari satu tempat</h2>
           <div class="dash-hero-chips">
-            <span class="dash-chip" data-sec="activity">✅ ${d.doneToday}/${d.tasksToday.length} task hari ini</span>
+            <span class="dash-chip" data-sec="activity">✅ ${d.doneToday}/${d.tasksToday.length} kegiatan hari ini</span>
             <span class="dash-chip" data-sec="activity">🔥 ${d.rtDone}/${d.rt.length} rutinitas</span>
             <span class="dash-chip" data-sec="goals">🎯 ${d.avgGoal}% goals</span>
             <span class="dash-chip" data-sec="goals">💚 ${d.habitAvg}% habit</span>
@@ -218,6 +259,8 @@ function renderDashboard(year) {
           <p class="dash-ring-note">Activity ${d.activityPct}% · Goals ${d.avgGoal}% · Habit ${d.habitAvg}% · Kas ${financePct}%</p>
         </aside>
       </section>
+
+      ${todayBlock}
 
       <div class="dash-grid-4">
         ${activityCard}
@@ -256,7 +299,7 @@ function renderDashboard(year) {
           <div class="dash-goals">${topGoals || '<p class="task-empty">Belum ada goals.</p>'}</div>
           <div class="dash-mini-kpis">
             <div><span>Project aktif</span><b>${d.projActive}</b></div>
-            <div><span>Task bulan ini</span><b>${d.monthTasks.length}</b></div>
+            <div><span>Kegiatan bulan ini</span><b>${d.monthTasks.length}</b></div>
             <div><span>Poin bulan</span><b>${pointScore(d.monthStats.average)}</b></div>
             <div><span>Bulan terbaik</span><b>${bestMonth ? bestMonth.monthName.slice(0, 3) : '-'}</b></div>
           </div>

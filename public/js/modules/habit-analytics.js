@@ -3,6 +3,66 @@
 // Classic script — urutan load: lihat <script> di public/index.html.
 'use strict';
 
+/* Periode yang sedang dilihat di halaman Kebiasaan (TASK-010).
+   null = ikuti bulan berjalan; angka = bulan pilihan pengguna (riwayat).
+   Dipisah dari activeYear/activeMonth agar tidak mengubah konteks bulan
+   modul lain (Finance, Dashboard, Kalender). */
+let habitNavYear = null;
+let habitNavMonth = null;
+
+function habitPeriod() {
+  if (habitNavYear === null || habitNavMonth === null) {
+    const cur = currentTrackingDate();
+    return { year: cur.year, monthIndex: cur.monthIndex };
+  }
+  return { year: habitNavYear, monthIndex: habitNavMonth };
+}
+
+function habitSetPeriod(year, monthIndex) {
+  habitNavYear = year;
+  habitNavMonth = monthIndex;
+}
+
+// Strip navigasi tahun + 12 bulan untuk halaman Kebiasaan (pengganti widget sidebar).
+function habitPeriodStripHtml() {
+  const period = habitPeriod();
+  const years = buildYearOptions();
+  const months = MONTHS.map((month, monthIndex) => {
+    const on = monthIndex === period.monthIndex ? ' on' : '';
+    const avg = compactPercent(calculateMonthStats(period.year, monthIndex).average);
+    return `<button type="button" class="habit-period-month${on}" data-habit-period="${monthIndex}" aria-pressed="${monthIndex === period.monthIndex}"><span>${month.slice(0, 3)}</span><em>${avg}</em></button>`;
+  }).join('');
+  return `
+    <section class="panel habit-period-panel">
+      <div class="habit-period-head">
+        <div>
+          <span class="kicker">Riwayat kebiasaan</span>
+          <h3>${MONTHS[period.monthIndex]} ${period.year}</h3>
+          <p>Pilih bulan untuk melihat riwayat centang. Bulan berjalan dipakai sebagai default.</p>
+        </div>
+        <label class="habit-period-year">
+          <span>Tahun</span>
+          <select id="habitPeriodYear" aria-label="Tahun kebiasaan">
+            ${years.map((y) => `<option value="${y}" ${y === period.year ? 'selected' : ''}>${y}</option>`).join('')}
+          </select>
+        </label>
+      </div>
+      <div class="habit-period-months" role="group" aria-label="Pilih bulan">${months}</div>
+    </section>`;
+}
+
+
+// Handler klik untuk pindah bulan di halaman Kebiasaan.
+function handleHabitPeriodAction(btn) {
+  if (!btn || !btn.dataset || btn.dataset.habitPeriod === undefined) return false;
+  const idx = Number(btn.dataset.habitPeriod);
+  if (!Number.isInteger(idx) || idx < 0 || idx > 11) return false;
+  const period = habitPeriod();
+  habitSetPeriod(period.year, idx);
+  renderShell();
+  return true;
+}
+
 
 function calculateHabitProgress(habit, categoryKey, year, monthIndex) {
   const totalSlots = slotCountFor(categoryKey, year, monthIndex);
@@ -279,18 +339,18 @@ function renderHabitsTab(year, monthIndex) {
   const monthData = ensureMonth(year, monthIndex);
   const dailyRates = calculateDailyRates(monthData, year, monthIndex);
   const focusDayIndex = focusedDayIndex(year, monthIndex);
+  const totalHabits = CATEGORY_ORDER.reduce((s, k) => s + ((monthData.categories || {})[k] || []).length, 0);
+  const emptyState = totalHabits === 0
+    ? `<section class="panel habit-empty"><div class="empty-state">
+        <div class="empty-ico" aria-hidden="true">🌱</div>
+        <h3>Belum ada kebiasaan di ${MONTHS[monthIndex]} ${year}</h3>
+        <p>Tambahkan kebiasaan pertamamu lewat form di bawah — harian, mingguan, atau bulanan.</p>
+      </div></section>`
+    : '';
 
   return `
     <div class="month-layout current-habits-view">
-      <section class="panel current-month-panel">
-        <div class="section-heading">
-          <div>
-            <span class="kicker">Bulan berjalan</span>
-            <h3>${MONTHS[monthIndex]} ${year}</h3>
-            <p>Tab ini hanya menampilkan kebiasaan untuk bulan yang sedang berjalan.</p>
-          </div>
-        </div>
-      </section>
+      ${habitPeriodStripHtml()}
 
       <section class="panel control-panel">
         <form id="habitForm" class="habit-form">
@@ -319,6 +379,7 @@ function renderHabitsTab(year, monthIndex) {
       ${renderHabitSection('weekly', monthData, year, monthIndex, null, focusDayIndex)}
       ${renderHabitSection('specificWeekly', monthData, year, monthIndex, null, focusDayIndex)}
       ${renderHabitSection('monthly', monthData, year, monthIndex, null, focusDayIndex)}
+      ${emptyState}
     </div>
   `;
 }

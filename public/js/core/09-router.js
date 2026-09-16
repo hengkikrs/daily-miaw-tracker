@@ -17,13 +17,6 @@ function renderShell() {
   document.body.classList.remove('auth-required');
   if (dom.authScreen) dom.authScreen.innerHTML = '';
 
-  if (activeView === 'habits') {
-    const current = currentTrackingDate();
-    activeYear = current.year;
-    activeMonth = current.monthIndex;
-    ensureYear(activeYear);
-  }
-
   renderYearOptions();
   renderMonthList();
   renderAuthPanel();
@@ -43,13 +36,11 @@ function renderShell() {
   }
 
   if (activeView === 'habits') {
-    const current = currentTrackingDate();
-    activeYear = current.year;
-    activeMonth = current.monthIndex;
-    ensureYear(activeYear);
+    const period = habitPeriod();
+    ensureYear(period.year);
     dom.pageTitle.textContent = 'Kebiasaan';
-    dom.pageSubtitle.textContent = `${MONTHS[activeMonth]} ${activeYear} berjalan`;
-    dom.content.innerHTML = renderHabitsTab(activeYear, activeMonth);
+    dom.pageSubtitle.textContent = `${MONTHS[period.monthIndex]} ${period.year}`;
+    dom.content.innerHTML = renderHabitsTab(period.year, period.monthIndex);
     return;
   }
 
@@ -174,7 +165,7 @@ function renderShell() {
     ensureSaveStore();
     ensureDocStore();
     ensureRepHistory();
-    dom.pageTitle.textContent = 'Laporan';
+    dom.pageTitle.textContent = 'Ekspor & Laporan';
     dom.pageSubtitle.textContent = 'Laporan lintas modul: Activity, Goals & Habit, Organization, Finance — PDF/DOC + analisis AI';
     dom.content.innerHTML = renderLaporanView();
     return;
@@ -202,7 +193,7 @@ const PLACEHOLDER_VIEWS = {
   budget: { title: 'Budget', subtitle: 'Rencana belanja bulanan', emoji: '🧾', hint: 'Bagi budget per pos belanja.' },
   tabungan: { title: 'Tabungan', subtitle: 'Target tabungan & dana darurat', emoji: '🪙', hint: 'Kejar target tabungan setahap demi setahap.' },
   'laporan-keuangan': { title: 'Laporan Keuangan', subtitle: 'Ringkasan kondisi finansial', emoji: '📊', hint: 'Rekap bulanan kas, budget, dan tabungan.' },
-  reports: { title: 'Laporan', subtitle: 'Laporan lintas aktivitas & kebiasaan', emoji: '📑', hint: 'Analitik gabungan dari seluruh modul tracker.' },
+  reports: { title: 'Ekspor & Laporan', subtitle: 'Laporan lintas aktivitas & kebiasaan', emoji: '📑', hint: 'Analitik gabungan dari seluruh modul tracker.' },
   miawai: { title: 'MiawAI', subtitle: 'Asisten cerdas produktivitas', emoji: '🤖', hint: 'Minta saran, ringkasan, dan rencana dari data tracker-mu.' },
 };
 

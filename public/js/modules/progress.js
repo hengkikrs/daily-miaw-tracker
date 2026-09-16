@@ -48,23 +48,17 @@ function progHabitStats() {
 
 function progGoalStats() {
   const goals = loadGoals();
-  let msTotal = 0;
-  let msDone = 0;
   const byCat = {};
-  goals.forEach((g) => {
-    (g.milestones || []).forEach((m) => {
-      msTotal += 1;
-      if (m.done) msDone += 1;
-    });
-    byCat[g.category] = (byCat[g.category] || 0) + 1;
-  });
+  goals.forEach((g) => { byCat[g.category] = (byCat[g.category] || 0) + 1; });
+  // pct/msTotal/msDone dari sumber kebenaran tunggal (goals.js) — bukan hitung ulang.
+  const agg = goalProgressAll(goals);
   return {
     count: goals.length,
     active: goals.filter((g) => g.status === 'aktif').length,
     done: goals.filter((g) => g.status === 'selesai').length,
-    pct: msTotal === 0 ? 0 : Math.round((msDone / msTotal) * 100),
-    msTotal,
-    msDone,
+    pct: agg.pct,
+    msTotal: agg.total,
+    msDone: agg.done,
     byCat,
   };
 }

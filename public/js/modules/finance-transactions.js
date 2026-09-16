@@ -24,7 +24,7 @@ function ensureTxStore() {
   if (!Array.isArray(state.transactions)) { state.transactions = []; }
   if (!state.txSeeded) {
     state.txSeeded = true;
-    if (state.transactions.length === 0) { state.transactions = txSeedList(); }
+    if (state.transactions.length === 0 && demoSeedEnabled()) { state.transactions = txSeedList(); }
     saveState();
   }
 }

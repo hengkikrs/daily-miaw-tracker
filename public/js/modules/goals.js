@@ -29,11 +29,16 @@ let goalsDetailId = null;
 let goalsMonthOffset = 0;
 let goalsAddCat = 'Karier';
 let goalsAddTerm = 'pendek';
-let goalsAddDraft = { title: '', description: '', deadline: '' };
+let goalsAddDraft = { title: '', description: '', deadline: '', savingsId: '' };
 function captureGoalAdd() {
   const f = document.querySelector('#goalAddForm');
   if (!f) return;
-  goalsAddDraft = { title: f.querySelector('[name=title]').value, description: f.querySelector('[name=description]').value, deadline: f.querySelector('[name=deadline]').value };
+  goalsAddDraft = {
+    title: f.querySelector('[name=title]').value,
+    description: f.querySelector('[name=description]').value,
+    deadline: f.querySelector('[name=deadline]').value,
+    savingsId: f.querySelector('[name=savingsId]') ? f.querySelector('[name=savingsId]').value : (goalsAddDraft.savingsId || ''),
+  };
 }
 let goalsCalSel = null;
 let goalsEditId = null;      // id goal yang sedang diubah (null = tambah baru)
@@ -45,6 +50,7 @@ function loadGoals() {
     const raw = JSON.parse(localStorage.getItem(scopedKey(GOALS_STORE_KEY)) || 'null');
     if (Array.isArray(raw) && raw.length) return raw;
   } catch { /* seed ulang */ }
+  if (!demoSeedEnabled()) return [];
   const today = taskTodayIso();
   const y = today.slice(0, 4);
   const m = today.slice(5, 7);
@@ -104,10 +110,46 @@ function saveGoals(list) {
   if (typeof queueRemoteSave === 'function') queueRemoteSave();
 }
 
+// Sumber kebenaran tunggal untuk progres goal (dipakai Goals, Dashboard, Progress, Laporan).
 function goalProgress(g) {
   const ms = g.milestones || [];
   const done = ms.filter((x) => x.done).length;
-  return { done, total: ms.length, pct: ms.length ? Math.round((done / ms.length) * 100) : 0 };
+  if (ms.length) return { done, total: ms.length, pct: Math.round((done / ms.length) * 100) };
+  return { done: 0, total: 0, pct: g.status === 'selesai' ? 100 : 0 };
+}
+
+// Progres agregat semua goal. Definisi: bila ada milestone → total selesai/total milestone;
+// bila tidak ada milestone sama sekali → rata-rata persen per goal (selesai=100, aktif=0).
+function goalProgressAll(list) {
+  const all = Array.isArray(list) ? list : loadGoals();
+  let done = 0;
+  let total = 0;
+  all.forEach((g) => { const p = goalProgress(g); done += p.done; total += p.total; });
+  if (total) return { done, total, pct: Math.round((done / total) * 100) };
+  const pct = all.length ? Math.round(all.reduce((s, g) => s + goalProgress(g).pct, 0) / all.length) : 0;
+  return { done, total, pct };
+}
+
+// Tautan Goal ↔ Tabungan (TASK-015): bila goal dihubungkan ke target tabungan,
+// tampilkan progres tabungan (derivasi dari transaksi) di kartu & detail goal.
+function goalSavingsInfo(g) {
+  if (!g || !g.savingsId) return null;
+  if (typeof saveList !== 'function' || typeof saveCalc !== 'function') return null;
+  const sv = saveList().find((x) => x.id === g.savingsId);
+  if (!sv) return null;
+  const c = saveCalc(sv);
+  return { id: sv.id, name: sv.name, icon: (typeof saveCatIcon === 'function' ? saveCatIcon(sv) : '💰'), pct: Math.round(c.pct), left: c.left, done: c.done };
+}
+function goalSavingsHtml(g, compact) {
+  const info = goalSavingsInfo(g);
+  if (!info) return '';
+  const cls = compact ? 'goal-savings compact' : 'goal-savings';
+  return `<div class="${cls}" data-goal-savings="${escapeHtml(info.id)}" role="button" tabindex="0" title="Buka Tabungan">
+      <span class="goal-savings-ico" aria-hidden="true">${info.icon}</span>
+      <span class="goal-savings-main"><b>${escapeHtml(info.name)}</b><small>Tabungan terhubung${info.done ? ' · tercapai ✓' : ''}</small></span>
+      <span class="goal-savings-bar" aria-hidden="true"><i style="width:${clamp(info.pct, 0, 100)}%"></i></span>
+      <em>${info.pct}%</em>
+    </div>`;
 }
 
 function goalCatColor(c) { return GOAL_CATS[c] || GOAL_CATS.Lainnya; }
@@ -123,6 +165,7 @@ function goalCardHtml(g) {
         <span class="goal-card-meta"><span class="goal-term-chip t-${term}" style="--tc:${GOAL_TERMS[term].color}">${GOAL_TERMS[term].label}</span> Deadline ${escapeHtml(taskDateRead(g.deadline || ''))} · ${escapeHtml(g.category)}</span>
         <span class="goal-bar"><span style="width:${p.pct}%"></span></span>
         <span class="goal-card-sub">${p.done}/${p.total} milestone${p.pct ? ` · ${p.pct}%` : ''}</span>
+        ${goalSavingsInfo(g) ? `<span class="goal-card-sv">💰 ${escapeHtml(goalSavingsInfo(g).name)} · ${goalSavingsInfo(g).pct}%</span>` : ''}
       </span>
       <span class="goal-chev">›</span>
     </button>`;
@@ -134,9 +177,10 @@ function renderGoalsView() {
   if (goalsPage === 'calendar') return renderGoalCalendarPage();
   const all = loadGoals();
   const filtered = all.filter((g) => (goalsFilter === 'all' ? true : g.status === goalsFilter));
-  const totalMs = all.reduce((s, g) => s + goalProgress(g).total, 0);
-  const doneMs = all.reduce((s, g) => s + goalProgress(g).done, 0);
-  const pctAll = totalMs ? Math.round((doneMs / totalMs) * 100) : 0;
+  const agg = goalProgressAll(all);
+  const doneMs = agg.done;
+  const totalMs = agg.total;
+  const pctAll = agg.pct;
   const summary = `<div class="goal-summary">
       <span class="goal-summary-label">${doneMs}/${totalMs} milestone selesai</span>
       <span class="goal-summary-pct">${pctAll}%</span>
@@ -195,6 +239,7 @@ function renderGoalDetailPage() {
         <div class="goal-detail-sub">${p.done}/${p.total} sub goal · ${p.pct}%</div>
         <div class="goal-detail-sec">Deskripsi</div>
         <p class="goal-detail-desc">${escapeHtml(g.description || '—')}</p>
+        ${goalSavingsHtml(g) ? `<div class="goal-detail-sec">Tabungan terhubung</div>${goalSavingsHtml(g)}` : ''}
         <div class="goal-detail-sec">Project di goal ini</div>
         ${(() => { const linked = loadProjects().filter((p) => p.goalId === g.id); return linked.length ? linked.map((p) => `<button type="button" class="goal-proj-chip link" data-proj-open="${p.id}">${p.icon || '🧩'} ${escapeHtml(p.name)} ${projStatusChip(p.status)}</button>`).join(' ') : '<span class="goal-proj-chip">Belum ada project — buat lewat menu Project</span>'; })()}
         <div class="goal-detail-sec">Sub Goal / Milestone</div>
@@ -222,6 +267,12 @@ function renderGoalAddPage() {
         <label class="goal-field"><span>Deskripsi</span><textarea name="description" rows="3" maxlength="240" placeholder="Ceritakan goal ini…">${escapeHtml(goalsAddDraft.description)}</textarea></label>
         <div class="goal-field"><span>Jangka Waktu</span><div class="goal-cat-row">${terms}</div></div>
         <label class="goal-field"><span>Deadline</span><input name="deadline" type="date" value="${escapeHtml(goalsAddDraft.deadline || taskTodayIso())}" /></label>
+        <label class="goal-field"><span>Tabungan terhubung (opsional)</span>
+          <select name="savingsId">
+            <option value="">— Tidak dihubungkan —</option>
+            ${(typeof saveList === 'function' ? saveList() : []).map((sv) => `<option value="${sv.id}" ${goalsAddDraft.savingsId === sv.id ? 'selected' : ''}>${escapeHtml(sv.name)}</option>`).join('')}
+          </select>
+        </label>
         <div class="goal-field"><span>Kategori</span><div class="goal-cat-row">${chips}</div></div>
         <p class="goal-form-hint">💡 Project dibuat menyusul: di halaman Project, pilih goal ini sebagai induknya (Goals → Project → Task → Subtask).</p>
         <button class="primary-button goal-save" type="submit">${editing ? 'Simpan Perubahan' : 'Simpan'}</button>
@@ -277,6 +328,14 @@ function renderGoalCalendarPage() {
 }
 
 function handleGoalAction(btn) {
+  if (btn.matches('[data-goal-savings]')) {
+    activeView = 'tabungan';
+    state.selectedView = 'tabungan';
+    saveState();
+    renderShell();
+    return true;
+  }
+
   if (btn.matches('[data-goal-add]')) {
     goalsPage = 'add';
     goalsEditId = null;
@@ -284,7 +343,7 @@ function handleGoalAction(btn) {
     goalsConfirmDel = false;
     goalsAddCat = 'Karier';
     goalsAddTerm = 'pendek';
-    goalsAddDraft = { title: '', description: '', deadline: '' };
+    goalsAddDraft = { title: '', description: '', deadline: '', savingsId: '' };
     renderShell();
     setTimeout(() => document.querySelector('#goalAddForm [name=title]')?.focus(), 30);
     return true;
@@ -324,7 +383,7 @@ function handleGoalAction(btn) {
       goalsConfirmDel = false;
       goalsAddCat = g.category || 'Karier';
       goalsAddTerm = goalTermOf(g);
-      goalsAddDraft = { title: g.title, description: g.description || '', deadline: g.deadline || '' };
+      goalsAddDraft = { title: g.title, description: g.description || '', deadline: g.deadline || '', savingsId: g.savingsId || '' };
       renderShell();
       setTimeout(() => document.querySelector('#goalAddForm [name=title]')?.focus(), 30);
     }
@@ -369,6 +428,7 @@ function submitGoalForm(form, again) {
       g.deadline = val('deadline') || g.deadline;
       g.category = goalsAddCat;
       g.term = goalsAddTerm;
+      g.savingsId = val('savingsId');
       saveGoals(items);
       showToast('Goal diperbarui.');
     }
@@ -381,7 +441,7 @@ function submitGoalForm(form, again) {
 
   const item = {
     id: `g${Date.now()}`, title, description: val('description'), deadline: val('deadline') || taskTodayIso(),
-    term: goalsAddTerm, project: '', category: goalsAddCat, status: 'aktif', createdAt: taskTodayIso(), milestones: [],
+    term: goalsAddTerm, project: '', category: goalsAddCat, status: 'aktif', createdAt: taskTodayIso(), milestones: [], savingsId: val('savingsId'),
   };
   items.push(item);
   saveGoals(items);

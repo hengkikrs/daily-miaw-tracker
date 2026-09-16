@@ -26,7 +26,7 @@ function ensureDocStore() {
   if (!Array.isArray(state.docCats)) { state.docCats = []; dirty = true; }
   if (!state.docSeeded) {
     state.docSeeded = true;
-    state.documents = docSeedList();
+    if (demoSeedEnabled()) state.documents = docSeedList();
     dirty = true;
   }
   if (dirty) saveState();

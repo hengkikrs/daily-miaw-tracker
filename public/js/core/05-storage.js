@@ -171,9 +171,9 @@ function createHabit(name, categoryKey, year, monthIndex, points = null) {
 function createMonth(year, monthIndex) {
   const categories = {};
   CATEGORY_ORDER.forEach((categoryKey) => {
-    categories[categoryKey] = DEFAULT_HABITS[categoryKey].map((name) => (
-      createHabit(name, categoryKey, year, monthIndex)
-    ));
+    categories[categoryKey] = demoSeedEnabled()
+      ? DEFAULT_HABITS[categoryKey].map((name) => createHabit(name, categoryKey, year, monthIndex))
+      : [];
   });
   return { categories };
 }

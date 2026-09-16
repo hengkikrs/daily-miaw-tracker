@@ -20,6 +20,7 @@ function ensureRepHistory() {
   if (!Array.isArray(state.transactions)) state.transactions = [];
   if (state.repHistSeeded) return;
   state.repHistSeeded = true;
+  if (!demoSeedEnabled()) return; // riwayat contoh hanya untuk mode lokal/demo
   const now = new Date();
   const has = new Set(txList().map((t) => (t.date || '').slice(0, 7)));
   const rnd = (seed) => { let x = seed; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; };

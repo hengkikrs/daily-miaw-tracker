@@ -13,25 +13,27 @@ function bindEvents() {
   dom.menuBtn.addEventListener('click', openSidebar);
   dom.overlay.addEventListener('click', closeSidebar);
 
-  dom.yearSelect.addEventListener('change', () => {
-    activeYear = Number(dom.yearSelect.value);
-    ensureYear(activeYear);
-    saveState();
-    renderShell();
-  });
+  if (dom.yearSelect) {
+    dom.yearSelect.addEventListener('change', () => {
+      activeYear = Number(dom.yearSelect.value);
+      ensureYear(activeYear);
+      saveState();
+      renderShell();
+    });
+  }
 
-  dom.monthList.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-month]');
-    if (!button) return;
+  if (dom.monthList) {
+    dom.monthList.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-month]');
+      if (!button) return;
 
-    activeMonth = Number(button.dataset.month);
-    activeView = 'month';
-    mobileDailyExpanded = false;
-    mobileOpenSections = new Set(['daily']);
-    saveState();
-    renderShell();
-    closeSidebar();
-  });
+      activeMonth = Number(button.dataset.month);
+      ensureYear(activeYear);
+      saveState();
+      renderShell();
+      closeSidebar();
+    });
+  }
 
   dom.authScreen.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -133,14 +135,17 @@ function bindEvents() {
 
     const jadwalCheckEl = event.target.closest('[data-jadwal-check]');
     if (jadwalCheckEl) { handleJadwalAction(jadwalCheckEl); return; }
-    const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel],[data-jadwal-ev],[data-jadwal-task]');
+    const jadwalBtn = event.target.closest('[data-jadwal-mode],[data-jadwal-prev],[data-jadwal-next],[data-jadwal-day],[data-jadwal-add],[data-jadwal-cancel],[data-jadwal-ev],[data-jadwal-task],[data-jadwal-goal]');
     if (jadwalBtn && event.target.tagName !== 'INPUT' && handleJadwalAction(jadwalBtn)) return;
 
-  const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-term],[data-goal-add-again],[data-goal-ms-add],[data-goal-ms-cancel],[data-goal-ms-del],[data-goal-edit],[data-goal-del],[data-goal-del-cancel],[data-goal-del-confirm],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page],[data-goal-proj]');
+  const goalBtn = event.target.closest('[data-goal-add],[data-goal-back],[data-goal-filter],[data-goal-open],[data-goal-cat],[data-goal-term],[data-goal-add-again],[data-goal-ms-add],[data-goal-ms-cancel],[data-goal-ms-del],[data-goal-edit],[data-goal-del],[data-goal-del-cancel],[data-goal-del-confirm],[data-goal-cal-prev],[data-goal-cal-next],[data-goal-cal-day],[data-goal-cal-page],[data-goal-proj],[data-goal-savings]');
   if (goalBtn && handleGoalAction(goalBtn)) return;
 
   const progBtn = event.target.closest('[data-progress-tab]');
   if (progBtn && handleProgressAction(progBtn)) return;
+
+  const habitPeriodBtn = event.target.closest('[data-habit-period]');
+  if (habitPeriodBtn && handleHabitPeriodAction(habitPeriodBtn)) return;
 
   const projBtn = event.target.closest('[data-proj-add],[data-proj-form-back],[data-proj-filter],[data-proj-open],[data-proj-back],[data-proj-tab],[data-proj-tfilter],[data-proj-menu],[data-proj-icon],[data-proj-color],[data-proj-status],[data-proj-edit],[data-proj-archive],[data-proj-del],[data-proj-task-add],[data-proj-note-add],[data-proj-file-add],[data-proj-note-del],[data-proj-file-del],[data-goal-from-proj],[data-pt-add-task],[data-pt-edit],[data-pt-edit-cancel],[data-pt-del],[data-proj-setstatus]');
   if (projBtn && handleProjectAction(projBtn)) return;
@@ -272,6 +277,13 @@ function bindEvents() {
   });
 
   dom.content.addEventListener('change', (event) => {
+    const habitYearSel = event.target.closest('#habitPeriodYear');
+    if (habitYearSel) {
+      habitSetPeriod(Number(habitYearSel.value), habitPeriod().monthIndex);
+      ensureYear(Number(habitYearSel.value));
+      renderShell();
+      return;
+    }
     const miawModelSel = event.target.closest('#miawModelSel');
     if (miawModelSel) { miawModel = miawModelSel.value; renderShell(); return; }
     const lapModelSel = event.target.closest('#lapAiModel');

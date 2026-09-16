@@ -37,7 +37,7 @@ function ensureSaveStore() {
   if (!Array.isArray(state.savingsTx)) state.savingsTx = [];
   if (!state.saveSeeded) {
     state.saveSeeded = true;
-    if (state.savings.length === 0) seedSavingsDemo();
+    if (state.savings.length === 0 && demoSeedEnabled()) seedSavingsDemo();
     saveState();
   }
 }

@@ -5,6 +5,13 @@
 'use strict';
 
 // Palet chart mengikuti token tema (--chart-1..9) supaya otomatis ikut light/dark.
+// Data contoh (seed) hanya untuk mode lokal/tanpa Supabase — dipakai QA & demo.
+// Akun asli (produksi, tersinkron ke Supabase) mulai dari kosong + empty state,
+// supaya pengguna tidak bingung membedakan data contoh dengan datanya sendiri.
+function demoSeedEnabled() {
+  return typeof remoteEnabled === 'undefined' ? true : !remoteEnabled;
+}
+
 function chartPalette(size = 5) {
   const out = [];
   for (let i = 0; i < size; i += 1) out.push(`var(--chart-${(i % 9) + 1})`);

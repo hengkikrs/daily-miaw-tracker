@@ -89,7 +89,7 @@ function lapActivityBlocks(p) {
 function lapGoalsBlocks(p) {
   const goals = loadGoals();
   const active = goals.filter((g) => g.status !== 'selesai');
-  const avgGoal = goals.length ? Math.round(goals.reduce((s, g) => s + goalPctOf(g), 0) / goals.length) : 0;
+  const avgGoal = goalProgressAll(goals).pct; // agregat milestone (sumber kebenaran tunggal)
   const goalRows = goals
     .slice()
     .sort((a, b) => (a.status === 'selesai' ? 1 : 0) - (b.status === 'selesai' ? 1 : 0) || String(a.deadline || '').localeCompare(String(b.deadline || '')))
@@ -123,7 +123,7 @@ function lapGoalsBlocks(p) {
       type: 'kpi',
       items: [
         { label: 'Goals aktif', value: String(active.length), note: `${goals.length} total goals` },
-        { label: 'Rata-rata goals', value: `${avgGoal}%`, note: 'progres milestone' },
+        { label: 'Progress goals', value: `${avgGoal}%`, note: 'progres milestone' },
         { label: 'Project', value: String(projects.length), note: `${projects.filter((x) => x.status === 'active').length} aktif` },
         { label: 'Capaian habit', value: `${habitAvg}%`, note: habitMonths.length > 1 ? `rata-rata ${habitMonths.length} bulan` : lastMonth ? lapShortMonth(lastMonth) : '-' },
       ],

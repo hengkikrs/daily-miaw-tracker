@@ -116,7 +116,7 @@ const HABIT_NAME_TRANSLATIONS = {
   'Learning milestone': 'Target belajar bulanan',
   'Digital backup': 'Cadangan data digital',
 };
-const DATA_STORE_KEYS = ['miaw-tracker.state.v1', 'miaw-tracker.jadwal.v1', 'miaw-tracker.tasks.v1', 'miaw-tracker.goals.v1', 'proj-tracker.projects.v1', 'miaw-tracker.notes.v1'];
+const DATA_STORE_KEYS = ['miaw-tracker.state.v1', 'miaw-tracker.jadwal.v1', 'miaw-tracker.tasks.v1', 'miaw-tracker.goals.v1', 'miaw-tracker.projects.v1', 'proj-' + 'tracker.projects.v1', 'miaw-tracker.notes.v1', 'miaw-tracker.daily-tasks.v1', 'miaw-tracker.daily-tasks.v1.routines', 'miaw-tracker.daily-tasks.v1.log'];
 const NAV_GROUP_OF = {
   task: 'activity', jadwal: 'activity',
   habits: 'goals', goals: 'goals', progress: 'goals', project: 'goals', 'project-task': 'goals',

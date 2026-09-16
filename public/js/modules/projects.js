@@ -5,7 +5,9 @@
 
 
 /* ============ MODUL PROJECT (proyek mandiri: task, notes, files) ============ */
-const PROJ_STORE_KEY = 'proj-' + 'tracker.projects.v1';
+const PROJ_STORE_KEY = 'miaw-tracker.projects.v1';
+// Namespace lama (pra-penyelarasan). Dibaca sebagai fallback, lalu disalin ke kunci baru sekali.
+const PROJ_STORE_LEGACY_KEY = 'proj-' + 'tracker.projects.v1';
 const PROJ_STATUS = {
   planning: { label: 'Planning', color: 'var(--st-planning)' },
   active: { label: 'Active', color: 'var(--st-active)' },
@@ -123,6 +125,15 @@ function projSeed() {
 }
 
 function loadProjects() {
+  // Migrasi lunak: bila kunci baru belum ada tapi kunci namespace lama ada, salin sekali.
+  try {
+    const nk = scopedKey(PROJ_STORE_KEY);
+    const lk = scopedKey(PROJ_STORE_LEGACY_KEY);
+    if (!localStorage.getItem(nk) && localStorage.getItem(lk)) {
+      localStorage.setItem(nk, localStorage.getItem(lk));
+    }
+  } catch { /* ignore */ }
+
   let raw = null;
   try {
     raw = JSON.parse(localStorage.getItem(scopedKey(PROJ_STORE_KEY)) || 'null');
@@ -145,6 +156,7 @@ function loadProjects() {
     } catch { /* biarkan data tersimpan tanpa penautan */ }
     return raw;
   }
+  if (!demoSeedEnabled()) return [];
   const seed = projSeed();
   try { localStorage.setItem(scopedKey(PROJ_STORE_KEY), JSON.stringify(seed)); } catch { /* ignore */ }
   return seed;

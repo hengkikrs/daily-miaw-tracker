@@ -26,6 +26,7 @@ function loadJadwalEvents() {
     const raw = JSON.parse(localStorage.getItem(scopedKey(JADWAL_STORE_KEY)) || 'null');
     if (Array.isArray(raw)) return raw;
   } catch { /* seed ulang */ }
+  if (!demoSeedEnabled()) return [];
   const seed = [
     { id: 'j1', date: '2026-09-07', time: '19:30', title: 'Live shopping', category: 'Konten', kind: 'event' },
     { id: 'j2', date: '2026-09-10', time: '09:00', title: 'Meeting tim', category: 'Kantor', kind: 'event' },
@@ -53,6 +54,10 @@ function jadwalItems(iso) {
   loadTasks().forEach((t) => {
     if (t.date === iso) items.push({ srcId: t.id, jadwalEv: false, time: t.time || '', title: t.title, sub: [t.project, t.tag].filter(Boolean).join(' · ') || 'Task', color: jadwalCatColor(t.tag || t.project), kind: 'task', done: !!t.done });
   });
+  // deadline goal ikut tampil di kalender
+  loadGoals().forEach((g) => {
+    if (g.deadline === iso) items.push({ srcId: g.id, jadwalEv: false, goalDue: true, time: '', title: g.title, sub: 'Deadline goal', color: goalCatColor(g.category), kind: 'goal', done: g.status === 'selesai' });
+  });
   items.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
   return items;
 }
@@ -78,14 +83,18 @@ function jadwalDayTitle(iso) {
 function jadwalRowHtml(it) {
   const dot = it.kind === 'task'
     ? `<span class="jadwal-dot ring" style="--jc:${it.color}"></span>`
-    : `<span class="jadwal-dot" style="background:${it.color}"></span>`;
+    : it.kind === 'goal'
+      ? `<span class="jadwal-dot goal" style="--jc:${it.color}"></span>`
+      : `<span class="jadwal-dot" style="background:${it.color}"></span>`;
   const isTask = it.kind === 'task';
   const check = isTask
     ? `<label class="task-check-wrap" title="Tandai selesai"><input class="task-check" type="checkbox" ${it.done ? 'checked' : ''} data-jadwal-check="${it.srcId}" data-src="${it.jadwalEv ? 'j' : 't'}" /></label>`
     : '';
-  const open = it.jadwalEv
-    ? `data-jadwal-ev="${it.srcId}"`
-    : `data-jadwal-task="${it.srcId}"`;
+  const open = it.goalDue
+    ? `data-jadwal-goal="${it.srcId}"`
+    : it.jadwalEv
+      ? `data-jadwal-ev="${it.srcId}"`
+      : `data-jadwal-task="${it.srcId}"`;
   return `<div class="jadwal-row${it.done ? ' done' : ''}" ${open} role="button" tabindex="0" aria-label="Buka ${escapeHtml(it.title)}">
       <span class="jadwal-time">${escapeHtml(it.time || '—')}</span>
       ${dot}
@@ -124,13 +133,20 @@ function renderJadwalView() {
       if (!iso) return '<span class="jadwal-cell empty"></span>';
       const items = jadwalItems(iso);
       const dots = items.slice(0, 3).map((it) => (it.kind === 'task'
-        ? `<span class="jadwal-mdot ring" style="--jc:${it.color}"></span>`
-        : `<span class="jadwal-mdot" style="background:${it.color}"></span>`)).join('');
+        ? `<span class="jadwal-mdot ring" style="--jc:${it.color}" title="Task"></span>`
+        : it.kind === 'goal'
+          ? `<span class="jadwal-mdot goal" style="--jc:${it.color}" title="Deadline goal"></span>`
+          : `<span class="jadwal-mdot" style="background:${it.color}" title="Agenda"></span>`)).join('');
       const sel = iso === jadwalSelIso ? ' sel' : '';
       const today = iso === taskTodayIso() ? ' today' : '';
       return `<button type="button" class="jadwal-cell${sel}${today}" data-jadwal-day="${iso}"><span>${Number(iso.slice(8))}</span><span class="jadwal-mdots">${dots}</span></button>`;
     }).join('');
     body = `
+      <div class="jadwal-legend">
+        <span><i class="jadwal-mdot ring" style="--jc:var(--blue)"></i> Task</span>
+        <span><i class="jadwal-mdot goal" style="--jc:var(--violet)"></i> Deadline goal</span>
+        <span><i class="jadwal-mdot" style="background:var(--orange)"></i> Agenda</span>
+      </div>
       <div class="jadwal-card">
         <div class="jadwal-month-head">
           <span class="jadwal-month-label">${monthLabel}</span>
@@ -168,6 +184,16 @@ function renderJadwalView() {
 }
 
 function handleJadwalAction(btn) {
+  if (btn.matches('[data-jadwal-goal]')) {
+    // deadline goal di kalender → buka detail goal
+    goalsPage = 'detail';
+    goalsDetailId = btn.dataset.jadwalGoal;
+    activeView = 'goals';
+    state.selectedView = 'goals';
+    saveState();
+    renderShell();
+    return true;
+  }
   if (btn.matches('[data-jadwal-mode]')) {
     jadwalMode = btn.dataset.jadwalMode;
     renderShell();
