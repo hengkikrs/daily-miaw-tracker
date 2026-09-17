@@ -292,12 +292,15 @@ function renderMetric(label, value, note, tone) {
 }
 
 function renderTrendChart(monthStats) {
-  const width = 760;
-  const height = 260;
-  const left = 42;
-  const right = 22;
-  const top = 24;
-  const bottom = 44;
+  // ui94: di layar HP chart digambar dengan geometri sempit supaya muat tanpa scroll samping
+  const narrow = isNarrowLayout();
+  const width = narrow ? 330 : 760;
+  const height = narrow ? 190 : 260;
+  const left = narrow ? 30 : 42;
+  const right = narrow ? 12 : 22;
+  const top = narrow ? 20 : 24;
+  const bottom = narrow ? 32 : 44;
+  const ticks = narrow ? [0, 50, 100] : [0, 25, 50, 75, 100];
   const plotWidth = width - left - right;
   const plotHeight = height - top - bottom;
   const xStep = plotWidth / (monthStats.length - 1);
@@ -311,9 +314,9 @@ function renderTrendChart(monthStats) {
 
   return `
     <div class="chart-scroll">
-      <svg class="trend-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Grafik tren penyelesaian tahunan">
+      <svg class="trend-chart${narrow ? ' trend-chart--narrow' : ''}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Grafik tren penyelesaian tahunan">
         <g class="chart-grid">
-          ${[0, 25, 50, 75, 100].map((tick) => {
+          ${ticks.map((tick) => {
             const y = top + plotHeight - ((tick / 100) * plotHeight);
             return `
               <line x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"></line>
@@ -326,7 +329,7 @@ function renderTrendChart(monthStats) {
         ${points.map((point, index) => `
           <g class="chart-point">
             <circle cx="${point.x}" cy="${point.y}" r="5"></circle>
-            <text x="${point.x}" y="${point.y - 12}" text-anchor="middle">${compactPercent(point.month.average)}</text>
+            ${!narrow || index % 2 === 0 ? `<text x="${point.x}" y="${point.y - 12}" text-anchor="middle">${compactPercent(point.month.average)}</text>` : ''}
             <text class="chart-month" x="${point.x}" y="${height - 14}" text-anchor="middle">${MONTHS[index].slice(0, 3)}</text>
           </g>
         `).join('')}

@@ -5079,6 +5079,22 @@ body.auth-required .auth-screen.landing {
   .dash-hero-ring { margin: 0 auto; }
   .dash-cat { grid-template-columns: 86px 1fr 40px; }
 }
+/* ── ui94: dashboard muat di layar HP (tanpa terpotong / scroll samping) ──── */
+@media (max-width: 700px) {
+  /* label ber-nowrap bisa memaksa lebar minimum halaman > layar → biarkan membungkus */
+  .kicker,
+  .section-chip { white-space: normal; overflow-wrap: anywhere; }
+  /* izinkan kartu menyusut mengikuti layar (min-width:auto = penyebab overflow) */
+  .dash-page,
+  .dash-page > *,
+  .dash-two > *,
+  .dash-grid-4 > *,
+  .dash-hero-main,
+  .dash-hero-ring { min-width: 0; }
+  /* chart tren digambar sempit oleh JS → jangan dipaksa 720px lagi */
+  .trend-chart { min-width: 0; width: 100%; }
+  .dash-page .panel { padding-left: 14px; padding-right: 14px; }
+}
 
 /* ── Daily Task: tombol ubah/hapus rutinitas (ui43) ───────────────────────── */
 .dt-card-tools { display: flex; gap: 6px; justify-content: flex-end; }

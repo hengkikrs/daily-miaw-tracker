@@ -33,6 +33,12 @@ function escapeHtml(value) {
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
+// ui94: breakpoint HP — dipakai chart agar digambar dengan geometri sempit
+const NARROW_LAYOUT_QUERY = '(max-width: 700px)';
+function isNarrowLayout() {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia(NARROW_LAYOUT_QUERY).matches;
+}
 function normalizeHabitPoints(value) {
   if (value === null || value === undefined || String(value).trim() === '') return null;
   const points = Number(value);

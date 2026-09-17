@@ -66,10 +66,17 @@ function repSpendByCat(monthKey) {
 }
 
 function repBarChartSvg(flows, W, H) {
+  // ui94: di layar HP perkecil viewBox supaya label & garis tetap terbaca (tidak mengecil 2x)
+  const narrow = isNarrowLayout();
+  if (narrow) {
+    W = Math.min(W, 330);
+    H = Math.min(H, 170);
+  }
+  const labelSize = narrow ? 10.5 : 9.5;
   const max = Math.max(1, ...flows.flatMap((f) => [f.inc, f.exp]));
   const pad = { l: 8, r: 8, t: 18, b: 22 };
   const gw = (W - pad.l - pad.r) / flows.length;
-  const bw = Math.min(16, gw * 0.28);
+  const bw = Math.min(narrow ? 12 : 16, gw * 0.28);
   let bars = '';
   let netPts = [];
   flows.forEach((f, i) => {
@@ -80,7 +87,7 @@ function repBarChartSvg(flows, W, H) {
     bars += `<rect x="${(cx + 2).toFixed(1)}" y="${(H - pad.b - ho).toFixed(1)}" width="${bw.toFixed(1)}" height="${ho.toFixed(1)}" rx="3" fill="var(--orange)"><title>Keluar ${txRp(f.exp)}</title></rect>`;
     const ny = H - pad.b - Math.max(0, Math.min(1, (f.net + max * 0.15) / (max * 1.15))) * (H - pad.t - pad.b);
     netPts.push([cx, ny]);
-    bars += `<text x="${cx}" y="${H - 7}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${repMonthLabel(f.m)}</text>`;
+    bars += `<text x="${cx}" y="${H - 7}" text-anchor="middle" font-size="${labelSize}" fill="var(--muted)">${repMonthLabel(f.m)}</text>`;
   });
   const path = netPts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   const dots = netPts.map(([x, y], i) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="var(--bg)" stroke="var(--accent-ink)" stroke-width="1.6" opacity="1"><title>Net ${txRp(flows[i].net)}</title></circle>`).join('');

@@ -39,6 +39,21 @@
   window.addEventListener('online', apply);
   window.addEventListener('offline', apply);
 
+  /* ui94: chart dashboard digambar dengan geometri berbeda di layar HP.
+     Saat lebar melewati breakpoint (mis. rotasi layar), gambar ulang view aktif. */
+  var lastNarrow = null;
+  function watchNarrow() {
+    var now = typeof isNarrowLayout === 'function' ? isNarrowLayout() : false;
+    if (lastNarrow === null) { lastNarrow = now; return; }
+    if (now === lastNarrow) return;
+    lastNarrow = now;
+    if (typeof activeView !== 'undefined' && activeView === 'dashboard' && typeof renderShell === 'function') {
+      renderShell();
+    }
+  }
+  window.addEventListener('resize', watchNarrow);
+  window.addEventListener('orientationchange', watchNarrow);
+
   window.markBusy = function (on) {
     bar();
     document.body.classList.toggle('is-busy', !!on);
