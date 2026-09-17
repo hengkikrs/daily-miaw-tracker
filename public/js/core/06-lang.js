@@ -102,39 +102,121 @@ function dictEn() {
   return (typeof I18N_EN === 'object' && I18N_EN) ? I18N_EN : {};
 }
 
-// Aturan pola untuk teks dinamis (angka + satuan).
+// Aturan pola untuk teks dinamis (angka + satuan). Dipakai SETELAH lapis kata.
 const I18N_RULES = [
   [/^(\d+) hari lalu$/i, '$1 days ago'],
-  [/^(\d+) hari$/i, '$1 days'],
   [/^(\d+) hari sebelum$/i, '$1 day before'],
   [/^(\d+) jam(?: (\d+) mnt)?$/i, (m) => (m[2] ? `${m[1]}h ${m[2]}m` : `${m[1]}h`)],
-  [/^(\d+) menit$/i, '$1 minutes'],
   [/^(\d+) menit sebelum$/i, '$1 minutes before'],
-  [/^(\d+) detik$/i, '$1 seconds'],
-  [/^(\d+) bulan$/i, '$1 months'],
-  [/^(\d+) tahun$/i, '$1 years'],
-  [/^(\d+) terakhir$/i, 'last $1'],
   [/^(\d+) terakhir dari kas$/i, 'last $1 from cash'],
-  [/^(.+) hari ini$/i, '$1 today'],
-  [/^(.+) bulan ini$/i, '$1 this month'],
-  [/^(.+) tahun ini$/i, '$1 this year'],
   [/^(\d+) dari (\d+)$/, '$1 of $2'],
   [/^Sisa (\d+) hari$/i, '$1 days left'],
-  [/^(\d+)% dari target$/i, '$1% of target'],
+  [/^(\d+) Kebiasaan Harian Paling Konsisten$/i, '$1 Most Consistent Daily Habits'],
+  [/^(\d+) Kebiasaan Harian yang Perlu Ditingkatkan$/i, '$1 Daily Habits Needing Improvement'],
+  [/^Budget periode ini (.+) dengan terpakai (.+) \((.+)\)\.$/i, 'Budget this period $1 with $2 used ($3).'],
+  [/^Rasio tabungan (.+) dari pemasukan, setoran tabungan periode ini (.+)\.$/i, 'Savings ratio $1 of income, savings deposits this period $2.'],
+  [/^Isi laporan mengikuti data tiap menu pada periode (.+)\.$/i, 'Report content follows each menu\u2019s data for the period $1.'],
+  [/^(\d+) September 2026: nilai (\d+) \((\d+) dari (\d+) poin\)$/i, '$1 September 2026: value $2 ($3 of $4 points)'],
+  [/^(\d+) target masih berjalan; setoran rutin (.+) bisa menambah (.+) ke tabungan\.$/i, '$1 targets still active; regular deposits of $2 can add $3 to savings.'],
+  [/^Prioritas (tinggi|sedang|rendah): (\d+) tugas \((.+)\)$/i, (m) => `Priority ${m[1] === 'tinggi' ? 'high' : m[1] === 'sedang' ? 'medium' : 'low'}: ${m[2]} tasks (${m[3]})`],
+  [/^(\d+) target aktif\/selesai \u00b7 (\d+) tercapai$/i, '$1 active/completed targets \u00b7 $2 achieved'],
+  [/^Pengeluaran terbesar: (.+)$/i, 'Largest expenses: $1'],
 ];
+
+// Lapis 2 — kamus kata/frasa untuk teks dinamis hasil interpolasi
+// ("0 dari 280 poin harian", "1 September — belum ada transaksi").
+// Frasa lebih panjang menang; hanya diterapkan pada string yang tampak UI
+// (mengandung angka, pendek, atau ≥2 kata cocok) agar konten pengguna utuh.
+const I18N_WORDS = {
+  'belum ada': 'no', 'tidak ada': 'no', 'hari lalu': 'days ago', 'jam lalu': 'hours ago',
+  'menit lalu': 'minutes ago', 'hari lagi': 'days left', 'hari masuk': 'days in',
+  'hari keluar': 'days out', 'terbesar': 'largest', 'kegiatan hari ini': 'activities today',
+  'kegiatan bulan ini': 'activities this month', 'kebiasaan harian': 'daily habits',
+  'kebiasaan aktif': 'active habits', 'poin harian': 'daily points', 'poin selesai': 'points completed',
+  'poin didapat': 'points earned', 'task selesai': 'tasks done', 'target aktif': 'active targets',
+  'goals aktif': 'active goals', 'blok data': 'data blocks', 'pos anggaran': 'budget lines',
+  'bulan lalu': 'last month', 'bulan ini': 'this month', 'hari ini': 'today', 'tahun ini': 'this year',
+  'minggu ini': 'this week', 'rutinitas': 'routines', 'kegiatan': 'activities', 'kebiasaan': 'habits',
+  'transaksi': 'transactions', 'milestone': 'milestones', 'task': 'tasks', 'poin': 'points',
+  'slot': 'slots', 'target': 'targets', 'goal': 'goals', 'catatan': 'notes', 'dokumen': 'documents',
+  'jadwal': 'schedules', 'bulan': 'months', 'tahun': 'years', 'kategori': 'categories',
+  'tercapai': 'achieved', 'aktif': 'active', 'selesai': 'done', 'dari': 'of', 'dan': 'and',
+  'masuk': 'in', 'keluar': 'out', 'pagu': 'cap', 'pos': 'lines', 'tugas': 'tasks',
+  'hari': 'days', 'jam': 'hours', 'menit': 'minutes', 'minggu': 'weeks', 'skor': 'score',
+  'buka': 'open', 'lihat': 'view', 'pilih': 'pick', 'belum': 'not yet', 'dengan': 'with',
+  'periode ini': 'this period', 'setoran tabungan': 'savings deposits', 'rasio tabungan': 'savings ratio',
+  'pemasukan': 'income', 'pengeluaran bulanan': 'monthly expenses', 'bulan depan': 'next month',
+  'kas': 'cash', 'ringkasan': 'summary', 'capaian': 'achievement',
+  // kategori (label tampilan; nilai tersimpan tidak diubah)
+  'makanan': 'food', 'transportasi': 'transport', 'belanja': 'shopping', 'tagihan': 'bills',
+  'hiburan': 'entertainment', 'gaji': 'salary', 'kesehatan': 'health', 'pendidikan': 'education',
+  'lainnya': 'other', 'kebutuhan pokok': 'essentials', 'umum': 'general', 'pribadi': 'personal',
+  'karier': 'career', 'keuangan': 'finance', 'bisnis': 'business', 'belajar': 'study',
+  'liburan': 'holiday', 'jurnal': 'journal', 'referensi': 'references', 'proyek': 'project',
+  'pengeluaran terbesar': 'largest expenses', 'pendapatan': 'income', 'pemasukan': 'income',
+  // hari & sapaan
+  'senin': 'Monday', 'selasa': 'Tuesday', 'rabu': 'Wednesday', 'kamis': 'Thursday',
+  'jumat': 'Friday', 'sabtu': 'Saturday', 'minggu': 'weeks', 'min': 'Sun', 'sen': 'Mon',
+  'sel': 'Tue', 'rab': 'Wed', 'kam': 'Thu', 'jum': 'Fri', 'sab': 'Sat',
+  'selamat pagi': 'good morning', 'selamat siang': 'good afternoon',
+  'selamat sore': 'good evening', 'selamat malam': 'good night',
+  'masih berjalan': 'still active', 'setoran rutin': 'regular deposits', 'bisa menambah': 'can add',
+  'ke tabungan': 'to savings', '/bln': '/mo', 'per bulan': 'per month', 'per hari': 'per day',
+};
+
+function escapeRx(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function matchCase(src, out) {
+  if (!src || !out) return out;
+  if (src === src.toUpperCase() && src !== src.toLowerCase()) return out.toUpperCase();
+  if (src[0] === src[0].toUpperCase()) return out[0].toUpperCase() + out.slice(1);
+  return out;
+}
+
+const I18N_WORD_KEYS = Object.keys(I18N_WORDS).sort((a, b) => b.length - a.length);
+
+// Terjemahan tingkat kata: null bila tak ada yang cocok.
+// Spasi/newline dinormalkan lebih dulu supaya frasa ("kegiatan hari ini")
+// tetap cocok walau di DOM terpecah baris.
+function translateWords(raw) {
+  const s = raw.replace(/\s+/g, ' ');
+  let out = s;
+  let hits = 0;
+  for (const key of I18N_WORD_KEYS) {
+    const rx = new RegExp('(^|[^\\p{L}])(' + escapeRx(key) + ')(?![\\p{L}])', 'giu');
+    out = out.replace(rx, (m, pre, word) => { hits += 1; return pre + matchCase(word, I18N_WORDS[key]); });
+  }
+  if (!hits || out === s) return null;
+  // Kalimat panjang (prosa pengguna: catatan, deskripsi goal/project) dibiarkan utuh —
+  // hanya UI pendek/berangka yang diterjemahkan tingkat kata.
+  const words = s.split(/\s+/).length;
+  if (words > 8 && s.length > 60) return null;
+  if (/\d/.test(s) || s.length <= 30 || hits >= 2) return out;
+  return null;
+}
 
 function translateString(s) {
   if (!s) return s;
   const dict = dictEn();
   const trimmed = s.trim();
   if (!trimmed) return s;
-  const hit = dict[trimmed];
-  if (hit) return s.replace(trimmed, hit);
+  const lead = s.match(/^\s*/)[0];
+  const tail = s.match(/\s*$/)[0];
+  const flat = trimmed.replace(/\s+/g, ' ');
+
+  // Lapis 1 — kecocokan persis (teks utuh maupun versi spasi-dinormalkan).
+  const hit = dict[trimmed] || dict[flat];
+  if (hit) return lead + hit + tail;
+
+  // Lapis 2 — kamus kata/frasa (menangani teks hasil interpolasi).
+  const worded = translateWords(flat);
+  if (worded) return lead + worded + tail;
+
+  // Lapis 3 — aturan pola angka/satuan.
   for (const [rx, rep] of I18N_RULES) {
-    const m = trimmed.match(rx);
+    const m = flat.match(rx);
     if (m) {
-      const out = typeof rep === 'function' ? rep(m) : trimmed.replace(rx, rep);
-      return s.replace(trimmed, out);
+      const out = typeof rep === 'function' ? rep(m) : flat.replace(rx, rep);
+      return lead + out + tail;
     }
   }
   return s;
