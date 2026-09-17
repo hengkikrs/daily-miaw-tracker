@@ -3,12 +3,33 @@
 // Classic script — urutan load: lihat <script> di public/index.html.
 'use strict';
 
+// Judul halaman per bahasa (lihat 06-lang.js). Peta view -> [kunci judul, kunci subjudul].
+const PAGE_META = {
+  dashboard: ['page.dashboard', 'page.dashboard-sub'],
+  habits: ['page.habits', null],
+  account: ['page.account', 'page.account-sub'],
+  task: ['page.task', 'page.task-sub'],
+  jadwal: ['page.jadwal', 'page.jadwal-sub'],
+  progress: ['page.progress', 'page.progress-sub'],
+  project: ['page.project', null],
+  'project-task': ['page.project-task', null],
+  goals: ['page.goals', null],
+  catatan: ['page.notes', 'page.notes-sub'],
+  dokumen: ['page.docs', 'page.docs-sub'],
+  transaksi: ['page.tx', 'page.tx-sub'],
+  budget: ['page.budget', 'page.budget-sub'],
+  tabungan: ['page.savings', 'page.savings-sub'],
+  'laporan-keuangan': ['page.report-fin', 'page.report-fin-sub'],
+  miawai: ['page.ai', 'page.ai-sub'],
+  reports: ['page.reports', 'page.reports-sub'],
+};
 
 function renderShell() {
+  renderI18nStatic();
   if (!isLoggedIn()) {
     dom.content.innerHTML = '';
-    dom.pageTitle.textContent = 'Masuk';
-    dom.pageSubtitle.textContent = 'Login diperlukan untuk membuka tracker';
+    dom.pageTitle.textContent = t('page.login');
+    dom.pageSubtitle.textContent = t('page.login-sub');
     renderAuthPanel();
     renderAuthScreen();
     return;
@@ -29,8 +50,8 @@ function renderShell() {
   if (taskSearch) taskSearch.hidden = activeView !== 'task';
 
   if (activeView === 'dashboard') {
-    dom.pageTitle.textContent = 'Dashboard';
-    dom.pageSubtitle.textContent = `Ringkasan kebiasaan sepanjang ${activeYear}`;
+    dom.pageTitle.textContent = t('page.dashboard');
+    dom.pageSubtitle.textContent = `${t('page.dashboard-sub')} ${activeYear}`;
     dom.content.innerHTML = renderDashboard(activeYear);
     return;
   }
@@ -38,22 +59,22 @@ function renderShell() {
   if (activeView === 'habits') {
     const period = habitPeriod();
     ensureYear(period.year);
-    dom.pageTitle.textContent = 'Kebiasaan';
+    dom.pageTitle.textContent = t('page.habits');
     dom.pageSubtitle.textContent = `${MONTHS[period.monthIndex]} ${period.year}`;
     dom.content.innerHTML = renderHabitsTab(period.year, period.monthIndex);
     return;
   }
 
   if (activeView === 'account') {
-    dom.pageTitle.textContent = 'Akun';
-    dom.pageSubtitle.textContent = 'Pengaturan profil dan keamanan';
+    dom.pageTitle.textContent = t('page.account');
+    dom.pageSubtitle.textContent = t('page.account-sub');
     dom.content.innerHTML = renderAccountTab();
     return;
   }
 
   if (activeView === 'task') {
-    dom.pageTitle.textContent = 'Daily Task';
-    dom.pageSubtitle.textContent = 'Kegiatan rutin harian di luar project';
+    dom.pageTitle.textContent = t('page.task');
+    dom.pageSubtitle.textContent = t('page.task-sub');
     if (dailyDetailId) {
       const dd = renderDailyDetail();
       if (dd) { dom.content.innerHTML = dd; return; }
@@ -69,42 +90,42 @@ function renderShell() {
   }
 
   if (activeView === 'jadwal') {
-    dom.pageTitle.textContent = 'Jadwal';
-    dom.pageSubtitle.textContent = 'Rencana waktu harian & mingguan';
+    dom.pageTitle.textContent = t('page.jadwal');
+    dom.pageSubtitle.textContent = t('page.jadwal-sub');
     dom.content.innerHTML = renderJadwalView();
     return;
   }
 
   if (activeView === 'progress') {
-    dom.pageTitle.textContent = 'Goals and Habit Progress';
+    dom.pageTitle.textContent = t('page.progress');
     dom.pageSubtitle.textContent = 'Statistik kebiasaan, task & goals';
     dom.content.innerHTML = renderProgressView();
     return;
   }
 
   if (activeView === 'project') {
-    dom.pageTitle.textContent = 'Project';
+    dom.pageTitle.textContent = t('page.project');
     dom.pageSubtitle.textContent = 'Proyek & target besar';
     dom.content.innerHTML = renderProjectView();
     return;
   }
 
   if (activeView === 'project-task') {
-    dom.pageTitle.textContent = 'Project Task';
+    dom.pageTitle.textContent = t('page.project-task');
     dom.pageSubtitle.textContent = 'Task yang terhubung ke tiap project';
     dom.content.innerHTML = renderProjectTaskView();
     return;
   }
 
   if (activeView === 'goals') {
-    dom.pageTitle.textContent = 'Goals';
+    dom.pageTitle.textContent = t('page.goals');
     dom.pageSubtitle.textContent = 'Target jangka pendek & panjang';
     dom.content.innerHTML = renderGoalsView();
     return;
   }
 
   if (activeView === 'catatan') {
-    dom.pageTitle.textContent = 'Catatan';
+    dom.pageTitle.textContent = t('page.notes');
     dom.pageSubtitle.textContent = 'Simpan ide, pengetahuan, dan hal penting dalam satu tempat.';
     dom.content.innerHTML = renderNotesView();
     return;
@@ -112,7 +133,7 @@ function renderShell() {
 
   if (activeView === 'dokumen') {
     ensureDocStore();
-    dom.pageTitle.textContent = 'Dokumen';
+    dom.pageTitle.textContent = t('page.docs');
     dom.pageSubtitle.textContent = 'Berkas & tautan penting dalam satu hub.';
     dom.content.innerHTML = renderDocsView();
     return;
@@ -120,7 +141,7 @@ function renderShell() {
 
   if (activeView === 'transaksi') {
     ensureTxStore();
-    dom.pageTitle.textContent = 'Transaksi';
+    dom.pageTitle.textContent = t('page.tx');
     dom.pageSubtitle.textContent = 'Catat uang masuk & keluar, lihat pola lewat kalender cashflow.';
     dom.content.innerHTML = renderTxView();
     return;
@@ -128,7 +149,7 @@ function renderShell() {
 
   if (activeView === 'budget') {
     ensureBudStore();
-    dom.pageTitle.textContent = 'Budget';
+    dom.pageTitle.textContent = t('page.budget');
     dom.pageSubtitle.textContent = 'Anggaran per kategori, dihitung otomatis dari transaksi kas.';
     dom.content.innerHTML = renderBudgetView();
     return;
@@ -136,7 +157,7 @@ function renderShell() {
 
   if (activeView === 'tabungan') {
     ensureSaveStore();
-    dom.pageTitle.textContent = 'Tabungan';
+    dom.pageTitle.textContent = t('page.savings');
     dom.pageSubtitle.textContent = 'Target tabungan dengan setoran, progress, dan deadline.';
     dom.content.innerHTML = renderSavingsView();
     return;
@@ -146,14 +167,14 @@ function renderShell() {
     ensureTxStore();
     ensureBudStore();
     ensureSaveStore();
-    dom.pageTitle.textContent = 'Laporan Keuangan';
+    dom.pageTitle.textContent = t('page.report-fin');
     dom.pageSubtitle.textContent = 'Rekap kas, budget, dan tabungan dalam satu laporan.';
     dom.content.innerHTML = renderReportView();
     return;
   }
 
   if (activeView === 'miawai') {
-    dom.pageTitle.textContent = 'MiawAI';
+    dom.pageTitle.textContent = t('page.ai');
     dom.pageSubtitle.textContent = 'Asisten AI untuk website, Habit & Goals';
     dom.content.innerHTML = renderMiawAIView();
     return;
@@ -165,7 +186,7 @@ function renderShell() {
     ensureSaveStore();
     ensureDocStore();
     ensureRepHistory();
-    dom.pageTitle.textContent = 'Ekspor & Laporan';
+    dom.pageTitle.textContent = t('page.reports');
     dom.pageSubtitle.textContent = 'Laporan lintas modul: Activity, Goals & Habit, Organization, Finance — PDF/DOC + analisis AI';
     dom.content.innerHTML = renderLaporanView();
     return;

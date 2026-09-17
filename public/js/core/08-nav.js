@@ -3,6 +3,15 @@
 // Classic script — urutan load: lihat <script> di public/index.html.
 'use strict';
 
+// Terapkan bahasa ke label sidebar & tombol lang topbar (dipanggil renderShell).
+function renderI18nStatic() {
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-lang-set]').forEach((btn) => {
+    btn.setAttribute('aria-pressed', String(APP_LANG === btn.dataset.langSet));
+  });
+}
 
 function buildYearOptions() {
   const knownYears = Object.keys(state.years).map(Number).filter(Number.isFinite);

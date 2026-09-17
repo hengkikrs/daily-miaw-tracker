@@ -38,9 +38,13 @@ function walk(dir, out = []) {
 const files = [path.join(ROOT, 'styles.css'), path.join(ROOT, 'theme.css')].concat(walk(path.join(ROOT, 'js')));
 const tokenHexes = new Set();
 
+// Blok token yang dikenali: :root, [data-theme="dark"], dan tema pilihan lain
+// (ocean/sunset/mono) — definisi nilai token SELALU boleh berisi hex.
+const TOKEN_BLOCK_START = /^\s*(?::root|\[data-theme(?:=["'][a-z-]+["'])?\\?\]\s*\{|html\[data-theme(?:=["'][a-z-]+["'])?\\?\])\s*\{/;
+
 for (const rel of ['styles.css', 'theme.css']) {
   const txt = fs.readFileSync(path.join(ROOT, rel), 'utf8');
-  const blocks = txt.match(/^(:root|\[data-theme="dark"\])\s*\{[\s\S]*?^\}/gm) || [];
+  const blocks = txt.match(/^(\[data-theme="[a-z-]+"\]|:root)\s*\{[\s\S]*?^\}/gm) || [];
   for (const b of blocks) {
     for (const line of b.split('\n')) {
       const m = line.match(/--[a-z0-9-]+\s*:\s*(#[0-9a-fA-F]{3,6})\s*;/);
@@ -56,7 +60,7 @@ for (const file of files) {
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let inTokens = false;
   lines.forEach((line, i) => {
-    if (/^\s*(:root|\[data-theme="dark"\])\s*\{/.test(line)) inTokens = true;
+    if (TOKEN_BLOCK_START.test(line)) inTokens = true;
     if (inTokens) {
       if (line.trim() === '}') inTokens = false;
       return;

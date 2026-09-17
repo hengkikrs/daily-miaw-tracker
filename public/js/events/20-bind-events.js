@@ -248,6 +248,16 @@ function bindEvents() {
     if (action === 'reset-finance-confirm') resetFinanceData();
     if (action === 'account-password-page') { accountPage = 'password'; acctNewPwVisible = false; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
     if (action === 'replay-onboarding') { openOnboarding(0); return; }
+    // Toggle bahasa EN/ID (topbar) & pemilih tema (menu Akun -> Tampilan).
+    if (action === 'set-lang') {
+      if (APP_LANG !== actionButton.dataset.langSet) { applyLang(actionButton.dataset.langSet); renderShell(); }
+      return;
+    }
+    if (action === 'set-theme') {
+      applyTheme(actionButton.dataset.themeSet);
+      renderShell();
+      return;
+    }
     if (action === 'account-back') { accountPage = 'main'; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
     if (action === 'acct-eye-on' || action === 'acct-eye-off') {
       const form = dom.content.querySelector('#accountPasswordForm');

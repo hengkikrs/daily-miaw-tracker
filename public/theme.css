@@ -132,6 +132,83 @@
   --miaw-avatar: #16A34A;
 }
 
+/* ---------- Tema pilihan (menu Akun): Ocean / Sunset / Mono ---------- */
+/* Nama token sama, nilai berbeda — styles.css tak perlu tahu. */
+[data-theme="ocean"] {
+  color-scheme: light;
+  --teal: #0EA5E9;
+  --teal-strong: #0369A1;
+  --teal-deep: #075985;
+  --accent-ink: #075985;
+  --nav-ink-active: #0369A1;
+  --green: #0EA5E9;
+  --cyan: #38BDF8;
+  --green-strong: #0369A1;
+  --green-soft: #E0F2FE;
+  --accent-1: #0EA5E9;
+  --accent-2: #0369A1;
+  --accent-3: #38BDF8;
+  --accent-strong: #0369A1;
+  --accent-ghost: #0EA5E9;
+  --sec-activity: var(--teal);
+  --sec-goals: var(--teal);
+  --sec-org: var(--teal);
+  --sec-finance: var(--teal);
+  --miaw-you: #0EA5E9;
+  --miaw-avatar: #0EA5E9;
+  --focus: 0 0 0 3px rgba(14, 165, 233, 0.25);
+}
+
+[data-theme="sunset"] {
+  color-scheme: light;
+  --teal: #EA580C;
+  --teal-strong: #C2410C;
+  --teal-deep: #9A3412;
+  --accent-ink: #9A3412;
+  --nav-ink-active: #C2410C;
+  --green: #EA580C;
+  --cyan: #FB923C;
+  --green-strong: #C2410C;
+  --green-soft: #FFEDD5;
+  --accent-1: #EA580C;
+  --accent-2: #C2410C;
+  --accent-3: #FB923C;
+  --accent-strong: #C2410C;
+  --accent-ghost: #EA580C;
+  --sec-activity: var(--teal);
+  --sec-goals: var(--teal);
+  --sec-org: var(--teal);
+  --sec-finance: var(--teal);
+  --miaw-you: #EA580C;
+  --miaw-avatar: #EA580C;
+  --focus: 0 0 0 3px rgba(234, 88, 12, 0.25);
+}
+
+[data-theme="mono"] {
+  color-scheme: light;
+  --teal: #334155;
+  --teal-strong: #1E293B;
+  --teal-deep: #0F172A;
+  --accent-ink: #0F172A;
+  --nav-ink-active: #1E293B;
+  --green: #334155;
+  --cyan: #64748B;
+  --green-strong: #1E293B;
+  --green-soft: #E2E8F0;
+  --accent-1: #334155;
+  --accent-2: #1E293B;
+  --accent-3: #64748B;
+  --accent-strong: #1E293B;
+  --accent-ghost: #334155;
+  --sec-activity: var(--teal);
+  --sec-goals: var(--teal);
+  --sec-org: var(--teal);
+  --sec-finance: var(--teal);
+  --miaw-you: #334155;
+  --miaw-avatar: #334155;
+  --focus: 0 0 0 3px rgba(51, 65, 85, 0.25);
+}
+
 /* ---------- Tokens: Dark ---------- */
 [data-theme="dark"] {
   color-scheme: dark;
@@ -527,4 +604,77 @@ textarea:focus,
     animation-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ---------- Toggle bahasa (topbar) ---------- */
+.lang-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--panel);
+  flex: none;
+}
+.lang-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  min-height: 34px;
+  min-width: 40px;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.lang-btn[aria-pressed="true"] {
+  background: var(--teal);
+  color: var(--on-accent);
+}
+.lang-btn:not([aria-pressed="true"]):hover { background: var(--panel-soft); }
+
+/* ---------- Pemilih tema (menu Akun) ---------- */
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.theme-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.theme-opt:hover { background: var(--panel-soft); }
+.theme-opt.on {
+  border-color: var(--teal);
+  box-shadow: var(--focus);
+}
+.theme-opt b { flex: 1; text-align: left; }
+.theme-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex: none;
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+.theme-swatch-auto {
+  background: linear-gradient(90deg, #FFFFFF 50%, #0B1220 50%);
+}
+.theme-check {
+  color: var(--teal);
+  font-weight: 900;
 }

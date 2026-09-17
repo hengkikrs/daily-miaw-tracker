@@ -370,6 +370,28 @@ function renderAccountTab() {
       <section class="panel account-panel">
         <div class="section-heading">
           <div>
+            <h2>Tampilan</h2>
+            <p>Pilih tema website sesuai selera. Pilihan tersimpan di perangkat ini.</p>
+          </div>
+        </div>
+        <div class="theme-picker" role="group" aria-label="Tema website">
+          ${[['light', '#16A34A'], ['dark', '#22C55E'], ['ocean', '#0EA5E9'], ['sunset', '#EA580C'], ['mono', '#64748B']].map(([th, col]) => `
+            <button type="button" class="theme-opt ${savedTheme === th ? 'on' : ''}" data-action="set-theme" data-theme-set="${th}" aria-pressed="${savedTheme === th}">
+              <i class="theme-swatch" style="background:${col}"></i>
+              <b>${themeLabel(th)}</b>
+              ${savedTheme === th ? '<span class="theme-check">✓</span>' : ''}
+            </button>`).join('')}
+          <button type="button" class="theme-opt ${savedTheme === 'auto' ? 'on' : ''}" data-action="set-theme" data-theme-set="auto" aria-pressed="${savedTheme === 'auto'}">
+            <i class="theme-swatch theme-swatch-auto"></i>
+            <b>${themeLabel('auto')}</b>
+            ${savedTheme === 'auto' ? '<span class="theme-check">✓</span>' : ''}
+          </button>
+        </div>
+      </section>
+
+      <section class="panel account-panel">
+        <div class="section-heading">
+          <div>
             <h2>Reset Data Keuangan</h2>
             <p>Mengosongkan transaksi, budget, tabungan, dan riwayat laporan supaya bisa diisi dari awal. Kebiasaan, task, goals, catatan, dan dokumen <strong>tidak</strong> dihapus.</p>
           </div>
