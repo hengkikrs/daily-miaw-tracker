@@ -240,6 +240,7 @@ function renderAuthPanel() {
 let accountPage = 'main';
 let acctNewPwVisible = false;
 let accountDeleteOpen = false;
+let accountResetFinanceOpen = false; // modal konfirmasi reset data keuangan
 let acctPwDraft = { pw: '', confirm: '' };
 
 function acctEyeSvg(show) {
@@ -366,6 +367,16 @@ function renderAccountTab() {
         <button class="primary-button" type="button" data-action="replay-onboarding">Putar Ulang Tutorial</button>
       </section>
 
+      <section class="panel account-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Reset Data Keuangan</h2>
+            <p>Mengosongkan transaksi, budget, tabungan, dan riwayat laporan supaya bisa diisi dari awal. Kebiasaan, task, goals, catatan, dan dokumen <strong>tidak</strong> dihapus.</p>
+          </div>
+        </div>
+        <button class="danger-button" type="button" data-action="reset-finance-open">Reset Data Keuangan</button>
+      </section>
+
       <section class="panel account-panel danger-zone">
         <div class="section-heading">
           <div>
@@ -390,6 +401,23 @@ function renderAccountTab() {
         <div class="doc-modal-foot">
           <button class="ghost-button" type="button" data-action="account-delete-cancel">Batal</button>
           <button class="danger-button" type="button" id="acctDelGo" data-action="account-delete-confirm" disabled>Hapus Permanen</button>
+        </div>
+      </div>
+    </div>` : ''}
+    ${accountResetFinanceOpen ? `
+    <div class="doc-modal-wrap" id="acctResetFinModal" role="dialog" aria-modal="true" aria-labelledby="acctResetFinTitle" data-action="reset-finance-cancel">
+      <div class="doc-modal acct-del-modal" data-action="acct-resetfin-noop">
+        <div class="doc-modal-head"><b id="acctResetFinTitle">Reset data keuangan?</b>
+          <button class="ghost-button" type="button" data-action="reset-finance-cancel">✕</button>
+        </div>
+        <p>Transaksi, budget, tabungan, dan riwayat laporan akan <strong>dikosongkan</strong> di perangkat ini dan di database website. Data kebiasaan (habit), task, goals, catatan, dan dokumen <strong>tidak dihapus</strong>.</p>
+        <label class="acct-del-confirm">
+          <span>Ketik: <code>reset keuangan</code></span>
+          <input id="acctResetFinConfirm" type="text" autocomplete="off" placeholder="reset keuangan" />
+        </label>
+        <div class="doc-modal-foot">
+          <button class="ghost-button" type="button" data-action="reset-finance-cancel">Batal</button>
+          <button class="danger-button" type="button" id="acctResetFinGo" data-action="reset-finance-confirm" disabled>Kosongkan Data Keuangan</button>
         </div>
       </div>
     </div>` : ''}
@@ -745,4 +773,45 @@ async function confirmAccountDeletion() {
   authIsBusy = false;
   renderShell();
   showToast('Akun dihapus. Identitas dimusnahkan otomatis dalam 24 jam.');
+}
+
+// Reset HANYA data keuangan (transaksi, budget, tabungan, riwayat laporan).
+// Data kebiasaan/habit, task, goals, catatan, dan dokumen tidak disentuh.
+async function resetFinanceData() {
+  const typed = (document.getElementById('acctResetFinConfirm')?.value || '').trim().toLowerCase();
+  if (typed !== 'reset keuangan') {
+    showToast('Ketik konfirmasi dengan tepat.');
+    return;
+  }
+
+  authIsBusy = true;
+  renderShell();
+
+  // 1) kosongkan data keuangan di state inti
+  state.transactions = [];
+  state.budgets = [];
+  state.savings = [];
+  state.savingsTx = [];
+  if (Array.isArray(state.repHist)) state.repHist = [];
+
+  // 2) tandai sudah pernah "terisi" agar data contoh tidak dimunculkan lagi
+  state.txSeeded = true;
+  state.budSeeded = true;
+  state.saveSeeded = true;
+  state.repHistSeeded = true;
+
+  // 3) simpan ke perangkat + antre sinkron Supabase
+  saveState();
+
+  try {
+    if (canSyncRemote()) await saveRemoteState();
+  } catch (error) {
+    console.warn('reset keuangan (remote):', error);
+    showToast('Data perangkat dikosongkan. Sinkron Supabase gagal sementara.');
+  }
+
+  accountResetFinanceOpen = false;
+  authIsBusy = false;
+  renderShell();
+  showToast('Data keuangan dikosongkan. Kebiasaan & data lain tetap aman.');
 }

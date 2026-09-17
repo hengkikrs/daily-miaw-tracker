@@ -242,6 +242,10 @@ function bindEvents() {
     if (action === 'acct-del-noop') return;
     if (action === 'account-delete-cancel') { accountDeleteOpen = false; renderShell(); return; }
     if (action === 'account-delete-confirm') confirmAccountDeletion();
+    if (action === 'reset-finance-open') { accountResetFinanceOpen = true; renderShell(); dom.content.querySelector('#acctResetFinConfirm')?.focus(); return; }
+    if (action === 'acct-resetfin-noop') return;
+    if (action === 'reset-finance-cancel') { accountResetFinanceOpen = false; renderShell(); return; }
+    if (action === 'reset-finance-confirm') resetFinanceData();
     if (action === 'account-password-page') { accountPage = 'password'; acctNewPwVisible = false; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
     if (action === 'replay-onboarding') { openOnboarding(0); return; }
     if (action === 'account-back') { accountPage = 'main'; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
@@ -350,6 +354,11 @@ function bindEvents() {
     if (delInp) {
       const go = dom.content.querySelector('#acctDelGo');
       if (go) go.disabled = delInp.value.trim().toLowerCase() !== 'ya, saya ingin hapus akun';
+    }
+    const finInp = event.target.closest('#acctResetFinConfirm');
+    if (finInp) {
+      const goFin = dom.content.querySelector('#acctResetFinGo');
+      if (goFin) goFin.disabled = finInp.value.trim().toLowerCase() !== 'reset keuangan';
     }
     const projSearch = event.target.closest('[data-proj-search]');
     if (projSearch) handleProjectChange(projSearch);
