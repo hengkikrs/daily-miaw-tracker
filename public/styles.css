@@ -4703,7 +4703,7 @@ body.auth-required .auth-screen.landing {
 .rep-flow-nums b { font-size: var(--fs-xs); }
 .rep-two { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 16px; align-items: start; }
 .rep-donut-wrap { display: flex; align-items: center; justify-content: center; gap: 26px; flex-wrap: wrap; }
-.rep-donut { width: clamp(190px, 46%, 260px); flex: 0 0 auto; }
+.rep-donut { width: clamp(210px, 52%, 260px); height: auto; aspect-ratio: 1 / 1; display: block; flex: 0 0 auto; }
 .rep-donut circle { transition: opacity 0.15s ease; } .rep-donut circle:hover { opacity: 0.8; }
 .rep-legend-list { flex: 1; min-width: 150px; display: grid; gap: 6px; }
 .rep-lg { display: grid; grid-template-columns: 12px 1fr auto auto; align-items: center; gap: 7px; font-size: var(--fs-xs); }
