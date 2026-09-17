@@ -5384,6 +5384,23 @@ summary:focus-visible,
 
 /* ============ DASHBOARD: blok Hari Ini + overdue (ui66, TASK-013) ============ */
 .dash-today { display: grid; gap: 10px; }
+/* Kartu ranking habit di Dashboard (pengganti blok ganda "Agenda & target") */
+.dash-hab-rank { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-1); padding: 14px 16px; margin: 4px 0 18px; }
+.dh-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 8px 22px; }
+.dh-h { margin: 6px 0 8px; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.dh-h.good { color: var(--accent-ink); }
+.dh-h.faint { color: var(--muted); }
+.dh-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 2px; border-top: 1px solid var(--line); font-size: var(--fs-sm); }
+.dh-row:first-of-type { border-top: 0; }
+.dh-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.dh-val { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.dh-n { font-variant-numeric: tabular-nums; color: var(--text); }
+.dh-n small { color: var(--muted); font-weight: 600; }
+.dhb-bar { display: inline-block; width: 56px; height: 6px; border-radius: var(--r-full); background: var(--panel-soft); overflow: hidden; }
+.dhb-bar b { display: block; height: 100%; border-radius: var(--r-full); background: var(--teal); }
+.dh-cols > div:last-child .dhb-bar b { background: var(--muted); }
+.dh-list { display: grid; gap: 0; }
+
 .dash-today-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .dash-today-head h2 { margin: 2px 0 0; font-size: var(--fs-lg); }
 .dash-today-sub { color: var(--muted); font-size: var(--fs-sm); }

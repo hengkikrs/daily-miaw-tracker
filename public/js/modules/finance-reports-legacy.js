@@ -83,8 +83,8 @@ function repBarChartSvg(flows, W, H) {
     bars += `<text x="${cx}" y="${H - 7}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${repMonthLabel(f.m)}</text>`;
   });
   const path = netPts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
-  const dots = netPts.map(([x, y], i) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="var(--text)"><title>Net ${txRp(flows[i].net)}</title></circle>`).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" class="rep-svg" role="img" aria-label="Grafik kasflow 6 bulan">${bars}<path d="${path}" fill="none" stroke="var(--text)" stroke-width="1.6" stroke-dasharray="3 3" opacity=".55"/>${dots}</svg>`;
+  const dots = netPts.map(([x, y], i) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="var(--bg)" stroke="var(--accent-ink)" stroke-width="1.6" opacity="1"><title>Net ${txRp(flows[i].net)}</title></circle>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="rep-svg" role="img" aria-label="Grafik cashflow 6 bulan">${bars}<path d="${path}" fill="none" stroke="var(--accent-ink)" stroke-width="2" stroke-dasharray="4 3" opacity=".9"/>${dots}</svg>`;
 }
 function repDonutSvg(items, total) {
   const COL = chartPalette(9);

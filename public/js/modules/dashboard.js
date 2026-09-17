@@ -181,47 +181,29 @@ function renderDashboard(year) {
 
   const upcoming = d.tasks.filter((t) => !t.done && t.date > d.todayIso).sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(0, 5);
 
-  // ===== Blok "Hari Ini" (TASK-013): actionable + overdue di paling atas =====
-  const dailyList = loadDailyTasks().filter((t) => t && t.id);
-  const routinesToday = loadDailyRoutines().filter((r) => dailyRoutineApplies(r, d.todayIso));
-  const todayRows = [
-    ...dailyList.filter((t) => t.date === d.todayIso).map((t) => ({
-      title: t.title, icon: t.icon || '✅', done: !!t.done, meta: t.category || 'Kegiatan',
-    })),
-    ...routinesToday.map((r) => ({
-      title: r.title, icon: r.icon || '🔥', done: dailyIsRoutineDone(r, d.todayIso), meta: 'Rutinitas',
-    })),
-  ];
-  const overdue = [
-    ...dailyList.filter((t) => !t.done && t.date && t.date < d.todayIso).map((t) => ({ title: t.title, icon: t.icon || '✅', date: t.date })),
-    ...d.tasks.filter((t) => !t.done && t.date && t.date < d.todayIso).map((t) => ({ title: t.title, icon: '🧩', date: t.date })),
-  ];
-  const todayDone = todayRows.filter((r) => r.done).length;
-  const todayBlock = `
-    <section class="dash-today">
-      <div class="dash-today-head">
-        <div>
-          <span class="kicker">Agenda &amp; target</span>
-          <h2>Hari Ini</h2>
-        </div>
-        <span class="dash-today-sub">${todayDone}/${todayRows.length} selesai${overdue.length ? ` · <b class="bad">${overdue.length} terlambat</b>` : ''}</span>
-      </div>
-      ${overdue.length ? `<div class="dash-overdue">
-        <span class="dash-overdue-title">⚠️ Terlambat</span>
-        ${overdue.slice(0, 4).map((o) => `<div class="dash-today-row late" data-dash-go="task" role="button" tabindex="0"><span class="dash-today-ico">${o.icon}</span><span class="dash-today-title">${escapeHtml(o.title)}</span><small>${escapeHtml(o.date)}</small></div>`).join('')}
-      </div>` : ''}
-      <div class="dash-today-list">
-        ${todayRows.length
-          ? todayRows.map((r) => `<div class="dash-today-row${r.done ? ' on' : ''}" data-dash-go="task" role="button" tabindex="0">
-              <span class="dash-today-ico">${r.icon}</span>
-              <span class="dash-today-title">${escapeHtml(r.title)}</span>
-              <small>${escapeHtml(r.meta)}</small>
-              <span class="dash-today-state" aria-hidden="true">${r.done ? '✓' : '○'}</span>
-            </div>`).join('')
-          : `<p class="dash-today-empty">Belum ada kegiatan untuk hari ini. <b>Buka Daily Task →</b></p>`}
-      </div>
-    </section>
-`;
+
+
+  // Ranking habit bulan berjalan: 5 paling sering & 5 paling jarang dikerjakan.
+  const rankRows = (d.monthStats.rows || [])
+    .slice()
+    .sort((a, b) => b.checkedSlots - a.checkedSlots || b.progress - a.progress);
+  const pctOf = (r) => (r.totalSlots ? Math.round((r.checkedSlots / r.totalSlots) * 100) : 0);
+  const barOf = (r) => `<i class="dhb-bar"><b style="width:${pctOf(r)}%"></b></i>`;
+  const rowHtml = (r) => `<div class="dh-row"><span class="dh-name">${escapeHtml(r.name)}</span><span class="dh-val"><b class="dh-n">${r.checkedSlots}<small>/${r.totalSlots}</small></b>${barOf(r)}</span></div>`;
+  let habitRankRows;
+  if (!rankRows.length) {
+    habitRankRows = '<p class="task-empty">Belum ada habit. Centang mulai dari halaman Habit.</p>';
+  } else if (rankRows.length <= 5) {
+    habitRankRows = `<div class="dh-list">${rankRows.map((r) => rowHtml(r)).join('')}</div>`;
+  } else {
+    const top5 = rankRows.slice(0, 5);
+    const topIds = new Set(top5.map((r) => r.id));
+    const rare5 = rankRows.filter((r) => !topIds.has(r.id)).slice(-5).reverse();
+    habitRankRows = `<div class="dh-cols">
+      <div><h2 class="dh-h good">Paling sering</h2>${top5.map((r) => rowHtml(r)).join('')}</div>
+      <div><h2 class="dh-h faint">Paling jarang</h2>${rare5.map((r) => rowHtml(r)).join('')}</div>
+    </div>`;
+  }
 
   return `
     <div class="dash-page">
@@ -260,7 +242,10 @@ function renderDashboard(year) {
         </aside>
       </section>
 
-      ${todayBlock}
+      <section class="panel dash-hab-rank">
+        <div class="rep-card-head"><h2>Habit ${MONTHS[activeMonth]}</h2><small>ranking centang bulan ini</small></div>
+        ${habitRankRows}
+      </section>
 
       <div class="dash-grid-4">
         ${activityCard}
@@ -275,7 +260,7 @@ function renderDashboard(year) {
           ${trend}
         </section>
         <section class="panel dash-chart-card">
-          <div class="rep-card-head"><h2>Kasflow 6 Bulan</h2><span class="rep-legend"><i class="lg-in"></i>Masuk <i class="lg-out"></i>Keluar</span></div>
+          <div class="rep-card-head"><h2>Cashflow 6 Bulan</h2><span class="rep-legend"><i class="lg-in"></i>Masuk <i class="lg-out"></i>Keluar</span></div>
           ${financeChart}
           <div class="rep-flow-nums">${d.flows.map((f) => `<div><span>${repMonthLabel(f.m)}</span><b class="${f.net >= 0 ? 'green' : 'coral'}">${f.net >= 0 ? '+' : '−'}${dashCompact(Math.abs(f.net))}</b></div>`).join('')}</div>
         </section>
