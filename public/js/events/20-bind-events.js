@@ -75,6 +75,7 @@ function bindEvents() {
       authPwChecks = { len: false, upper: false, other: false };
       authOtpResendAt = 0;
       renderAuthScreen();
+      if (APP_LANG === 'en') translateDom();
       return;
     }
 
@@ -85,6 +86,7 @@ function bindEvents() {
       authPwVisible = false;
       authOtpResendAt = 0;
       renderAuthScreen();
+      if (APP_LANG === 'en') translateDom();
       return;
     }
 
@@ -98,6 +100,7 @@ function bindEvents() {
       authPwChecks = { len: false, upper: false, other: false };
       authOtpResendAt = 0;
       renderAuthScreen();
+      if (APP_LANG === 'en') translateDom();
     }
 
     if (button.dataset.authAction === 'back-to-signup') {
@@ -106,6 +109,7 @@ function bindEvents() {
       authPwVisible = false;
       authOtpResendAt = 0;
       renderAuthScreen();
+      if (APP_LANG === 'en') translateDom();
     }
 
     if (button.dataset.authAction === 'resend-signup') resendSignupOtp();
@@ -250,7 +254,14 @@ function bindEvents() {
     if (action === 'replay-onboarding') { openOnboarding(0); return; }
     // Toggle bahasa EN/ID (topbar) & pemilih tema (menu Akun -> Tampilan).
     if (action === 'set-lang') {
-      if (APP_LANG !== actionButton.dataset.langSet) { applyLang(actionButton.dataset.langSet); renderShell(); }
+      if (APP_LANG !== actionButton.dataset.langSet) {
+        applyLang(actionButton.dataset.langSet);
+        renderShell();
+        translateDom();
+        // Pass kedua: renderAuthScreen bisa menyusun DOM setelah pass pertama.
+        requestAnimationFrame(() => { if (APP_LANG === 'en') translateDom(); });
+        setTimeout(() => { if (APP_LANG === 'en') translateDom(); }, 120);
+      }
       return;
     }
     if (action === 'set-theme') {

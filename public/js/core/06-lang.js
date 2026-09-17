@@ -1,11 +1,16 @@
 // Tracker Daily — 06-lang.js
-// Pemilihan bahasa EN/ID (toggle kiri-atas topbar). Memuat SEBELUM 09-router.js.
-// Simbol: APP_LANG, initLang, applyLang, t(), toggleLang
+// Pemilihan bahasa EN/ID + mesin terjemahan DOM.
+// Pendekatan: aplikasi merender teks Indonesia; saat EN aktif, satu lapisan
+// pasca-render menerjemahkan text node & atribut memakai kamus I18N_EN
+// (lihat 06b-i18n-dict.js). Tidak ada modul lain yang perlu diubah.
+// Simbol: APP_LANG, LANG_KEY, t, applyLang, toggleLang, initLang, translateDom, watchI18n
 'use strict';
 
 const LANG_KEY = 'miaw-tracker.lang';
+
+// Label chrome (dipakai langsung oleh renderShell/akun) — sumber kebenaran ganda
+// dengan kamus DOM: kunci 'nav.*'/'page.*'/'acct.*'/'theme.*'.
 const APP_STRINGS = {
-  // Sidebar
   'nav.dashboard': { en: 'Dashboard', id: 'Dashboard' },
   'nav.month': { en: 'Monthly Tracker', id: 'Pelacakan Bulanan' },
   'nav.activity': { en: 'Activity', id: 'Activity' },
@@ -27,9 +32,6 @@ const APP_STRINGS = {
   'nav.export': { en: 'Export & Reports', id: 'Ekspor & Laporan' },
   'nav.ai': { en: 'MiawAI', id: 'MiawAI' },
   'nav.account': { en: 'Account', id: 'Akun' },
-  // Topbar
-  'app.subtitle': { en: 'Daily, weekly, and monthly tracking', id: 'Jejak harian, mingguan, dan bulanan' },
-  // Router judul halaman
   'page.login': { en: 'Sign in', id: 'Masuk' },
   'page.login-sub': { en: 'Login required to open the tracker', id: 'Login diperlukan untuk membuka tracker' },
   'page.dashboard': { en: 'Dashboard', id: 'Dashboard' },
@@ -63,7 +65,6 @@ const APP_STRINGS = {
   'page.ai-sub': { en: 'AI assistant', id: 'Asisten AI' },
   'page.reports': { en: 'Export & Reports', id: 'Ekspor & Laporan' },
   'page.reports-sub': { en: 'Cross-module reports', id: 'Laporan lintas modul' },
-  // Halaman akun
   'acct.profile': { en: 'Account Profile', id: 'Profil Akun' },
   'acct.profile-sub': { en: 'Data used to sign in and appear in the app.', id: 'Data yang dipakai untuk masuk dan tampil di aplikasi.' },
   'acct.name': { en: 'Name', id: 'Nama' },
@@ -79,18 +80,16 @@ const APP_STRINGS = {
   'acct.replay': { en: 'Replay Tutorial', id: 'Putar Ulang Tutorial' },
   'acct.appearance': { en: 'Appearance', id: 'Tampilan' },
   'acct.appearance-sub': { en: 'Pick a website theme that suits your taste. Choice is saved per device.', id: 'Pilih tema website sesuai selera. Pilihan tersimpan di perangkat ini.' },
-  'acct.theme-names': { en: 'Theme', id: 'Tema' },
-  // Tema (5 pilihan + auto)
   'theme.light': { en: 'Green Light', id: 'Hijau Terang' },
   'theme.dark': { en: 'Green Dark', id: 'Hijau Gelap' },
   'theme.ocean': { en: 'Ocean', id: 'Samudra' },
   'theme.sunset': { en: 'Sunset', id: 'Senja' },
   'theme.mono': { en: 'Mono Slate', id: 'Slate Monokrom' },
   'theme.auto': { en: 'Follow device (light/dark)', id: 'Ikuti perangkat (terang/gelap)' },
-  'theme.group-title': { en: 'Website theme', id: 'Tema website' },
 };
 
-let APP_LANG = localStorage.getItem(LANG_KEY) || 'id';
+let APP_LANG = 'id';
+let i18nApplying = false;
 
 function t(key) {
   const row = APP_STRINGS[key];
@@ -98,10 +97,134 @@ function t(key) {
   return row[APP_LANG] || row.id || key;
 }
 
+/* ---------- kamus DOM (I18N_EN dari 06b-i18n-dict.js) ---------- */
+function dictEn() {
+  return (typeof I18N_EN === 'object' && I18N_EN) ? I18N_EN : {};
+}
+
+// Aturan pola untuk teks dinamis (angka + satuan).
+const I18N_RULES = [
+  [/^(\d+) hari lalu$/i, '$1 days ago'],
+  [/^(\d+) hari$/i, '$1 days'],
+  [/^(\d+) hari sebelum$/i, '$1 day before'],
+  [/^(\d+) jam(?: (\d+) mnt)?$/i, (m) => (m[2] ? `${m[1]}h ${m[2]}m` : `${m[1]}h`)],
+  [/^(\d+) menit$/i, '$1 minutes'],
+  [/^(\d+) menit sebelum$/i, '$1 minutes before'],
+  [/^(\d+) detik$/i, '$1 seconds'],
+  [/^(\d+) bulan$/i, '$1 months'],
+  [/^(\d+) tahun$/i, '$1 years'],
+  [/^(\d+) terakhir$/i, 'last $1'],
+  [/^(\d+) terakhir dari kas$/i, 'last $1 from cash'],
+  [/^(.+) hari ini$/i, '$1 today'],
+  [/^(.+) bulan ini$/i, '$1 this month'],
+  [/^(.+) tahun ini$/i, '$1 this year'],
+  [/^(\d+) dari (\d+)$/, '$1 of $2'],
+  [/^Sisa (\d+) hari$/i, '$1 days left'],
+  [/^(\d+)% dari target$/i, '$1% of target'],
+];
+
+function translateString(s) {
+  if (!s) return s;
+  const dict = dictEn();
+  const trimmed = s.trim();
+  if (!trimmed) return s;
+  const hit = dict[trimmed];
+  if (hit) return s.replace(trimmed, hit);
+  for (const [rx, rep] of I18N_RULES) {
+    const m = trimmed.match(rx);
+    if (m) {
+      const out = typeof rep === 'function' ? rep(m) : trimmed.replace(rx, rep);
+      return s.replace(trimmed, out);
+    }
+  }
+  return s;
+}
+
+const I18N_SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA', 'SVG', 'PATH', 'CANVAS']);
+const I18N_ATTRS = ['placeholder', 'title', 'aria-label'];
+
+function i18nSkipNode(el) {
+  for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+    if (I18N_SKIP_TAGS.has(n.tagName)) return true;
+    if (n.dataset && n.dataset.noI18n !== undefined) return true;
+    if (n.isContentEditable) return true;
+  }
+  return false;
+}
+
+// Terjemahkan seluruh text node + atribut di dalam root (default: <body>).
+function translateDom(root) {
+  const scope = root || document.body;
+  if (!scope || APP_LANG !== 'en') return;
+  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, null);
+  const nodes = [];
+  let node = walker.nextNode();
+  while (node) {
+    if (!i18nSkipNode(node.parentElement)) nodes.push(node);
+    node = walker.nextNode();
+  }
+  const dict = dictEn();
+  if (!Object.keys(dict).length) return;
+  i18nApplying = true;
+  try {
+    for (const n of nodes) {
+      const out = translateString(n.nodeValue);
+      if (out !== n.nodeValue) n.nodeValue = out;
+    }
+    const els = scope.querySelectorAll('[placeholder],[title],[aria-label]');
+    els.forEach((el) => {
+      if (i18nSkipNode(el)) return;
+      I18N_ATTRS.forEach((a) => {
+        const v = el.getAttribute(a);
+        if (!v) return;
+        const out = translateString(v);
+        if (out !== v) el.setAttribute(a, out);
+      });
+    });
+  } finally {
+    i18nApplying = false;
+  }
+}
+
+let i18nObserver = null;
+// Amati perubahan DOM (render ulang modul, toast, modal) lalu terjemahkan.
+// Mutasi yang tiba saat pass terjemahan lain berjalan TIDAK dibuang — antre
+// dan diproses di frame berikutnya, supaya node hasil render ulang tidak lolos.
+function watchI18n() {
+  if (i18nObserver) return;
+  const pending = new Set();
+  let scheduled = false;
+  const flush = () => {
+    scheduled = false;
+    i18nApplying = false;
+    const batch = [...pending];
+    pending.clear();
+    batch.forEach((el) => { if (el.isConnected) translateDom(el); });
+  };
+  i18nObserver = new MutationObserver((records) => {
+    if (APP_LANG !== 'en') return;
+    records.forEach((r) => {
+      if (r.type === 'characterData') { if (r.target.parentElement) pending.add(r.target.parentElement); return; }
+      r.addedNodes.forEach((n) => {
+        if (n.nodeType === 1) pending.add(n);
+        else if (n.nodeType === 3 && n.parentElement) pending.add(n.parentElement);
+      });
+    });
+    if (!pending.size || scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(flush);
+  });
+  i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+}
+
 function applyLang(lang) {
-  APP_LANG = APP_STRINGS && lang === 'en' ? 'en' : 'id';
+  APP_LANG = lang === 'en' ? 'en' : 'id';
   localStorage.setItem(LANG_KEY, APP_LANG);
   document.documentElement.lang = APP_LANG;
+  // Nama bulan ikut bahasa (MONTHS dipakai lintas modul).
+  if (typeof MONTHS_ID !== 'undefined' && typeof MONTHS_EN !== 'undefined') {
+    MONTHS = APP_LANG === 'en' ? MONTHS_EN : MONTHS_ID;
+  }
 }
 
 function toggleLang() {
@@ -112,4 +235,8 @@ function initLang() {
   const saved = localStorage.getItem(LANG_KEY);
   APP_LANG = saved === 'en' ? 'en' : 'id';
   document.documentElement.lang = APP_LANG;
+  if (typeof MONTHS_ID !== 'undefined' && typeof MONTHS_EN !== 'undefined') {
+    MONTHS = APP_LANG === 'en' ? MONTHS_EN : MONTHS_ID;
+  }
+  watchI18n();
 }

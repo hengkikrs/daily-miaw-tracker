@@ -5,6 +5,7 @@
 
 
 async function init() {
+  initLang();
   initTheme();
   await consumeOAuthCallback();
   if (authSession) await getAccessToken();
@@ -12,6 +13,7 @@ async function init() {
   saveState();
   bindEvents();
   renderShell();
+  if (APP_LANG === 'en') translateDom();
   await hydrateRemoteState();
   // Tutorial pop-up: muncul sekali per akun (lihat js/modules/onboarding.js)
   maybeStartOnboarding();

@@ -1,6 +1,6 @@
 // Tracker Daily — 01-config.js
 // Dipisah dari public/app.js (FASE A: ekstraksi murni, tanpa perubahan identifier).
-// Simbol: STORAGE_KEY, THEME_KEY, CLIENT_ID_KEY, AUTH_SESSION_KEY, SCHEMA_VERSION, REMOTE_SYNC_DEBOUNCE_MS, OTP_RESEND_SECONDS, MONTHS, CATEGORY_ORDER, CATEGORY_CONFIG, DEFAULT_HABITS, CATEGORY_DEFAULT_POINTS, DEFAULT_HABIT_POINTS, HABIT_NAME_TRANSLATIONS, DATA_STORE_KEYS, NAV_GROUP_OF, PW_RULE_OK, OAUTH_VERIFIER_KEY, PW_RULE_LABELS
+// Simbol: STORAGE_KEY, THEME_KEY, CLIENT_ID_KEY, AUTH_SESSION_KEY, SCHEMA_VERSION, REMOTE_SYNC_DEBOUNCE_MS, OTP_RESEND_SECONDS, MONTHS, MONTHS_ID, MONTHS_EN, CATEGORY_ORDER, CATEGORY_CONFIG, DEFAULT_HABITS, CATEGORY_DEFAULT_POINTS, DEFAULT_HABIT_POINTS, HABIT_NAME_TRANSLATIONS, DATA_STORE_KEYS, NAV_GROUP_OF, PW_RULE_OK, OAUTH_VERIFIER_KEY, PW_RULE_LABELS
 // Dimuat sebagai classic script SEBELUM app.js — lihat urutan <script> di public/index.html.
 'use strict';
 
@@ -11,10 +11,16 @@ const AUTH_SESSION_KEY = 'miaw-tracker.auth-session.v1';
 const SCHEMA_VERSION = 1;
 const REMOTE_SYNC_DEBOUNCE_MS = 150;
 const OTP_RESEND_SECONDS = 60;
-const MONTHS = [
+// Nama bulan: dua bahasa (lihat 06-lang.js — applyLang menukar isi MONTHS).
+const MONTHS_ID = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ];
+const MONTHS_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+let MONTHS = MONTHS_ID;
 const CATEGORY_ORDER = ['daily', 'weekly', 'specificWeekly', 'monthly'];
 const CATEGORY_CONFIG = {
   daily: {
