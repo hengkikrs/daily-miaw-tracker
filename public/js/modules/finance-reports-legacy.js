@@ -83,8 +83,8 @@ function repBarChartSvg(flows, W, H) {
     const cx = pad.l + gw * i + gw / 2;
     const hi = Math.max(2, (f.inc / max) * (H - pad.t - pad.b));
     const ho = Math.max(2, (f.exp / max) * (H - pad.t - pad.b));
-    bars += `<rect x="${(cx - bw - 2).toFixed(1)}" y="${(H - pad.b - hi).toFixed(1)}" width="${bw.toFixed(1)}" height="${hi.toFixed(1)}" rx="3" fill="var(--green)"><title>Masuk ${txRp(f.inc)}</title></rect>`;
-    bars += `<rect x="${(cx + 2).toFixed(1)}" y="${(H - pad.b - ho).toFixed(1)}" width="${bw.toFixed(1)}" height="${ho.toFixed(1)}" rx="3" fill="var(--orange)"><title>Keluar ${txRp(f.exp)}</title></rect>`;
+    bars += `<rect x="${(cx - bw - 2).toFixed(1)}" y="${(H - pad.b - hi).toFixed(1)}" width="${bw.toFixed(1)}" height="${hi.toFixed(1)}" rx="3" fill="var(--green)" opacity="0.75"><title>Masuk ${txRp(f.inc)}</title></rect>`;
+    bars += `<rect x="${(cx + 2).toFixed(1)}" y="${(H - pad.b - ho).toFixed(1)}" width="${bw.toFixed(1)}" height="${ho.toFixed(1)}" rx="3" fill="var(--orange)" opacity="0.75"><title>Keluar ${txRp(f.exp)}</title></rect>`;
     const ny = H - pad.b - Math.max(0, Math.min(1, (f.net + max * 0.15) / (max * 1.15))) * (H - pad.t - pad.b);
     netPts.push([cx, ny]);
     bars += `<text x="${cx}" y="${H - 7}" text-anchor="middle" font-size="${labelSize}" fill="var(--muted)">${repMonthLabel(f.m)}</text>`;

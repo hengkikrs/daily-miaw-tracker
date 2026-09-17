@@ -318,6 +318,11 @@ function renderDashboard(year) {
           <button type="button" class="dash-mod-cta" data-dash-go="reports">Buka Laporan →</button>
         </div>
       </section>
+
+      <section class="panel dash-progress-embed">
+        <div class="rep-card-head"><h2>Goals and Habit Progress</h2><small>skor keseluruhan, aktivitas, dan tren</small></div>
+        ${renderProgressView()}
+      </section>
     </div>
   `;
 }

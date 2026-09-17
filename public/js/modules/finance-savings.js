@@ -135,7 +135,7 @@ function renderSavingsView() {
   return `<div class="sv-page">
     <div class="panel sv-hero">
       <div class="sv-nums">
-        <div><span>💰 Tergumpul</span><b class="green">${txRp(totalSaved)}</b></div>
+        <div><span>💰 Terkumpul</span><b class="green">${txRp(totalSaved)}</b></div>
         <div><span>🎯 Total Target</span><b>${txRp(totalTarget)}</b></div>
         <div><span>📉 Sisa Target</span><b>${txRp(Math.max(0, totalTarget - totalSaved))}</b></div>
         <div><span>📊 Progress</span><b class="${pctAll >= 100 ? 'green' : 'amber'}">${pctAll.toFixed(0)}%</b></div>
