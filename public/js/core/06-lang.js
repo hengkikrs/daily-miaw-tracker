@@ -143,7 +143,7 @@ const I18N_WORDS = {
   'tercapai': 'achieved', 'aktif': 'active', 'selesai': 'done', 'dari': 'of', 'dan': 'and',
   'masuk': 'in', 'keluar': 'out', 'pagu': 'cap', 'pos': 'lines', 'tugas': 'tasks',
   'hari': 'days', 'jam': 'hours', 'menit': 'minutes', 'minggu': 'weeks', 'skor': 'score',
-  'buka': 'open', 'lihat': 'view', 'pilih': 'pick', 'belum': 'not yet', 'dengan': 'with',
+  'buka': 'open', 'lihat': 'view', 'pilih': 'pick', 'belum': 'not yet', 'dengan': 'with', 'tambah': 'add',
   'periode ini': 'this period', 'setoran tabungan': 'savings deposits', 'rasio tabungan': 'savings ratio',
   'pemasukan': 'income', 'pengeluaran bulanan': 'monthly expenses', 'bulan depan': 'next month',
   'kas': 'cash', 'ringkasan': 'summary', 'capaian': 'achievement',
