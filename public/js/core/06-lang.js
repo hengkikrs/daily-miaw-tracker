@@ -154,6 +154,7 @@ const I18N_WORDS = {
   'karier': 'career', 'keuangan': 'finance', 'bisnis': 'business', 'belajar': 'study',
   'liburan': 'holiday', 'jurnal': 'journal', 'referensi': 'references', 'proyek': 'project',
   'pengeluaran terbesar': 'largest expenses', 'pendapatan': 'income', 'pemasukan': 'income',
+  'laporan keuangan': 'financial report', 'laporan': 'report',
   // hari & sapaan
   'senin': 'Monday', 'selasa': 'Tuesday', 'rabu': 'Wednesday', 'kamis': 'Thursday',
   'jumat': 'Friday', 'sabtu': 'Saturday', 'minggu': 'weeks', 'min': 'Sun', 'sen': 'Mon',
@@ -206,6 +207,15 @@ function translateString(s) {
   // Lapis 1 — kecocokan persis (teks utuh maupun versi spasi-dinormalkan).
   const hit = dict[trimmed] || dict[flat];
   if (hit) return lead + hit + tail;
+
+  // Lapis 1b — panah "→" yang ditempel template (`${cta} →`) berada di luar
+  // kamus; terjemahkan bagian depannya lalu tempel ulang panahnya.
+  const arrow = flat.match(/\s*→$/);
+  if (arrow) {
+    const core = flat.slice(0, arrow.index).trim();
+    const coreHit = dict[core] || translateWords(core);
+    if (coreHit) return lead + coreHit + ' →' + tail;
+  }
 
   // Lapis 2 — kamus kata/frasa (menangani teks hasil interpolasi).
   const worded = translateWords(flat);
