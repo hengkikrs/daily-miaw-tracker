@@ -864,5 +864,8 @@ const I18N_EN = {
  "Jum": "Fri",
  "Sab": "Sat",
  "Min": "Sun",
- "Hari": "Day"
+ "Hari": "Day",
+ "Setiap": "Every",
+ "Umum": "General",
+ "Buka Laporan Keuangan": "Open Financial Report"
 };
