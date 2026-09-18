@@ -410,6 +410,16 @@ function renderAccountTab() {
         <button class="danger-button" type="button" data-action="reset-finance-open">Reset Data Keuangan</button>
       </section>
 
+      <section class="panel account-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Sesi</h2>
+            <p>Keluar dari akun ini di perangkat ini. Kamu bisa masuk lagi kapan saja.</p>
+          </div>
+        </div>
+        <button class="ghost-button" type="button" data-action="account-logout" ${authIsBusy ? 'disabled' : ''}>Keluar</button>
+      </section>
+
       <section class="panel account-panel danger-zone">
         <div class="section-heading">
           <div>

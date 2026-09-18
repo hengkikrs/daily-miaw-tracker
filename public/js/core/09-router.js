@@ -24,7 +24,14 @@ const PAGE_META = {
   reports: ['page.reports', 'page.reports-sub'],
 };
 
+// Pembungkus: setiap render ulang shell (login, logout, pindah view, menu Akun)
+// langsung diterjemahkan saat bahasa EN aktif, tanpa bergantung MutationObserver.
 function renderShell() {
+  renderShellInner();
+  if (typeof APP_LANG !== 'undefined' && APP_LANG === 'en') translateDom();
+}
+
+function renderShellInner() {
   renderI18nStatic();
   if (!isLoggedIn()) {
     dom.content.innerHTML = '';

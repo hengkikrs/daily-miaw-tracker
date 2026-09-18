@@ -906,5 +906,7 @@
   "email": "Email",
   "you_can_use_this_to_sign_in_later": "You can use this to sign in later:",
   "kirim_ulang_otp": "Kirim ulang OTP",
-  "ubah_email": "Ubah Email"
+  "ubah_email": "Ubah Email",
+  "sesi": "Sesi",
+  "keluar_dari_akun_ini_di_perangkat_ini_kamu_bisa_masuk_lagi_k": "Keluar dari akun ini di perangkat ini. Kamu bisa masuk lagi kapan saja."
 }

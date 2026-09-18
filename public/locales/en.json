@@ -146,7 +146,7 @@
   "edit_task": "Edit Task",
   "email_atau_password_salah_atau_akun_belum_diverifikasi": "Wrong email or password, or account not verified yet.",
   "email_tidak_valid": "Invalid email.",
-  "email_yang_digunakan": "Email Already in Use",
+  "email_yang_digunakan": "Email in use",
   "english": "English",
   "esc": "Esc",
   "estimasi": "Estimate",
@@ -219,7 +219,7 @@
   "jumlah_tidak_valid_contoh_35rb": "Invalid amount. Example: 35k.",
   "jurnal_malam": "Night journal",
   "kalender": "Calendar",
-  "kamu_sudah_keluar_mode_lokal_aktif": "You've been signed out. Local mode is active.",
+  "kamu_sudah_keluar_mode_lokal_aktif": "You are signed out. Local mode is active.",
   "kanal": "Channel",
   "kantor": "Office",
   "katalog_harga_tetap_di_whatsapp": "Fixed price catalog on WhatsApp",
@@ -237,7 +237,7 @@
   "kegiatan_diperbarui": "Activity updated.",
   "kegiatan_hari_ini": "Today's activities",
   "kegiatan_hari_ini_ditambahkan": "Today's activity added.",
-  "keluar": "Out",
+  "keluar": "Log out",
   "kembali": "Back",
   "keterangan": "Details",
   "ketik_konfirmasi_dengan_tepat": "Type the confirmation exactly.",
@@ -906,5 +906,7 @@
   "email": "Email",
   "you_can_use_this_to_sign_in_later": "You can use this to sign in later:",
   "kirim_ulang_otp": "Resend OTP",
-  "ubah_email": "Change Email"
+  "ubah_email": "Change Email",
+  "sesi": "Session",
+  "keluar_dari_akun_ini_di_perangkat_ini_kamu_bisa_masuk_lagi_k": "Sign out of this account on this device. You can sign in again anytime."
 }

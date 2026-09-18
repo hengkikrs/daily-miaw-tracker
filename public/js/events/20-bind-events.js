@@ -252,6 +252,8 @@ function bindEvents() {
     if (action === 'reset-finance-confirm') resetFinanceData();
     if (action === 'account-password-page') { accountPage = 'password'; acctNewPwVisible = false; acctPwDraft = { pw: '', confirm: '' }; renderShell(); return; }
     if (action === 'replay-onboarding') { openOnboarding(0); return; }
+    // Keluar dari akun (panel Sesi di menu Akun).
+    if (action === 'account-logout') { logoutAuth(); return; }
     // Toggle bahasa EN/ID (topbar) & pemilih tema (menu Akun -> Tampilan).
     if (action === 'set-lang') {
       if (APP_LANG !== actionButton.dataset.langSet) {

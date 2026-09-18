@@ -136,7 +136,7 @@ const I18N_EN = {
  "Donut pengeluaran per kategori": "Spending by Category (Donut Chart)",
  "Email atau password salah, atau akun belum diverifikasi.": "Wrong email or password, or account not verified yet.",
  "Email tidak valid.": "Invalid email.",
- "Email yang digunakan": "Email Already in Use",
+ "Email yang digunakan": "Email in use",
  "Estimasi": "Estimate",
  "Evaluasi tiap 3 bulan": "Review every 3 months",
  "Facebook Marketplace, grup proyek lokal, dan referral tukang langganan.": "Facebook Marketplace, local project groups, and referrals from regular contractors.",
@@ -198,7 +198,7 @@ const I18N_EN = {
  "Jumlah tidak valid. Contoh: 35rb.": "Invalid amount. Example: 35k.",
  "Jurnal malam": "Night journal",
  "Kalender": "Calendar",
- "Kamu sudah keluar. Mode lokal aktif.": "You've been signed out. Local mode is active.",
+ "Kamu sudah keluar. Mode lokal aktif.": "You are signed out. Local mode is active.",
  "Kanal": "Channel",
  "Kantor": "Office",
  "Katalog harga tetap di WhatsApp": "Fixed price catalog on WhatsApp",
@@ -216,7 +216,7 @@ const I18N_EN = {
  "Kegiatan diperbarui.": "Activity updated.",
  "Kegiatan hari ini": "Today's activities",
  "Kegiatan hari ini ditambahkan.": "Today's activity added.",
- "Keluar": "Out",
+ "Keluar": "Log out",
  "Kembali": "Back",
  "Keterangan": "Details",
  "Ketik konfirmasi dengan tepat.": "Type the confirmation exactly.",
@@ -833,5 +833,7 @@ const I18N_EN = {
  "detik": "seconds",
  "untuk kirim ulang.": "to resend.",
  "Kirim ulang OTP": "Resend OTP",
- "Ubah Email": "Change Email"
+ "Ubah Email": "Change Email",
+ "Sesi": "Session",
+ "Keluar dari akun ini di perangkat ini. Kamu bisa masuk lagi kapan saja.": "Sign out of this account on this device. You can sign in again anytime."
 };
