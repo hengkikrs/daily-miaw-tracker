@@ -104,6 +104,7 @@ function dictEn() {
 
 // Aturan pola untuk teks dinamis (angka + satuan). Dipakai SETELAH lapis kata.
 const I18N_RULES = [
+  [/^Baru \((\d+) hari(?:s)?\)$/i, (m) => `New (${m[1]} days)`],
   [/^Diperbarui (\d+) jam lalu$/i, (m) => `Last updated ${m[1]} hour${m[1] === '1' ? '' : 's'} ago`],
   [/^Diperbarui (\d+) hari lalu$/i, (m) => `Last updated ${m[1]} day${m[1] === '1' ? '' : 's'} ago`],
   [/^Diperbarui (\d+) menit lalu$/i, (m) => `Last updated ${m[1]} minute${m[1] === '1' ? '' : 's'} ago`],
@@ -162,6 +163,9 @@ const I18N_WORDS = {
   'pengeluaran terbesar': 'largest expenses', 'pendapatan': 'income', 'pemasukan': 'income',
   'laporan keuangan': 'financial report', 'laporan': 'report',
   'diperbarui': 'last updated', 'paling konsisten': 'most consistent',
+  'umum': 'general', 'kemarin': 'yesterday', 'terakhir': 'last', 'rata-rata': 'average',
+  'rekap': 'recap', 'kuliah': 'lecture', 'pekerjaan': 'work', 'diarsipkan': 'archived',
+  'siap diunduh': 'ready to download', 'pada': 'at',
   // hari & sapaan
   'senin': 'Monday', 'selasa': 'Tuesday', 'rabu': 'Wednesday', 'kamis': 'Thursday',
   'jumat': 'Friday', 'sabtu': 'Saturday', 'minggu': 'weeks', 'min': 'Sun', 'sen': 'Mon',
