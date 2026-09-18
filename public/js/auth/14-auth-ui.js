@@ -35,6 +35,15 @@ function refreshUsernamePreview(name) {
 // Halaman depan (landing) sebelum login — profesional & minimalis.
 // Satu headline, satu CTA utama, pratinjau produk datar, dan 6 fitur
 // dengan ikon garis monokrom (tanpa emoji, tanpa elemen dekoratif berlebih).
+// Toggle bahasa EN/ID untuk halaman sebelum login (topbar baru tampil setelah masuk).
+// Tombol memakai data-action/data-lang-set supaya ditangani delegasi global
+// (20-bind-events.js) dan ikut disinkronkan renderI18nStatic().
+function authLangToggleHtml() {
+  const btn = (code, label, title) =>
+    `<button type="button" class="lang-btn" data-action="set-lang" data-lang-set="${code}" aria-pressed="${APP_LANG === code}" title="${title}">${label}</button>`;
+  return `<span class="lang-toggle auth-lang-toggle" role="group" aria-label="Pilih bahasa / Choose language">${btn('en', 'EN', 'English')}${btn('id', 'ID', 'Bahasa Indonesia')}</span>`;
+}
+
 function authLandingHtml() {
   const fitur = [
     { nama: 'Kebiasaan', teks: 'Streak dan skor bulanan dihitung otomatis.', icon: '<svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>' },
@@ -53,6 +62,7 @@ function authLandingHtml() {
           <b>Miaw Tracker</b>
         </span>
         <span class="land-nav-links">
+          ${authLangToggleHtml()}
           <button class="land-nav-link" type="button" data-auth-action="start-login">Masuk</button>
           <button class="land-nav-cta" type="button" data-auth-action="start-signup">Mulai gratis</button>
         </span>
@@ -135,6 +145,7 @@ function renderAuthScreen() {
           <strong>Pelacak kebiasaan pribadi</strong>
         </div>
       </div>
+      ${authLangToggleHtml()}
 
       <div class="auth-copy">
         <h1>${title}</h1>
