@@ -104,7 +104,12 @@ function dictEn() {
 
 // Aturan pola untuk teks dinamis (angka + satuan). Dipakai SETELAH lapis kata.
 const I18N_RULES = [
-  [/^(\d+) hari lalu$/i, '$1 days ago'],
+  [/^Diperbarui (\d+) jam lalu$/i, (m) => `Last updated ${m[1]} hour${m[1] === '1' ? '' : 's'} ago`],
+  [/^Diperbarui (\d+) hari lalu$/i, (m) => `Last updated ${m[1]} day${m[1] === '1' ? '' : 's'} ago`],
+  [/^Diperbarui (\d+) menit lalu$/i, (m) => `Last updated ${m[1]} minute${m[1] === '1' ? '' : 's'} ago`],
+  [/^Diperbarui (.+)$/i, 'Last updated $1'],
+  [/^(?:Kebiasaan|Habits) paling konsisten \((.+)\)$/i, 'Most consistent habits ($1)'],
+  [/^(\d+) hari lalu$/i, (m) => `${m[1]} day${m[1] === '1' ? '' : 's'} ago`],
   [/^(\d+) hari sebelum$/i, '$1 day before'],
   [/^(\d+) jam(?: (\d+) mnt)?$/i, (m) => (m[2] ? `${m[1]}h ${m[2]}m` : `${m[1]}h`)],
   [/^(\d+) menit sebelum$/i, '$1 minutes before'],
@@ -117,8 +122,9 @@ const I18N_RULES = [
   [/^Rasio tabungan (.+) dari pemasukan, setoran tabungan periode ini (.+)\.$/i, 'Savings ratio $1 of income, savings deposits this period $2.'],
   [/^Isi laporan mengikuti data tiap menu pada periode (.+)\.$/i, 'Report content follows each menu\u2019s data for the period $1.'],
   [/^(\d+) September 2026: nilai (\d+) \((\d+) dari (\d+) poin\)$/i, '$1 September 2026: value $2 ($3 of $4 points)'],
-  [/^(\d+) target masih berjalan; setoran rutin (.+) bisa menambah (.+) ke tabungan\.$/i, '$1 targets still active; regular deposits of $2 can add $3 to savings.'],
-  [/^Prioritas (tinggi|sedang|rendah): (\d+) tugas \((.+)\)$/i, (m) => `Priority ${m[1] === 'tinggi' ? 'high' : m[1] === 'sedang' ? 'medium' : 'low'}: ${m[2]} tasks (${m[3]})`],
+  [/^(\d+) target masih berjalan; setoran rutin (.+) bisa menambah (.+) ke tabungan\.$/i,
+    (m) => `${m[1]} target${m[1] === '1' ? '' : 's'} still active; regular deposits of ${m[2].replace('/bln', '/mo')} can add ${m[3].replace(/ rb$/, 'k')} to savings.`],
+  [/^Prioritas (tinggi|sedang|rendah): (\d+) (?:tugas|tasks?|todos?) \((.+)\)$/i, (m) => `Priority ${m[1] === 'tinggi' ? 'high' : m[1] === 'sedang' ? 'medium' : 'low'}: ${m[2]} task${m[2] === '1' ? '' : 's'} (${m[3]})`],
   [/^(\d+) target aktif\/selesai \u00b7 (\d+) tercapai$/i, '$1 active/completed targets \u00b7 $2 achieved'],
   [/^Pengeluaran terbesar: (.+)$/i, 'Largest expenses: $1'],
 ];
@@ -155,6 +161,7 @@ const I18N_WORDS = {
   'liburan': 'holiday', 'jurnal': 'journal', 'referensi': 'references', 'proyek': 'project',
   'pengeluaran terbesar': 'largest expenses', 'pendapatan': 'income', 'pemasukan': 'income',
   'laporan keuangan': 'financial report', 'laporan': 'report',
+  'diperbarui': 'last updated', 'paling konsisten': 'most consistent',
   // hari & sapaan
   'senin': 'Monday', 'selasa': 'Tuesday', 'rabu': 'Wednesday', 'kamis': 'Thursday',
   'jumat': 'Friday', 'sabtu': 'Saturday', 'minggu': 'weeks', 'min': 'Sun', 'sen': 'Mon',
@@ -175,6 +182,15 @@ function matchCase(src, out) {
 
 const I18N_WORD_KEYS = Object.keys(I18N_WORDS).sort((a, b) => b.length - a.length);
 
+// Bentuk tunggal untuk hasil terjemahan (dipakai setelah angka 1).
+const EN_SINGULAR = {
+  tasks: 'task', points: 'point', days: 'day', months: 'month', years: 'year',
+  weeks: 'week', hours: 'hour', minutes: 'minute', slots: 'slot', milestones: 'milestone',
+  activities: 'activity', routines: 'routine', habits: 'habit', transactions: 'transaction',
+  notes: 'note', documents: 'document', targets: 'target', goals: 'goal', reports: 'report',
+  categories: 'category', schedules: 'schedule', lines: 'line', projects: 'project',
+};
+
 // Terjemahan tingkat kata: null bila tak ada yang cocok.
 // Spasi/newline dinormalkan lebih dulu supaya frasa ("kegiatan hari ini")
 // tetap cocok walau di DOM terpecah baris.
@@ -187,6 +203,11 @@ function translateWords(raw) {
     out = out.replace(rx, (m, pre, word) => { hits += 1; return pre + matchCase(word, I18N_WORDS[key]); });
   }
   if (!hits || out === s) return null;
+  // Bentuk tunggal setelah angka 1 ("1 tasks" -> "1 task", "1 days" -> "1 day").
+  out = out.replace(/(^|[^\p{L}])1\s+([A-Za-z]+)/gu, (m, pre, w) => {
+    const sing = EN_SINGULAR[w.toLowerCase()];
+    return sing ? pre + '1 ' + matchCase(w, sing) : m;
+  });
   // Kalimat panjang (prosa pengguna: catatan, deskripsi goal/project) dibiarkan utuh —
   // hanya UI pendek/berangka yang diterjemahkan tingkat kata.
   const words = s.split(/\s+/).length;
@@ -208,28 +229,47 @@ function translateString(s) {
   const hit = dict[trimmed] || dict[flat];
   if (hit) return lead + hit + tail;
 
-  // Lapis 1b — panah "→" yang ditempel template (`${cta} →`) berada di luar
-  // kamus; terjemahkan bagian depannya lalu tempel ulang panahnya.
-  const arrow = flat.match(/\s*→$/);
-  if (arrow) {
-    const core = flat.slice(0, arrow.index).trim();
-    const coreHit = dict[core] || translateWords(core);
-    if (coreHit) return lead + coreHit + ' →' + tail;
-  }
+  // Prefix simbol/emoji ("💡 3 target ...", "🧾 Rekap ...") dipisah supaya
+  // aturan berpola tetap cocok; simbolnya ditempel ulang apa adanya.
+  const symMatch = flat.match(/^[^\p{L}\p{N}]+/u);
+  const symLead = symMatch ? symMatch[0] : '';
+  const body = symLead ? flat.slice(symLead.length).trim() : flat;
 
-  // Lapis 2 — kamus kata/frasa (menangani teks hasil interpolasi).
+  const coreOut = translateCore(body, dict);
+  if (coreOut) return lead + symLead + coreOut + tail;
+
+  // Lapis terakhir — kamus kata atas teks utuh (termasuk prefix simbol).
   const worded = translateWords(flat);
   if (worded) return lead + worded + tail;
+  return s;
+}
 
-  // Lapis 3 — aturan pola angka/satuan.
+// Terjemahkan satu potongan tanpa prefix simbol: panah → aturan pola → kata.
+function translateCore(text, dict) {
+  if (!text) return null;
+
+  // Panah "→" yang ditempel template (`${cta} →`) berada di luar kamus.
+  const arrow = text.match(/\s*→$/);
+  if (arrow) {
+    const core = text.slice(0, arrow.index).trim();
+    const coreHit = dict[core] || translateWords(core);
+    if (coreHit) return coreHit + ' →';
+  }
+
+  const exact = dict[text];
+  if (exact) return exact;
+
+  // Aturan pola (angka/satuan/tanggal) dijalankan SEBELUM kamus kata supaya
+  // kalimat berformat tetap utuh (mis. "Diperbarui 3 jam lalu").
   for (const [rx, rep] of I18N_RULES) {
-    const m = flat.match(rx);
+    const m = text.match(rx);
     if (m) {
-      const out = typeof rep === 'function' ? rep(m) : flat.replace(rx, rep);
-      return lead + out + tail;
+      const out = typeof rep === 'function' ? rep(m) : text.replace(rx, rep);
+      return translateWords(out) || out;
     }
   }
-  return s;
+
+  return translateWords(text);
 }
 
 const I18N_SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA', 'SVG', 'PATH', 'CANVAS']);
