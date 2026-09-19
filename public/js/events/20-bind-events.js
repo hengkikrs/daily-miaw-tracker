@@ -40,6 +40,7 @@ function bindEvents() {
     if (event.target.id === 'authLoginForm') loginWithPassword(event.target);
     if (event.target.id === 'authSignupForm') signupWithPassword(event.target);
     if (event.target.id === 'authOtpForm') verifyAuthOtp(event.target);
+    if (event.target.id === 'authResetForm') submitPasswordReset(event.target);
   });
 
   dom.authScreen.addEventListener('input', (event) => {
@@ -62,6 +63,16 @@ function bindEvents() {
       button.querySelector('.eye-open').style.display = authPwVisible ? 'none' : '';
       button.querySelector('.eye-off').style.display = authPwVisible ? '' : 'none';
       input.focus();
+      return;
+    }
+
+    if (button.dataset.authAction === 'start-reset') {
+      authMode = 'reset';
+      authOtpEmail = '';
+      authPwVisible = false;
+      authIsBusy = false;
+      renderAuthScreen();
+      if (APP_LANG === 'en') translateDom();
       return;
     }
 

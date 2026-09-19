@@ -1092,5 +1092,14 @@
   "tidak_ada_hasil": "Tidak ada hasil",
   "coba_kata_kunci_lain_atau_ganti_tab_kategori": "Coba kata kunci lain atau ganti tab kategori.",
   "tidak_ada_hasil_untuk": "Tidak ada hasil untuk",
-  "mulai_catat_uang_masuk_keluar_pertamamu_x": "Mulai catat uang masuk & keluar pertamamu"
+  "mulai_catat_uang_masuk_keluar_pertamamu_x": "Mulai catat uang masuk & keluar pertamamu",
+  "goals_proyek": "Goals & Proyek",
+  "lupa_password": "Lupa password?",
+  "pw_helper_login": "Minimal 8 karakter.",
+  "reset_judul": "Reset password",
+  "reset_sub": "Masukkan email akun kamu — kami kirim tautan untuk ganti password.",
+  "reset_kirim_link": "Kirim tautan reset",
+  "reset_email_terkirim": "Tautan reset terkirim. Cek inbox email kamu.",
+  "reset_gagal": "Gagal mengirim tautan reset. Coba lagi.",
+  "reset_back_login": "← Kembali ke masuk"
 }

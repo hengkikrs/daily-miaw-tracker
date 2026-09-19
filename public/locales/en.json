@@ -1092,5 +1092,14 @@
   "tidak_ada_hasil": "No results",
   "coba_kata_kunci_lain_atau_ganti_tab_kategori": "Try another keyword or switch the category tab.",
   "tidak_ada_hasil_untuk": "No results for",
-  "mulai_catat_uang_masuk_keluar_pertamamu_x": "Start recording your first money in & out"
+  "mulai_catat_uang_masuk_keluar_pertamamu_x": "Start recording your first money in & out",
+  "goals_proyek": "Goals & Projects",
+  "lupa_password": "Forgot password?",
+  "pw_helper_login": "At least 8 characters.",
+  "reset_judul": "Reset password",
+  "reset_sub": "Enter your account email — we will send you a link to set a new password.",
+  "reset_kirim_link": "Send reset link",
+  "reset_email_terkirim": "Reset link sent. Check your email inbox.",
+  "reset_gagal": "Failed to send the reset link. Try again.",
+  "reset_back_login": "← Back to sign in"
 }

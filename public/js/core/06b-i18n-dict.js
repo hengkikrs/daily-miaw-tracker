@@ -1012,5 +1012,13 @@ const I18N_EN = {
  "Tidak ada hasil": "No results",
  "Coba kata kunci lain atau ganti tab kategori.": "Try another keyword or switch the category tab.",
  "Tidak ada hasil untuk": "No results for",
- "Mulai catat uang masuk & keluar pertamamu": "Start recording your first money in & out"
+ "Mulai catat uang masuk & keluar pertamamu": "Start recording your first money in & out",
+ "Goals & Proyek": "Goals & Projects",
+ "Lupa password?": "Forgot password?",
+ "Minimal 8 karakter.": "At least 8 characters.",
+ "Masukkan email akun kamu — kami kirim tautan untuk ganti password.": "Enter your account email — we will send you a link to set a new password.",
+ "Kirim tautan reset": "Send reset link",
+ "Tautan reset terkirim. Cek inbox email kamu.": "Reset link sent. Check your email inbox.",
+ "Gagal mengirim tautan reset. Coba lagi.": "Failed to send the reset link. Try again.",
+ "← Kembali ke masuk": "← Back to sign in"
 };

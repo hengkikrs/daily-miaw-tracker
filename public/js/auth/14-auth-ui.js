@@ -48,9 +48,9 @@ function authLandingHtml() {
   const fitur = [
     { nama: 'Kebiasaan', teks: 'Streak dan skor bulanan dihitung otomatis.', icon: '<svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>' },
     { nama: 'Task & Jadwal', teks: 'Agenda harian dengan jam, kategori, dan sesi fokus.', icon: '<svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
-    { nama: 'Goals & Project', teks: 'Target besar dipecah menjadi langkah yang terukur.', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' },
+    { nama: 'Goals & Proyek', teks: 'Target besar dipecah menjadi langkah yang terukur.', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' },
     { nama: 'Catatan & Dokumen', teks: 'Ide dan berkas tersimpan rapi dalam kategori.', icon: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>' },
-    { nama: 'Finance', teks: 'Uang masuk dan keluar, budget, serta tabungan.', icon: '<svg viewBox="0 0 24 24"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>' },
+    { nama: 'Keuangan', teks: 'Uang masuk dan keluar, budget, serta tabungan.', icon: '<svg viewBox="0 0 24 24"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>' },
     { nama: 'Laporan & Miaw AI', teks: 'Tren bulanan dan asisten perangkum dalam satu klik.', icon: '<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v4"/><path d="M12 10v9"/><path d="M17 6v13"/></svg>' },
   ];
 
@@ -96,9 +96,12 @@ function authLandingHtml() {
       </section>
 
       <section class="land-feat" id="fitur">
-        ${fitur.map((f) => `
+        ${fitur.map((f, idx) => `
           <article class="land-item">
-            <span class="land-item-ico">${f.icon}</span>
+            <div class="land-item-top">
+              <span class="land-item-ico">${f.icon}</span>
+              <span class="land-item-num" aria-hidden="true">0${idx + 1}</span>
+            </div>
             <strong>${f.nama}</strong>
             <p>${f.teks}</p>
           </article>
@@ -128,13 +131,16 @@ function renderAuthScreen() {
 
   const isSignup = authMode === 'signup';
   const isVerify = isSignup && authOtpEmail;
+  const isReset = authMode === 'reset';
   const remaining = otpRemainingSeconds();
-  const title = isVerify ? 'Verifikasi email' : (isSignup ? 'Daftar akun' : 'Masuk ke Miaw Tracker');
-  const subtitle = isVerify
-    ? `Masukkan kode OTP yang dikirim ke ${authOtpEmail}.`
-    : (isSignup
-      ? 'Buat akun dengan email dan password, lalu verifikasi OTP dari email.'
-      : 'Masukkan email dan password untuk membuka tracker pribadi kamu.');
+  const title = isReset ? 'Reset password' : (isVerify ? 'Verifikasi email' : (isSignup ? 'Daftar akun' : 'Masuk ke Miaw Tracker'));
+  const subtitle = isReset
+    ? 'Masukkan email akun kamu — kami kirim tautan untuk ganti password.'
+    : (isVerify
+      ? `Masukkan kode OTP yang dikirim ke ${authOtpEmail}.`
+      : (isSignup
+        ? 'Buat akun dengan email dan password, lalu verifikasi OTP dari email.'
+        : 'Masukkan email dan password untuk membuka tracker pribadi kamu.'));
 
   dom.authScreen.innerHTML = `
     <div class="auth-hero">
@@ -142,7 +148,6 @@ function renderAuthScreen() {
         <img src="cat-logo.svg" alt="" aria-hidden="true" />
         <div>
           <span>Miaw Tracker</span>
-          <strong>Pelacak kebiasaan pribadi</strong>
         </div>
       </div>
 
@@ -151,7 +156,16 @@ function renderAuthScreen() {
         <p>${subtitle}</p>
       </div>
 
-      ${isVerify ? `
+      ${isReset ? `
+        <form id="authResetForm" class="auth-page-form">
+          <label for="resetEmail">Email</label>
+          <input id="resetEmail" name="email" type="email" autocomplete="email" placeholder="nama@email.com" value="${escapeHtml(authOtpEmail)}" required />
+          <button class="auth-primary" type="submit" ${authIsBusy ? 'disabled' : ''}>
+            ${authIsBusy ? 'Mengirim...' : 'Kirim tautan reset'}
+          </button>
+        </form>
+        <button class="auth-text-button" type="button" data-auth-action="start-login">← Kembali ke masuk</button>
+      ` : isVerify ? `
         <form id="authOtpForm" class="auth-page-form">
           <label for="authOtp">Kode OTP</label>
           <input id="authOtp" name="token" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6 digit dari email" maxlength="8" required />
@@ -179,12 +193,13 @@ function renderAuthScreen() {
 
           <label for="authPassword">Password</label>
           <div class="auth-pw-wrap">
-            <input id="authPassword" name="password" type="${authPwVisible ? 'text' : 'password'}" autocomplete="${isSignup ? 'new-password' : 'current-password'}" placeholder="Minimal 8 karakter" minlength="8" required />
+            <input id="authPassword" name="password" type="${authPwVisible ? 'text' : 'password'}" autocomplete="${isSignup ? 'new-password' : 'current-password'}" placeholder="Minimal 8 karakter" minlength="8" required ${isSignup ? '' : 'aria-describedby="authPwHelper"'} />
             <button class="auth-eye" type="button" data-auth-action="toggle-pw" aria-label="${authPwVisible ? 'Sembunyikan password' : 'Tampilkan password'}" aria-pressed="${authPwVisible ? 'true' : 'false'}" tabindex="-1">
               <svg class="eye-open" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${authPwVisible ? ' style="display:none"' : ''}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="eye-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${authPwVisible ? '' : ' style="display:none"'}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.13a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             </button>
           </div>
+          ${isSignup ? '' : '<p class="auth-hint" id="authPwHelper">Minimal 8 karakter.</p>'}
           ${isSignup ? `
             <ul class="auth-pw-rules ${allPwChecksPass(authPwChecks) ? 'all-pass' : ''}" id="authPwRules" aria-label="Kriteria password">
               <li data-rule="len" class="${authPwChecks.len ? 'pass' : ''}">${authPwChecks.len ? '✓' : '○'} Minimal 8 karakter</li>
@@ -198,9 +213,12 @@ function renderAuthScreen() {
             ${authIsBusy ? 'Memproses...' : (isSignup ? 'Daftar dan kirim OTP' : 'Masuk')}
           </button>
         </form>
-        <button class="auth-switch" type="button" data-auth-action="switch-mode">
-          ${isSignup ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}
-        </button>
+        <div class="auth-row-actions">
+          <button class="auth-switch" type="button" data-auth-action="switch-mode">
+            ${isSignup ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}
+          </button>
+          ${isSignup ? '' : '<button class="auth-text-button" type="button" data-auth-action="start-reset">Lupa password?</button>'}
+        </div>
         <button class="auth-text-button land-back" type="button" data-auth-action="to-landing">← Kembali ke halaman depan</button>
         ${!isSignup && remoteEnabled ? `
           <div class="auth-divider"><span>atau</span></div>
@@ -515,6 +533,40 @@ async function loginWithPassword(form) {
   } finally {
     authIsBusy = false;
     if (!isLoggedIn()) renderAuthScreen();
+  }
+}
+
+async function submitPasswordReset(form) {
+  const data = new FormData(form);
+  const email = String(data.get('email') || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    showToast('Email tidak valid.');
+    return;
+  }
+  if (!remoteEnabled) {
+    showToast('Konfigurasi Supabase belum tersedia.');
+    return;
+  }
+
+  authIsBusy = true;
+  authOtpEmail = email;
+  renderAuthScreen();
+
+  try {
+    await authFetch('/auth/v1/recover', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        gotrue_meta_security: { captcha_enabled: false },
+      }),
+    });
+    showToast('Tautan reset terkirim. Cek inbox email kamu.');
+  } catch (error) {
+    console.warn(error);
+    showToast('Gagal mengirim tautan reset. Coba lagi.');
+  } finally {
+    authIsBusy = false;
+    renderAuthScreen();
   }
 }
 

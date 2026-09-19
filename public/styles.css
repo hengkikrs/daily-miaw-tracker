@@ -109,6 +109,7 @@ body.auth-required .auth-screen {
 .auth-copy h1 {
   font-size: clamp(1.55rem, 7vw, 2.15rem);
   line-height: 1.1;
+  text-wrap: balance;
 }
 
 .auth-copy p {
@@ -152,11 +153,21 @@ body.auth-required .auth-screen {
 }
 
 .auth-primary,
+.auth-row-actions .auth-switch,
+.auth-row-actions .auth-text-button {
+  min-height: 44px;
+}
+
 .auth-switch,
 .auth-text-button {
   min-height: 44px;
   border-radius: var(--radius);
   font-weight: 900;
+}
+
+.auth-text-button[data-auth-action='start-reset'] {
+  color: var(--accent-ink);
+  font-weight: 700;
 }
 
 .auth-primary {
@@ -4139,7 +4150,7 @@ body.auth-required .auth-screen.landing {
 .land-wrap {
   width: min(100%, 1000px);
   display: grid;
-  gap: clamp(40px, 7vw, 88px);
+  gap: clamp(36px, 6vw, 64px);
   margin: 0 auto;
 }
 
@@ -4219,6 +4230,7 @@ body.auth-required .auth-screen.landing {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .land-hero > p { margin: 0; max-width: 52ch; color: var(--muted); font-size: clamp(0.95rem, 2.2vw, 1.05rem); line-height: 1.7; }
@@ -4291,6 +4303,10 @@ body.auth-required .auth-screen.landing {
 
 .land-item { display: grid; gap: 10px; padding-top: 18px; border-top: 1px solid var(--line); }
 
+.land-item-top { display: flex; align-items: center; gap: 10px; }
+.land-item-num { color: var(--line-strong); font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; transition: color 0.18s ease; }
+.land-item:hover .land-item-num { color: var(--accent-ink); }
+
 .land-item-ico {
   display: inline-flex;
   align-items: center;
@@ -4307,11 +4323,26 @@ body.auth-required .auth-screen.landing {
 .land-item p { margin: 0; color: var(--muted); font-size: var(--fs-sm); line-height: 1.6; }
 
 /* penutup */
-.land-end { display: grid; gap: 10px; justify-items: center; padding-top: 26px; border-top: 1px solid var(--line); text-align: center; }
+.land-end { display: grid; gap: 12px; justify-items: center; padding-top: 26px; border-top: 1px solid var(--line); text-align: center; }
 .land-end > p { margin: 0; color: var(--muted); font-size: var(--fs-md); font-weight: 500; }
 
-.land-inline-link { padding: 0 2px; border: 0; background: transparent; color: var(--accent-ink); font: inherit; font-size: var(--fs-md); font-weight: 600; cursor: pointer; }
-.land-inline-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.land-inline-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  margin-left: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.land-inline-link:hover { border-color: var(--accent-ink); background: var(--green-soft); }
 
 .land-foot { margin: 0; color: var(--muted); font-size: var(--fs-xs); font-weight: 400; opacity: 0.9; }
 
@@ -4329,6 +4360,11 @@ body.auth-required .auth-screen.landing {
   .land-cta, .land-cta-link { justify-content: center; width: 100%; }
   .land-end { padding-top: 20px; }
   .land-feat { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 375px) {
+  /* Anti-cramp: layar sempit, "Masuk" cukup sebagai link kecil di bawah? Tidak — sembunyikan label penuhnya, CTA tetap. */
+  .land-nav-link { display: none; }
 }
 
 @media (max-width: 420px) {
