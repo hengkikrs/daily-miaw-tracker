@@ -205,6 +205,9 @@ function renderOnboarding() {
     </div>
   `;
 
+  // Overlay tutorial hidup di luar #content — terjemahkan eksplisit saat EN.
+  if (typeof APP_LANG !== 'undefined' && APP_LANG === 'en' && typeof translateDom === 'function') translateDom(wrap);
+
   const focusTarget = wrap.querySelector(isLast ? '[data-ob-action="done"]' : '[data-ob-action="next"]');
   if (focusTarget) focusTarget.focus();
 }

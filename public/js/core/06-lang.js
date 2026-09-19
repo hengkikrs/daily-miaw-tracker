@@ -107,6 +107,7 @@ const I18N_RULES = [
   [/^Masukkan kode OTP yang dikirim ke (.+)\.$/i, 'Enter the OTP code sent to $1.'],
   [/^Kode belum masuk\? Tunggu (\d+) detik untuk kirim ulang\.$/i,
     (m) => `Code not received yet? Wait ${m[1]} second${m[1] === '1' ? '' : 's'} to resend.`],
+  [/^Langkah (\d+) dari (\d+)$/i, 'Step $1 of $2'],
   [/^Baru \((\d+) hari(?:s)?\)$/i, (m) => `New (${m[1]} days)`],
   [/^Diperbarui (\d+) jam lalu$/i, (m) => `Last updated ${m[1]} hour${m[1] === '1' ? '' : 's'} ago`],
   [/^Diperbarui (\d+) hari lalu$/i, (m) => `Last updated ${m[1]} day${m[1] === '1' ? '' : 's'} ago`],
@@ -332,9 +333,7 @@ let i18nObserver = null;
 function watchI18n() {
   if (i18nObserver) return;
   const pending = new Set();
-  let scheduled = false;
   const flush = () => {
-    scheduled = false;
     i18nApplying = false;
     const batch = [...pending];
     pending.clear();
@@ -349,9 +348,11 @@ function watchI18n() {
         else if (n.nodeType === 3 && n.parentElement) pending.add(n.parentElement);
       });
     });
-    if (!pending.size || scheduled) return;
-    scheduled = true;
-    requestAnimationFrame(flush);
+    if (!pending.size) return;
+    // Diterjemahkan langsung (microtask) — requestAnimationFrame bisa tertunda
+    // atau tidak jalan sama sekali saat tab tidak aktif, sehingga overlay/dialog
+    // (mis. tutorial) tampil tanpa terjemahan.
+    flush();
   });
   i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
 }
