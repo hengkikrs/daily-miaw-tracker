@@ -114,7 +114,7 @@ const I18N_RULES = [
   [/^— saldo (.+), tidak bisa minus\.$/i, '— balance $1, cannot go negative.'],
   [/^Belum ada budget untuk (.+)$/i, 'No budget for $1'],
   [/^Tidak ada hasil untuk “(.+)”\.$/i, 'No results for “$1”.'],
-  [/^🎉 Target "(.+)" tercapai!$/i, '🎉 Target "$1" achieved!'],
+    [/^Target "(.+)" tercapai!$/i, (m) => `Target "${m[1]}" achieved!`],
   [/^Belum \((.+)\)$/i, 'None ($1)'],
   [/^Semua \((\d+)\)$/i, 'All ($1)'],
   [/^Kirim ulang \((\d+)\)$/i, 'Resend ($1)'],
@@ -302,8 +302,10 @@ function translateCore(text, dict) {
   for (const [rx, rep] of I18N_RULES) {
     const m = text.match(rx);
     if (m) {
-      const out = typeof rep === 'function' ? rep(m) : text.replace(rx, rep);
-      return translateWords(out) || out;
+      // Aturan berbentuk fungsi dianggap hasil final (tidak dilewatkan kamus
+      // kata lagi, supaya kata yang sama di dua bahasa tidak pluralisasi ulang).
+      if (typeof rep === 'function') return rep(m);
+      return translateWords(text.replace(rx, rep)) || text.replace(rx, rep);
     }
   }
 
