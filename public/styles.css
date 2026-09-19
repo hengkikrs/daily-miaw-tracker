@@ -4123,7 +4123,12 @@ body.auth-required .auth-screen.landing {
   align-items: start;
   justify-items: center;
   padding: clamp(20px, 4vw, 40px) clamp(16px, 3vw, 28px) 64px;
+  overflow-x: hidden;
 }
+
+/* Toggle bahasa di halaman masuk (sebelum login) */
+.auth-lang-toggle { display: inline-flex; }
+.auth-lang-toggle .lang-btn { min-width: 40px; min-height: 34px; }
 
 .land-wrap {
   width: min(100%, 1000px);
@@ -4303,16 +4308,27 @@ body.auth-required .auth-screen.landing {
 
 @media (max-width: 720px) {
   .land-wrap { gap: 44px; }
-  .land-nav { padding: 7px 8px 7px 12px; }
+  .land-nav { padding: 7px 8px 7px 12px; flex-wrap: wrap; }
+  .land-nav-links { flex-wrap: wrap; }
   .land-hero h1 { font-size: clamp(1.75rem, 8vw, 2.3rem); letter-spacing: -0.025em; }
   .land-cta-row { flex-direction: column; align-items: stretch; width: 100%; }
   .land-cta, .land-cta-link { justify-content: center; width: 100%; }
   .land-end { padding-top: 20px; }
+  .land-feat { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 420px) {
-  .land-nav-brand b { font-size: var(--fs-md); }
+  .land-nav { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+  .land-nav-brand { justify-content: center; }
+  .land-nav-brand b { font-size: var(--fs-md); white-space: normal; text-align: center; }
+  .land-nav-links { justify-content: center; flex-wrap: wrap; gap: 6px; }
+  .land-nav-link, .land-nav-cta { padding: 8px 12px; font-size: var(--fs-xs); min-height: 44px; display: inline-flex; align-items: center; }
+  .auth-lang-toggle { justify-content: center; order: -1; margin-bottom: 2px; }
+  .auth-lang-toggle .lang-btn { min-width: 44px; min-height: 44px; padding: 0 14px; font-size: var(--fs-xs); }
   .land-device { padding: 16px; }
+  .land-hero > p { font-size: var(--fs-sm); }
+  .land-item strong { font-size: var(--fs-sm); }
+  .land-item p { font-size: var(--fs-xs); }
 }
 
 /* ============ HUB DOKUMEN ============ */
