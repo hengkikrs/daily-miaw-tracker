@@ -145,7 +145,6 @@ function renderAuthScreen() {
           <strong>Pelacak kebiasaan pribadi</strong>
         </div>
       </div>
-      ${authLangToggleHtml()}
 
       <div class="auth-copy">
         <h1>${title}</h1>
