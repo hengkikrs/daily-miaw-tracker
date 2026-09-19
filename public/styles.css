@@ -4127,8 +4127,8 @@ body.auth-required .auth-screen.landing {
 }
 
 /* Toggle bahasa di halaman masuk (sebelum login) */
-.auth-lang-toggle { display: inline-flex; }
-.auth-lang-toggle .lang-btn { min-width: 40px; min-height: 34px; }
+.auth-lang-toggle { display: inline-flex; flex: none; }
+.auth-lang-toggle .lang-btn { min-width: 46px; min-height: 44px; padding: 0 16px; font-size: var(--fs-xs); }
 
 .land-wrap {
   width: min(100%, 1000px);
