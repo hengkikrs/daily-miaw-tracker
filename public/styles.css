@@ -4126,9 +4126,15 @@ body.auth-required .auth-screen.landing {
   overflow-x: hidden;
 }
 
-/* Toggle bahasa di halaman masuk (sebelum login) */
+/* Toggle bahasa di halaman masuk (sebelum login) — ikut mengecil di layar sempit
+   supaya header tetap SATU baris (bukan membungkus ke baris kedua). */
 .auth-lang-toggle { display: inline-flex; flex: none; }
-.auth-lang-toggle .lang-btn { min-width: 46px; min-height: 44px; padding: 0 16px; font-size: var(--fs-xs); }
+.auth-lang-toggle .lang-btn {
+  min-width: clamp(32px, 8.5vw, 46px);
+  min-height: 40px;
+  padding: 0 clamp(6px, 2vw, 16px);
+  font-size: clamp(0.66rem, 2.8vw, var(--fs-xs));
+}
 
 .land-wrap {
   width: min(100%, 1000px);
@@ -4145,41 +4151,50 @@ body.auth-required .auth-screen.landing {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 10px 8px 14px;
+  flex-wrap: nowrap;
+  gap: clamp(4px, 1.2vw, 12px);
+  padding: clamp(6px, 1.6vw, 8px) clamp(8px, 2vw, 10px) clamp(6px, 1.6vw, 8px) clamp(10px, 3vw, 14px);
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   background: var(--panel);
 }
 
-.land-nav-brand { display: inline-flex; align-items: center; gap: 9px; min-width: 0; }
-.land-nav-brand img { width: 26px; height: 26px; object-fit: contain; }
-.land-nav-brand b { font-size: var(--fs-md); font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
-.land-nav-links { display: inline-flex; align-items: center; gap: 4px; }
+.land-nav-brand { display: inline-flex; align-items: center; gap: clamp(5px, 1.6vw, 9px); min-width: 0; flex: 0 1 auto; }
+.land-nav-brand img { width: clamp(20px, 5.5vw, 26px); height: clamp(20px, 5.5vw, 26px); object-fit: contain; flex: none; }
+.land-nav-brand b { font-size: clamp(0.72rem, 3.2vw, var(--fs-md)); font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+.land-nav-links { display: inline-flex; align-items: center; flex-wrap: nowrap; gap: clamp(3px, 1vw, 8px); flex: 0 0 auto; }
 
 .land-nav-link {
-  padding: 8px 14px;
+  padding: clamp(6px, 1.6vw, 8px) clamp(7px, 2.2vw, 14px);
   border: 0;
   border-radius: var(--r-pill);
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: var(--fs-sm);
+  font-size: clamp(0.7rem, 3vw, var(--fs-sm));
   font-weight: 500;
+  white-space: nowrap;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
 }
 .land-nav-link:hover { background: var(--panel-soft); color: var(--text); }
 
 .land-nav-cta {
-  padding: 9px 18px;
+  padding: clamp(6px, 1.6vw, 9px) clamp(8px, 2.6vw, 18px);
   border: 0;
   border-radius: var(--r-pill);
   background: var(--teal-strong);
   color: var(--on-accent);
   font: inherit;
-  font-size: var(--fs-sm);
+  font-size: clamp(0.7rem, 3vw, var(--fs-sm));
   font-weight: 600;
+  white-space: nowrap;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
   transition: background 0.18s ease;
 }
@@ -4308,8 +4323,7 @@ body.auth-required .auth-screen.landing {
 
 @media (max-width: 720px) {
   .land-wrap { gap: 44px; }
-  .land-nav { padding: 7px 8px 7px 12px; flex-wrap: wrap; }
-  .land-nav-links { flex-wrap: wrap; }
+  .land-nav { padding: 6px 8px 6px 12px; }
   .land-hero h1 { font-size: clamp(1.75rem, 8vw, 2.3rem); letter-spacing: -0.025em; }
   .land-cta-row { flex-direction: column; align-items: stretch; width: 100%; }
   .land-cta, .land-cta-link { justify-content: center; width: 100%; }
@@ -4318,13 +4332,14 @@ body.auth-required .auth-screen.landing {
 }
 
 @media (max-width: 420px) {
-  .land-nav { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
-  .land-nav-brand { justify-content: center; }
-  .land-nav-brand b { font-size: var(--fs-md); white-space: normal; text-align: center; }
-  .land-nav-links { justify-content: center; flex-wrap: wrap; gap: 6px; }
-  .land-nav-link, .land-nav-cta { padding: 8px 12px; font-size: var(--fs-xs); min-height: 44px; display: inline-flex; align-items: center; }
-  .auth-lang-toggle { justify-content: center; order: -1; margin-bottom: 2px; }
-  .auth-lang-toggle .lang-btn { min-width: 44px; min-height: 44px; padding: 0 14px; font-size: var(--fs-xs); }
+  /* Header tetap satu baris: rapatkan gap, jangan bungkus. */
+  .land-nav { gap: 3px; padding: 6px 7px 6px 10px; }
+  .land-nav-links { gap: 2px; }
+  .land-nav-brand { gap: 5px; }
+  .land-nav-brand b { font-size: 0.72rem; }
+  .land-nav-link, .land-nav-cta { padding: 6px 7px; font-size: 0.7rem; }
+  .land-nav-cta { padding: 6px 9px; }
+  .auth-lang-toggle .lang-btn { min-width: 30px; min-height: 38px; padding: 0 6px; font-size: 0.66rem; }
   .land-device { padding: 16px; }
   .land-hero > p { font-size: var(--fs-sm); }
   .land-item strong { font-size: var(--fs-sm); }
