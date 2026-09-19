@@ -83,7 +83,13 @@ function sanitizeNoteHtml(html) {
       if (kid.nodeType === 8) { kid.remove(); continue; }
       if (kid.nodeType !== 1) continue;
       const tag = kid.tagName;
-      if (!ALLOW[tag]) { kid.replaceWith(...[...kid.childNodes].map((c) => c.cloneNode(true))); continue; }
+      if (!ALLOW[tag]) {
+        // Sanitasi subtree dulu sebelum dibongkar: tanpa ini, atribut berbahaya
+        // di dalam tag tak-whitelist (mis. <form><img onerror=…>) lolos utuh.
+        clean(kid);
+        kid.replaceWith(...[...kid.childNodes].map((c) => c.cloneNode(true)));
+        continue;
+      }
       for (const attr of [...kid.attributes]) {
         if (!(ALLOW[tag].includes(attr.name) && (tag !== 'A' || /^(https?:|mailto:)/i.test(attr.value)) && (tag !== 'INPUT' || ['type', 'checked'].includes(attr.name)))) kid.removeAttribute(attr.name);
       }

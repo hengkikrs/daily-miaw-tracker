@@ -61,12 +61,19 @@ async function purgeExpired(ctx) {
   return purged;
 }
 
+const SWEEP_MIN_INTERVAL_MS = 5 * 60 * 1000;
+let lastSweepAt = 0; // throttle sweep per instance fungsi (state hangat modul)
+
 export default async function handler(req, res) {
   const ctx = adminCtx();
   if (!ctx) return json(res, 500, { error: 'unconfigured' });
 
-  // Sweep runs on every hit so the 24h window is honoured even without cron.
-  try { await purgeExpired(ctx); } catch (e) { /* best-effort sweep */ }
+  // Sweep maksimal sekali per 5 menit per instance supaya hit rutin tidak
+  // memicu paginasi seluruh daftar user berulang-ulang.
+  if (Date.now() - lastSweepAt >= SWEEP_MIN_INTERVAL_MS) {
+    lastSweepAt = Date.now();
+    try { await purgeExpired(ctx); } catch (e) { /* best-effort sweep */ }
+  }
 
   if (req.method === 'GET') return json(res, 200, { ok: true });
 
@@ -96,9 +103,13 @@ export default async function handler(req, res) {
   }
 
   const stamp = new Date().toISOString();
+  // Admin API GoTrue menerima field `user_metadata` (bukan `data` — itu milik
+  // endpoint self-service /auth/v1/user). Metadata lama di-merge supaya
+  // username/nama/phone tidak tertimpa saat penandaan hapus akun.
+  const currentMeta = (who.data && who.data.user_metadata) || {};
   const mark = await adminFetch(ctx, '/auth/v1/admin/users/' + userId, {
     method: 'PUT',
-    body: JSON.stringify({ data: { deletion_requested_at: stamp } }),
+    body: JSON.stringify({ user_metadata: Object.assign({}, currentMeta, { deletion_requested_at: stamp }) }),
   });
   if (!mark.ok && mark.status !== 404) return json(res, 502, { error: 'upstream' });
   if (mark.status === 404) return json(res, 404, { error: 'not_found' });

@@ -18,6 +18,8 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
+const SECURITY_HEADERS = { 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY' };
+
 const server = http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split('?')[0]);
   if (urlPath === '/') urlPath = '/index.html';
@@ -26,17 +28,17 @@ const server = http.createServer((req, res) => {
   const isInsidePublic = filePath === PUBLIC_DIR || filePath.startsWith(`${PUBLIC_DIR}${path.sep}`);
 
   if (!isInsidePublic) {
-    res.writeHead(403);
+    res.writeHead(403, SECURITY_HEADERS);
     return res.end('Akses ditolak');
   }
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.writeHead(404, { 'Content-Type': 'text/plain', ...SECURITY_HEADERS });
       return res.end('404 Tidak Ditemukan');
     }
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', ...SECURITY_HEADERS });
     res.end(data);
   });
 });

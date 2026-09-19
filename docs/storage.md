@@ -32,8 +32,7 @@ scopedKey(key) = authSession?.user?.id ? `${key}:${authSession.user.id}` : key
 | `miaw-tracker.oauth-verifier.v1` | PKCE verifier saat alur Google | auth/oauth |
 | `miaw-tracker.username-map.v1` | peta username → email (login username instan) | auth |
 
-`DATA_STORE_KEYS` (L158) = 6 kunci: `state.v1`, `jadwal.v1`, `tasks.v1`, `goals.v1`, `proj-tracker.projects.v1`, `notes.v1`.
-**Temuan (dokumentasi saja, jangan diperbaiki tanpa approval):** `miaw-tracker.daily-tasks.v1` **tidak** ada di daftar itu sehingga tidak ikut `migrateLegacyStores()`/`removeUserDataFor()` — akun lama berpotensi tidak mengadopsi store daily task, dan penghapusan data user tidak membersihkannya.
+`DATA_STORE_KEYS` = 10 kunci: `state.v1`, `jadwal.v1`, `tasks.v1`, `goals.v1`, `miaw-tracker.projects.v1` (varian lama), `proj-tracker.projects.v1`, `notes.v1`, `daily-tasks.v1`, `daily-tasks.v1.routines`, `daily-tasks.v1.log` — semuanya ikut `migrateLegacyStores()` dan `removeUserDataFor()` (terverifikasi audit 2026-09-19).
 
 ## Baca/tulis state
 - `loadState()` (L437): parse `scopedKey(STORAGE_KEY)`; valid bila `schemaVersion === SCHEMA_VERSION (1)` **dan** ada `years`; jika tidak → `createFreshState()`.
