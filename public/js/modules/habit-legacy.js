@@ -47,6 +47,7 @@ function renderMonth(year, monthIndex) {
           </label>
           <button class="primary-button" type="submit">Tambah Kebiasaan</button>
           <button class="danger-button" type="button" data-action="reset-month">Reset Centang</button>
+          ${habitCopyPanelHtml()}
         </form>
       </section>
 

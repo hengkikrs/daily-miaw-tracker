@@ -253,6 +253,11 @@ function bindEvents() {
     if (action === 'toggle-active') toggleActive(category, habitId);
     if (action === 'delete-habit') deleteHabit(category, habitId);
     if (action === 'reset-month') resetMonthChecks();
+    if (action === 'habit-copy-open') { habitCopyToggleOpen(); return; }
+    if (action === 'habit-copy-all') { habitCopySetAll(); return; }
+    if (action === 'habit-copy-none') { habitCopySetNone(); return; }
+    if (action === 'habit-copy-run') { habitCopyExecute(); return; }
+    if (action === 'habit-copy-item') { habitCopyToggleItem(category, habitId); return; }
     if (action === 'delete-account-data') { accountDeleteOpen = true; renderShell(); dom.content.querySelector('#acctDelConfirm')?.focus(); return; }
     if (action === 'acct-del-noop') return;
     if (action === 'account-delete-cancel') { accountDeleteOpen = false; renderShell(); return; }
