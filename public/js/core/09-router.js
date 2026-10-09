@@ -17,6 +17,7 @@ const PAGE_META = {
   catatan: ['page.notes', 'page.notes-sub'],
   dokumen: ['page.docs', 'page.docs-sub'],
   transaksi: ['page.tx', 'page.tx-sub'],
+  akun: ['page.acc', 'page.acc-sub'],
   budget: ['page.budget', 'page.budget-sub'],
   tabungan: ['page.savings', 'page.savings-sub'],
   'laporan-keuangan': ['page.report-fin', 'page.report-fin-sub'],
@@ -154,6 +155,14 @@ function renderShellInner() {
     return;
   }
 
+  if (activeView === 'akun') {
+    ensureAccStore();
+    dom.pageTitle.textContent = t('page.acc');
+    dom.pageSubtitle.textContent = 'Kelola pos penyimpanan uang: tunai, bank, dan e-wallet.';
+    dom.content.innerHTML = renderAccView();
+    return;
+  }
+
   if (activeView === 'budget') {
     ensureBudStore();
     dom.pageTitle.textContent = t('page.budget');
@@ -218,6 +227,7 @@ const PLACEHOLDER_VIEWS = {
   project: { title: 'Project', subtitle: 'Proyek & target besar', emoji: '🧩', hint: 'Kelompokkan task dan catatan ke dalam proyek.' },
   catatan: { title: 'Catatan', subtitle: 'Ide, journal, dan memo cepat', emoji: '📝', hint: 'Tangkap pikiran sebelum hilang.' },
   transaksi: { title: 'Transaksi', subtitle: 'Pemasukan & pengeluaran harian', emoji: '💸', hint: 'Catat uang masuk dan keluar dengan cepat.' },
+  akun: { title: 'Akun', subtitle: 'Tunai, bank & e-wallet', emoji: '🏦', hint: 'Pisahkan uang per pos penyimpanan dan transfer antar-akun.' },
   budget: { title: 'Budget', subtitle: 'Rencana belanja bulanan', emoji: '🧾', hint: 'Bagi budget per pos belanja.' },
   tabungan: { title: 'Tabungan', subtitle: 'Target tabungan & dana darurat', emoji: '🪙', hint: 'Kejar target tabungan setahap demi setahap.' },
   'laporan-keuangan': { title: 'Laporan Keuangan', subtitle: 'Ringkasan kondisi finansial', emoji: '📊', hint: 'Rekap bulanan kas, budget, dan tabungan.' },

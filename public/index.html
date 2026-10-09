@@ -44,9 +44,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260919-ui132" />
-  <link rel="stylesheet" href="theme.css?v=20260919-ui132" />
-  <link rel="stylesheet" href="css/habit-copy.css?v=20260928-hc1" />
+  <link rel="stylesheet" href="styles.css?v=20260919-ui133" />
+  <link rel="stylesheet" href="theme.css?v=20260919-ui133" />
+  <link rel="stylesheet" href="css/habit-copy.css?v=20260919-ui133" />
   <link rel="icon" href="cat-logo.svg" />
   <link rel="icon" type="image/png" sizes="192x192" href="/logo-192.png" />
   <link rel="apple-touch-icon" href="/logo-192.png" />
@@ -135,6 +135,7 @@
         <div class="nav-group-items">
           <div class="nav-group-items-inner">
             <button class="nav-item sub" type="button" data-view="transaksi"><span data-i18n="nav.tx">Transaksi</span></button>
+            <button class="nav-item sub" type="button" data-view="akun"><span data-i18n="nav.acc">Akun</span></button>
             <button class="nav-item sub" type="button" data-view="budget"><span data-i18n="nav.budget">Budget</span></button>
             <button class="nav-item sub" type="button" data-view="tabungan"><span data-i18n="nav.savings">Tabungan</span></button>
             <button class="nav-item sub" type="button" data-view="laporan-keuangan"><span data-i18n="nav.report-fin">Laporan Keuangan</span></button>
@@ -203,44 +204,45 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="runtime-config.js?v=20260918-ui131"></script>
-  <script src="js/core/01-config.js?v=20260918-ui131"></script>
-  <script src="js/core/04-utils.js?v=20260918-ui131"></script>
-  <script src="js/core/06b-i18n-dict.js?v=20260918-ui131"></script>
-  <script src="js/core/06-lang.js?v=20260918-ui131"></script>
-  <script src="js/core/07-theme.js?v=20260918-ui131"></script>
-  <script src="js/core/02-runtime-dom.js?v=20260918-ui131"></script>
-  <script src="js/core/05-storage.js?v=20260918-ui131"></script>
-  <script src="js/auth/11-session.js?v=20260918-ui131"></script>
-  <script src="js/core/03-state.js?v=20260918-ui131"></script>
-  <script src="js/auth/13-remote-sync.js?v=20260918-ui131"></script>
-  <script src="js/auth/12-oauth.js?v=20260918-ui131"></script>
-  <script src="js/core/06-toast.js?v=20260918-ui131"></script>
-  <script src="js/core/08-nav.js?v=20260918-ui131"></script>
-  <script src="js/auth/14-auth-ui.js?v=20260918-ui131"></script>
-  <script src="js/core/09-router.js?v=20260918-ui131"></script>
-  <script src="js/modules/habit-analytics.js?v=20260918-ui131"></script>
-  <script src="js/modules/daily-tasks.js?v=20260918-ui131"></script>
-  <script src="js/modules/goals.js?v=20260918-ui131"></script>
-  <script src="js/modules/projects.js?v=20260918-ui131"></script>
-  <script src="js/modules/tasks.js?v=20260918-ui131"></script>
-  <script src="js/modules/schedule.js?v=20260918-ui131"></script>
-  <script src="js/modules/notes.js?v=20260919-fix1"></script>
-  <script src="js/modules/finance-reports-legacy.js?v=20260918-ui131"></script>
-  <script src="js/modules/finance-savings.js?v=20260918-ui131"></script>
-  <script src="js/modules/finance-budget.js?v=20260918-ui131"></script>
-  <script src="js/modules/finance-transactions.js?v=20260918-ui131"></script>
-  <script src="js/modules/finance-documents.js?v=20260918-ui131"></script>
-  <script src="js/modules/progress.js?v=20260918-ui131"></script>
-  <script src="js/modules/dashboard.js?v=20260918-ui131"></script>
-  <script src="js/modules/miawai.js?v=20260918-ui131"></script>
-  <script src="js/modules/habit-legacy.js?v=20260928-hc1"></script>
-  <script src="js/modules/habit-copy-next.js?v=20260928-hc1"></script>
-  <script src="js/events/20-bind-events.js?v=20260918-ui131"></script>
-  <script src="js/modules/laporan-export.js?v=20260918-ui131"></script>
-  <script src="js/modules/global-search.js?v=20260918-ui131"></script>
-  <script src="js/modules/onboarding.js?v=20260918-ui131"></script>
-  <script src="js/core/22-ux-states.js?v=20260918-ui131"></script>
-  <script src="js/bootstrap/30-init.js?v=20260918-ui131"></script>
+  <script src="runtime-config.js?v=20260919-ui133"></script>
+  <script src="js/core/01-config.js?v=20260919-ui133"></script>
+  <script src="js/core/04-utils.js?v=20260919-ui133"></script>
+  <script src="js/core/06b-i18n-dict.js?v=20260919-ui133"></script>
+  <script src="js/core/06-lang.js?v=20260919-ui133"></script>
+  <script src="js/core/07-theme.js?v=20260919-ui133"></script>
+  <script src="js/core/02-runtime-dom.js?v=20260919-ui133"></script>
+  <script src="js/core/05-storage.js?v=20260919-ui133"></script>
+  <script src="js/auth/11-session.js?v=20260919-ui133"></script>
+  <script src="js/core/03-state.js?v=20260919-ui133"></script>
+  <script src="js/auth/13-remote-sync.js?v=20260919-ui133"></script>
+  <script src="js/auth/12-oauth.js?v=20260919-ui133"></script>
+  <script src="js/core/06-toast.js?v=20260919-ui133"></script>
+  <script src="js/core/08-nav.js?v=20260919-ui133"></script>
+  <script src="js/auth/14-auth-ui.js?v=20260919-ui133"></script>
+  <script src="js/core/09-router.js?v=20260919-ui133"></script>
+  <script src="js/modules/habit-analytics.js?v=20260919-ui133"></script>
+  <script src="js/modules/daily-tasks.js?v=20260919-ui133"></script>
+  <script src="js/modules/goals.js?v=20260919-ui133"></script>
+  <script src="js/modules/projects.js?v=20260919-ui133"></script>
+  <script src="js/modules/tasks.js?v=20260919-ui133"></script>
+  <script src="js/modules/schedule.js?v=20260919-ui133"></script>
+  <script src="js/modules/notes.js?v=20260919-ui133"></script>
+  <script src="js/modules/finance-reports-legacy.js?v=20260919-ui133"></script>
+  <script src="js/modules/finance-accounts.js?v=20260919-ui133"></script>
+  <script src="js/modules/finance-savings.js?v=20260919-ui133"></script>
+  <script src="js/modules/finance-budget.js?v=20260919-ui133"></script>
+  <script src="js/modules/finance-transactions.js?v=20260919-ui133"></script>
+  <script src="js/modules/finance-documents.js?v=20260919-ui133"></script>
+  <script src="js/modules/progress.js?v=20260919-ui133"></script>
+  <script src="js/modules/dashboard.js?v=20260919-ui133"></script>
+  <script src="js/modules/miawai.js?v=20260919-ui133"></script>
+  <script src="js/modules/habit-legacy.js?v=20260919-ui133"></script>
+  <script src="js/modules/habit-copy-next.js?v=20260919-ui133"></script>
+  <script src="js/events/20-bind-events.js?v=20260919-ui133"></script>
+  <script src="js/modules/laporan-export.js?v=20260919-ui133"></script>
+  <script src="js/modules/global-search.js?v=20260919-ui133"></script>
+  <script src="js/modules/onboarding.js?v=20260919-ui133"></script>
+  <script src="js/core/22-ux-states.js?v=20260919-ui133"></script>
+  <script src="js/bootstrap/30-init.js?v=20260919-ui133"></script>
 </body>
 </html>

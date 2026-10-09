@@ -75,17 +75,22 @@ function txCompact(n) {
 function txByDay(month) {
   const map = {};
   txList().forEach((t) => {
+    if (t.type === 'transfer') return; // transfer internal bukan cashflow eksternal
     if (t.date && t.date.startsWith(month)) map[t.date] = (map[t.date] || 0) + (t.type === 'in' ? t.amount : -t.amount);
   });
   return map;
 }
 function txMonthTotals(month) {
   let inn = 0; let out = 0; let cnt = 0;
-  txList().forEach((t) => { if (t.date && t.date.startsWith(month)) { cnt += 1; if (t.type === 'in') inn += t.amount; else out += t.amount; } });
+  txList().forEach((t) => {
+    if (t.type === 'transfer') return; // transfer internal tidak dihitung masuk/keluar
+    if (t.date && t.date.startsWith(month)) { cnt += 1; if (t.type === 'in') inn += t.amount; else out += t.amount; }
+  });
   return { inn, out, net: inn - out, cnt };
 }
 function txFiltered() {
   let list = txList().filter((t) => {
+    if (t.type === 'transfer') return false; // transfer tampil di halaman Akun, bukan riwayat kas
     if (txFilter !== 'all' && t.type !== txFilter) return false;
     if (txDaySel && t.date !== txDaySel) return false;
     return true;
@@ -104,11 +109,13 @@ function ensureTxFormDefaults() {
   const today = txTodayIso();
   const inCats = txFormType === 'in' ? TX_CATS_IN : TX_CATS_OUT;
   const cat = txFormDraft && inCats.includes(txFormDraft.cat) ? txFormDraft.cat : inCats[0];
+  const accValid = txFormDraft && txFormDraft.accId && typeof accList === 'function' && accList().some((a) => a.id === txFormDraft.accId);
   return {
     amount: txFormDraft && txFormDraft.type === txFormType ? txFormDraft.amount : '',
     note: txFormDraft && txFormDraft.type === txFormType ? txFormDraft.note : '',
     date: (txFormDraft && txFormDraft.date) || today,
     cat,
+    accId: accValid ? txFormDraft.accId : '',
   };
 }
 
@@ -116,7 +123,7 @@ function txStatsHtml(month) {
   const tot = txMonthTotals(month);
   const today = txTodayIso();
   let tin = 0; let tout = 0; let tc = 0;
-  txList().forEach((t) => { if (t.date === today) { tc += 1; if (t.type === 'in') tin += t.amount; else tout += t.amount; } });
+  txList().forEach((t) => { if (t.type !== 'transfer' && t.date === today) { tc += 1; if (t.type === 'in') tin += t.amount; else tout += t.amount; } });
   const netToday = tin - tout;
   const cards = [
     { v: txRp(tot.inn), l: `Masuk · ${txMonthLabel(month)}`, c: 'green', i: '↑' },
@@ -131,6 +138,10 @@ function txFormHtml() {
   const d = ensureTxFormDefaults();
   const editing = txEditingId ? txFind(txEditingId) : null;
   const cats = txFormType === 'in' ? TX_CATS_IN : TX_CATS_OUT;
+  const hasAccounts = typeof accActiveList === 'function' && accActiveList().length > 0;
+  const draftAcc = txFormDraft && txFormDraft.accId && txActiveListHas(txFormDraft.accId) ? txFormDraft.accId : '';
+  const editAcc = editing && txActiveListHas(editing.accId) ? editing.accId : '';
+  const accVal = editing ? editAcc : draftAcc;
   return `<div class="panel tx-form-card">
     <div class="tx-form-head"><h2>${editing ? '✏️ Edit Transaksi' : '➕ Catat Transaksi'}</h2>
       ${editing ? '<button type="button" class="btn tiny" data-tx-canceledit>Batal</button>' : ''}</div>
@@ -144,10 +155,17 @@ function txFormHtml() {
         <label class="field"><span>Keterangan</span><input name="txNote" maxlength="80" autocomplete="off" placeholder="cth: makan siang" value="${escapeHtml(String(d.note))}" /></label>
         <label class="field"><span>Kategori</span><select name="txCat">${cats.map((c) => `<option value="${c}" ${c === d.cat ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
         <label class="field"><span>Tanggal</span><input type="date" name="txDate" value="${d.date}" /></label>
+        ${hasAccounts ? `<label class="field"><span>Akun</span><select name="txAcc" data-tx-acc>${accOptionsHtml(accVal, {})}</select></label>` : ''}
       </div>
       <div class="tx-form-actions"><button type="submit" class="btn primary">${editing ? 'Simpan Perubahan' : '+ Tambah Data'}</button></div>
     </form>
   </div>`;
+}
+
+// Akun tetap valid dipilih bila ada di daftar (termasuk nonaktif — riwayat lama tidak boleh hilang pilihannya).
+function txActiveListHas(id) {
+  if (!id) return false;
+  return accList().some((a) => a.id === id);
 }
 
 function txCalendarHtml(month) {
@@ -214,10 +232,11 @@ function txListHtml() {
     }
     const isIn = t.type === 'in';
     const time = t.ts ? new Date(t.ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+    const accLabel = t.accId && typeof accName === 'function' && accName(t.accId) ? ` · 🏦 ${accName(t.accId)}` : '';
     html += `<div class="tx-row" data-tx-id="${t.id}">
       <span class="tx-row-ic ${isIn ? 'in' : 'out'}">${isIn ? '↑' : '↓'}</span>
       <div class="tx-row-mid"><b>${escapeHtml(t.note || t.cat || (isIn ? 'Pemasukan' : 'Pengeluaran'))}</b>
-        <span>${escapeHtml(t.cat || '')}${time ? ` · ${time}` : ''}</span></div>
+        <span>${escapeHtml(t.cat || '')}${accLabel}${time ? ` · ${time}` : ''}</span></div>
       <div class="tx-row-amt ${isIn ? 'pos' : 'neg'}">${isIn ? '+' : '−'}${txRp(t.amount)}</div>
       <div class="tx-row-act">
         <button type="button" class="tx-icobtn" data-tx-edit="${t.id}" title="Edit">✏️</button>
@@ -238,14 +257,17 @@ function submitTxForm(form) {
   const note = form.txNote.value.trim().slice(0, 80);
   const cat = form.txCat.value;
   const date = form.txDate.value || txTodayIso();
+  // Akun opsional-aman: hanya disimpan bila ID-nya benar-benar milik pengguna ini.
+  const accId = form.txAcc && txActiveListHas(form.txAcc.value) ? form.txAcc.value : null;
   if (date > txTodayIso()) { showToast('Tanggal belum terjadi — pilih hari ini atau sebelumnya.'); return; }
   if (txEditingId) {
     const t = txFind(txEditingId);
-    if (t) { t.type = txFormType; t.amount = amount; t.note = note || cat; t.cat = cat; t.date = date; t.ts = t.ts || Date.now(); showToast('Transaksi diperbarui.'); }
+    if (t) { t.type = txFormType; t.amount = amount; t.note = note || cat; t.cat = cat; t.date = date; t.accId = accId; t.ts = t.ts || Date.now(); showToast('Transaksi diperbarui.'); }
     txEditingId = null; txFormDraft = null;
   } else {
-    state.transactions = txList().concat([{ id: uid('tx'), type: txFormType, amount, note: note || cat, cat, date, ts: Date.now() }]);
-    showToast(txFormType === 'in' ? `Masuk ${txRp(amount)} tercatat ✅` : `Keluar ${txRp(amount)} tercatat ✅`);
+    state.transactions = txList().concat([{ id: uid('tx'), type: txFormType, amount, note: note || cat, cat, date, accId, ts: Date.now() }]);
+    const accSuffix = accId && accName(accId) ? ` · ${accName(accId)}` : '';
+    showToast(txFormType === 'in' ? `Masuk ${txRp(amount)} tercatat ✅${accSuffix}` : `Keluar ${txRp(amount)} tercatat ✅${accSuffix}`);
     txFormDraft = null;
   }
   saveState();
@@ -256,7 +278,7 @@ function handleTxAction(btn) {
   if (btn.matches('[data-tx-ftype]')) { txFilter = btn.dataset.txFtype; renderShell(); return true; }
   if (btn.matches('[data-tx-ftype-btn]')) {
     const form = dom.content.querySelector('#txForm');
-    if (form) txFormDraft = { type: txFormType, amount: form.txAmount.value, note: form.txNote.value, cat: form.txCat.value, date: form.txDate.value };
+    if (form) txFormDraft = { type: txFormType, amount: form.txAmount.value, note: form.txNote.value, cat: form.txCat.value, date: form.txDate.value, accId: form.txAcc ? form.txAcc.value : '' };
     txFormType = btn.dataset.txFtypeBtn; renderShell();
     const el = dom.content.querySelector('#txForm [name=txAmount]'); if (el) el.focus();
     return true;
@@ -276,7 +298,7 @@ function handleTxAction(btn) {
     const t = txFind(btn.dataset.txEdit);
     if (!t) return true;
     txEditingId = t.id; txFormType = t.type;
-    txFormDraft = { type: t.type, amount: t.amount, note: t.note, cat: t.cat, date: t.date };
+    txFormDraft = { type: t.type, amount: t.amount, note: t.note, cat: t.cat, date: t.date, accId: t.accId || '' };
     renderShell();
     const el = dom.content.querySelector('#txForm'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return true;

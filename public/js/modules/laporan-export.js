@@ -179,12 +179,12 @@ function lapOrgBlocks(p) {
 }
 
 function lapFinanceBlocks(p) {
-  const txs = txList().filter((t) => lapInRange(t.date, p));
+  const txs = txList().filter((t) => lapInRange(t.date, p) && t.type !== 'transfer');
   const income = txs.filter((t) => t.type === 'in').reduce((s, t) => s + (Number(t.amount) || 0), 0);
   const expense = txs.filter((t) => t.type === 'out').reduce((s, t) => s + (Number(t.amount) || 0), 0);
   const net = income - expense;
   const perMonth = p.keys.map((k, i) => {
-    const list = txList().filter((t) => (t.date || '').slice(0, 7) === k);
+    const list = txList().filter((t) => (t.date || '').slice(0, 7) === k && t.type !== 'transfer');
     const inSum = list.filter((t) => t.type === 'in').reduce((s, t) => s + (Number(t.amount) || 0), 0);
     const outSum = list.filter((t) => t.type === 'out').reduce((s, t) => s + (Number(t.amount) || 0), 0);
     return [lapShortMonth(p.months[i]), lapRp(inSum), lapRp(outSum), lapRp(inSum - outSum)];
@@ -213,6 +213,11 @@ function lapFinanceBlocks(p) {
   const deposits = (state.savingsTx || []).filter((t) => lapInRange(t.date, p) && t.kind === 'deposit')
     .reduce((s, t) => s + (Number(t.amount) || 0), 0);
   const biggest = txs.filter((t) => t.type === 'out').sort((a, b) => b.amount - a.amount).slice(0, 3);
+  const accRows = (typeof accList === 'function' ? accList() : []).map((a) => [
+    `${accTypeMeta(a.type).label} — ${a.name}${a.inactive ? ' (nonaktif)' : ''}`,
+    lapRp(a.opening || 0),
+    lapRp(accBalance(a.id)),
+  ]);
   const blocks = [
     {
       type: 'kpi',
@@ -227,6 +232,7 @@ function lapFinanceBlocks(p) {
     { type: 'table', head: [{ t: 'Kategori pengeluaran', w: 0.5 }, { t: 'Total', w: 0.28, a: 'r' }, { t: 'Porsi', w: 0.22, a: 'r' }], rows: catRows, empty: 'Belum ada pengeluaran tercatat.' },
     { type: 'table', head: [{ t: `Budget ${lapShortMonth(p.months[p.months.length - 1])}`, w: 0.34 }, { t: 'Anggaran', w: 0.2, a: 'r' }, { t: 'Terpakai', w: 0.2, a: 'r' }, { t: 'Sisa', w: 0.16, a: 'r' }, { t: 'Status', w: 0.18 }], rows: budRows, empty: 'Belum ada budget pada periode ini.' },
     { type: 'table', head: [{ t: 'Target tabungan', w: 0.36 }, { t: 'Target', w: 0.2, a: 'r' }, { t: 'Saldo', w: 0.2, a: 'r' }, { t: 'Progres', w: 0.12, a: 'r' }, { t: 'Deadline', w: 0.16 }], rows: svRows, empty: 'Belum ada target tabungan.' },
+    { type: 'table', head: [{ t: 'Akun (Jenis — Nama)', w: 0.44 }, { t: 'Saldo awal', w: 0.28, a: 'r' }, { t: 'Saldo saat ini', w: 0.28, a: 'r' }], rows: accRows, empty: 'Belum ada akun terdaftar.' },
   ];
   const notes = [];
   if (budTotal > 0) notes.push(`Budget periode ini ${lapRp(budTotal)} dengan terpakai ${lapRp(budSpent)} (${Math.round((budSpent / budTotal) * 100)}%).`);

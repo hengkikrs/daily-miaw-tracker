@@ -173,6 +173,8 @@ function bindEvents() {
 
   const txBtn = event.target.closest('[data-tx-ftype],[data-tx-ftype-btn],[data-tx-mprev],[data-tx-mnext],[data-tx-mtoday],[data-tx-day],[data-tx-dayclear],[data-tx-focus],[data-tx-canceledit],[data-tx-edit],[data-tx-del]');
   if (txBtn && handleTxAction(txBtn)) return;
+  const accBtn = event.target.closest('[data-acc-new],[data-acc-cancelform],[data-acc-transfer],[data-acc-canceltransfer],[data-acc-detail],[data-acc-back],[data-acc-edit],[data-acc-toggle],[data-acc-del]');
+  if (accBtn && typeof handleAccAction === 'function' && handleAccAction(accBtn)) return;
   const budBtn = event.target.closest('[data-bud-mprev],[data-bud-mnext],[data-bud-mtoday],[data-bud-filter],[data-bud-open],[data-bud-back],[data-bud-new],[data-bud-edit],[data-bud-del],[data-bud-cancelform],[data-bud-newtx],[data-bud-cancelform2],[data-bud-gotx]');
   if (budBtn && handleBudAction(budBtn)) return;
   const svBtn = event.target.closest('[data-sv-filter],[data-sv-open],[data-sv-back],[data-sv-new],[data-sv-newtx],[data-sv-deposit],[data-sv-edit],[data-sv-archive],[data-sv-del],[data-sv-cancelform],[data-sv-cancelform2],[data-sv-pick-ic],[data-sv-pick-color]');
@@ -423,6 +425,8 @@ function bindEvents() {
     if (event.target.id === 'projForm') { submitProjectForm(event.target); return; }
     if (event.target.id === 'docForm') { submitDocForm(event.target); return; }
     if (event.target.id === 'txForm') { submitTxForm(event.target); return; }
+    if (event.target.id === 'accForm') { if (typeof submitAccForm === 'function') submitAccForm(event.target); return; }
+    if (event.target.id === 'accTransferForm') { if (typeof submitAccTransfer === 'function') submitAccTransfer(event.target); return; }
     if (event.target.id === 'budForm') { submitBudForm(event.target); return; }
     if (event.target.id === 'budTxForm') { submitBudTxForm(event.target); return; }
     if (event.target.id === 'svForm') { submitSvForm(event.target); return; }

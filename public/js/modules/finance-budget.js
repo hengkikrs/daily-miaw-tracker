@@ -269,6 +269,7 @@ let budTxQuickAdd = false;
 function budTxFormHtml() {
   const cats = BUD_CATS.filter((c) => budList().some((b) => b.cat === c.name && b.period === budPeriod()));
   const list = cats.length ? cats : BUD_CATS.slice(0, 5);
+  const hasAcc = typeof accActiveList === 'function' && accActiveList().length > 0;
   return `<form id="budTxForm" class="panel bud-form" novalidate>
     <h2>➕ Tambah Transaksi Keluar <small>langsung masuk ke anggaran kategori</small></h2>
     <div class="tx-form-grid">
@@ -276,6 +277,7 @@ function budTxFormHtml() {
       <label class="field"><span>Jumlah (Rp)</span><input name="qtxAmount" inputmode="numeric" placeholder="mis. 35rb" required></label>
       <label class="field"><span>Kategori Budget</span><select name="qtxCat">${list.map((x) => `<option value="${x.name}">${x.icon} ${x.name}</option>`).join('')}</select></label>
       <label class="field"><span>Tanggal</span><input type="date" name="qtxDate" value="${txIso(new Date())}"></label>
+      ${hasAcc ? `<label class="field"><span>Akun</span><select name="qtxAcc">${accOptionsHtml('', {})}</select></label>` : ''}
     </div>
     <div class="tx-form-actions"><button type="submit" class="btn primary">Simpan Transaksi</button><button type="button" class="btn" data-bud-cancelform2>Batal</button></div>
   </form>`;
@@ -285,9 +287,10 @@ function submitBudTxForm(form) {
   const amount = txParseAmount(form.qtxAmount.value);
   if (!(amount > 0)) { showToast('Jumlah tidak valid. Contoh: 35rb.', true); return; }
   const cat = form.qtxCat.value;
+  const accId = form.qtxAcc && typeof accList === 'function' && accList().some((a) => a.id === form.qtxAcc.value) ? form.qtxAcc.value : null;
   const invMap = Object.fromEntries(Object.entries(BUD_TX_MAP).map(([k, v]) => [v, k]));
   if (!Array.isArray(state.transactions)) state.transactions = [];
-  state.transactions.push({ id: uid('tx'), type: 'out', amount, note: form.qtxNote.value.trim() || cat, cat: invMap[cat] || 'Lainnya', date: form.qtxDate.value || txIso(new Date()), ts: Date.now() });
+  state.transactions.push({ id: uid('tx'), type: 'out', amount, note: form.qtxNote.value.trim() || cat, cat: invMap[cat] || 'Lainnya', date: form.qtxDate.value || txIso(new Date()), accId, ts: Date.now() });
   budTxQuickAdd = false;
   saveState(); showToast('Transaksi dicatat & budget diperbarui.'); renderShell();
 }

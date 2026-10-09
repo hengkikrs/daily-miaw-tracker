@@ -14,6 +14,11 @@ function repMonths(n) { // n bulan terakhir, tua -> baru
 }
 function repMonthLabel(key) { const [y, m] = key.split('-'); return `${MONTHS[Number(m) - 1].slice(0, 3)} ${y.slice(2)}`; }
 function repSum(list) { return list.reduce((a, t) => a + (Number(t.amount) || 0), 0); }
+// Saldo kas agregat: transfer internal saling menghapus (satu keluar, satu masuk) → tidak perlu guard eksplisit,
+// tapi tetap kita kecualikan agar tahan bila data transfer tidak lengkap.
+function repCashBalance() {
+  return txList().filter((t) => t.type !== 'transfer').reduce((s, t) => s + (t.type === 'in' ? (Number(t.amount) || 0) : -(Number(t.amount) || 0)), 0);
+}
 
 // seed riwayat kas 6 bulan (sekali) supaya grafik laporan hidup; hanya bulan yang benar-benar kosong
 function ensureRepHistory() {
@@ -52,7 +57,7 @@ function ensureRepHistory() {
 
 function repFlow(months) {
   return months.map((m) => {
-    const txs = txList().filter((t) => (t.date || '').slice(0, 7) === m);
+    const txs = txList().filter((t) => (t.date || '').slice(0, 7) === m && t.type !== 'transfer');
     const inc = repSum(txs.filter((t) => t.type === 'in'));
     const exp = repSum(txs.filter((t) => t.type === 'out'));
     return { m, inc, exp, net: inc - exp, count: txs.length };
@@ -113,7 +118,7 @@ function renderReportView() {
   const flows = repFlow(months);
   const fCur = flows[flows.length - 1];
   const fPrev = flows.length > 1 ? flows[flows.length - 2] : null;
-  const balance = repSum(txList().filter((t) => t.type === 'in')) - repSum(txList().filter((t) => t.type === 'out'));
+  const balance = repCashBalance();
   const savedTotal = saveList().reduce((a, s) => a + (Number(s.balance) || 0), 0);
   const netWorth = balance + savedTotal;
   const rate = fCur.inc > 0 ? (fCur.net / fCur.inc) * 100 : 0;
@@ -204,8 +209,22 @@ function renderReportView() {
     </div>
 
     <div class="panel rep-card">
+      <div class="rep-card-head"><h2>🏦 Saldo per Akun</h2><small>${typeof accList === 'function' ? accList().length : 0} akun · transfer internal tidak dihitung ganda</small></div>
+      ${(typeof accList === 'function' && accList().length) ? accList().map((a) => {
+        const bal = accBalance(a.id);
+        const meta = accTypeMeta(a.type);
+        return `<div class="rep-row">
+          <span class="rep-row-name"><i>${meta.icon}</i>${escapeHtml(a.name)}${a.inactive ? ' <small>(nonaktif)</small>' : ''}</span>
+          <div class="rep-row-bar"></div>
+          <b class="${bal < 0 ? 'coral' : ''}"></b>
+          <span class="rep-row-amt">${txRp(bal)}</span>
+        </div>`;
+      }).join('') : '<p class="muted rep-empty-line">Belum ada akun — buat di menu Finance → Akun.</p>'}
+    </div>
+
+    <div class="panel rep-card">
       <div class="rep-card-head"><h2>Transaksi Terbaru</h2><small>5 terakhir dari kas</small></div>
-      ${txList().length === 0 ? '<p class="muted rep-empty-line">Belum ada transaksi.</p>' : [...txList()].sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.ts || 0) - (a.ts || 0)).slice(0, 5).map((t) => `<div class="rep-txline">
+      ${txList().length === 0 ? '<p class="muted rep-empty-line">Belum ada transaksi.</p>' : [...txList()].filter((t) => t.type !== 'transfer').sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.ts || 0) - (a.ts || 0)).slice(0, 5).map((t) => `<div class="rep-txline">
         <span class="rep-tx-ic">${t.type === 'in' ? '↑' : '↓'}</span>
         <div><b>${escapeHtml(t.note || t.cat || 'Transaksi')}</b><small>${budGroupDate(t.date)} · ${escapeHtml(t.cat || 'Umum')}</small></div>
         <span class="${t.type === 'in' ? 'green' : 'coral'}">${t.type === 'in' ? '+' : '−'}${txRp(t.amount)}</span>
